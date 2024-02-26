@@ -59,11 +59,11 @@ ID : [a-zA-Z]+ ;
 WS : [ \t\n\r\f]+ -> skip ;
 
 importDecl
-    : IMPORT ID ('.' ID)* ';'
+    : IMPORT path+=ID ('.' path+=ID)* ';'
     ;
 
 program
-    : importDecl * classDecl EOF
+    : importDecl* classDecl EOF
     ;
 
 
@@ -72,7 +72,7 @@ program
 
 classDecl
     : CLASS name=ID
-      (EXTEND ID)?
+      (EXTEND extendedClass=ID)?
       LCURLY
       varDecl*
       methodDecl*
@@ -86,10 +86,10 @@ varDecl
 
 // NOTE Quando meter nome dos nos ou anotações dos nos
 type
-    : INT array = ('[]' | '...') # TypeIntArray
-    | INT # TypeInt
-    | BOOL # TypeBool
-    | ID # TypeVariable
+    : name = INT array = ('[]' | '...') # TypeIntArray
+    | name = INT # TypeInt
+    | name = BOOL # TypeBool
+    | name = ID # TypeVariable
     ;
 
 //NOTE alternado?
@@ -124,8 +124,8 @@ stmt
       ELSE stmt # IfStmt
     | WHILE LPAREN expr RPAREN stmt # WhileStmt
     | expr SEMI # ExprStmt
-    | ID EQUALS expr SEMI # AssignStmt
-    | ID LSQUARE expr RSQUARE EQUALS  expr SEMI # ListAssignStmt
+    | name = ID EQUALS expr SEMI # AssignStmt
+    | name = ID LSQUARE expr RSQUARE EQUALS  expr SEMI # ListAssignStmt
     | RETURN expr SEMI # ReturnStmt
     ;
 
@@ -140,9 +140,9 @@ expr
     // others
     | expr LSQUARE expr RSQUARE # ArrayExpr
     | expr DOT LENGTH # LengthAttrExpr// ID?
-    | expr DOT ID LPAREN (expr (COMMA expr)*)? RPAREN # MethodExpr
+    | expr DOT name = ID LPAREN (expr (COMMA expr)*)? RPAREN # MethodExpr
     | NEW INT LSQUARE expr RSQUARE # NewArrayExpr
-    | NEW ID LPAREN RPAREN #NewObjExpr// Dafult?
+    | NEW name = ID LPAREN RPAREN # NewObjExpr// Dafult?
     | LPAREN expr RPAREN # ParenthExpr
     | LSQUARE (expr (COMMA expr)*)? RSQUARE # InitArrayExpr
     | value= (TRUE | FALSE) # BoolLiteral
