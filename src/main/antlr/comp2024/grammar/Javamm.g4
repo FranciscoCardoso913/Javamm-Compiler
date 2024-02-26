@@ -52,8 +52,8 @@ IMPORT : 'import';
 STATIC: 'static';
 MAIN: 'main';
 
-INTEGER : [0-9] ;
-ID : [a-zA-Z]+ ;
+INTEGER : [0-9]+ ;
+ID : [a-zA-Z_]+ [a-zA-Z_0-9]*  ;
 
 
 WS : [ \t\n\r\f]+ -> skip ;
@@ -89,10 +89,12 @@ type
     : name = INT array = ('[]' | '...') # TypeIntArray
     | name = INT # TypeInt
     | name = BOOL # TypeBool
+    | name = STRING # TypeString
     | name = ID # TypeVariable
     ;
 
 //NOTE alternado?
+// '[]' não reconhecido como []
 methodDecl locals[boolean isPublic=false]
     : (PUBLIC {$isPublic=true;})?
         type name=ID
@@ -104,7 +106,7 @@ methodDecl locals[boolean isPublic=false]
     | (PUBLIC {$isPublic=true;})?
         STATIC VOID MAIN
         LPAREN
-        STRING  LSQUARE RSQUARE ID
+        STRING  LSQUARE . RSQUARE name=ID
         RPAREN
         LCURLY
         varDecl* stmt*
