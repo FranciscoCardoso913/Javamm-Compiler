@@ -12,6 +12,8 @@ LPAREN : '(' ;
 RPAREN : ')' ;
 LSQUARE: '[';
 RSQUARE: ']';
+
+ELLIPSIS: '...';
 COMMA: ',';
 DOT: '.';
 
@@ -20,11 +22,11 @@ ADD : '+' ;
 SUB : '-';
 DIV : '/';
 
-// NOTE OR?
+
+
 AND: '&&';
 LT: '<';
 NOT: '!';
-
 
 INT : 'int' ;
 BOOL: 'boolean';
@@ -52,23 +54,22 @@ IMPORT : 'import';
 STATIC: 'static';
 MAIN: 'main';
 
+
 INTEGER : [0-9]+ ;
 ID : [a-zA-Z_]+ [a-zA-Z_0-9]*  ;
 
+SINGLE_COMMENTS: ('//' ~[\n\r]* '\r'?'\n') -> skip;
+MULTI_COMMENTS: ('/*' .*? '*/') -> skip;
 
 WS : [ \t\n\r\f]+ -> skip ;
 
 importDecl
-    : IMPORT path+=ID ('.' path+=ID)* ';'
+    : IMPORT path+=ID (DOT path+=ID)* SEMI
     ;
 
 program
     : importDecl* classDecl EOF
     ;
-
-
-// NOTE - suportar Implements
-// Public e private em vars
 
 classDecl
     : CLASS name=ID
@@ -84,21 +85,19 @@ varDecl
     : type name=ID SEMI
     ;
 
-// NOTE Quando meter nome dos nos ou anotações dos nos
-type
-    : name = INT array = ('[]' | '...') # TypeIntArray
+type locals[ boolean isArray= false, boolean isEllipse = false]
+    : name = INT (LSQUARE RSQUARE {$isArray = true;})  # TypeIntArray
+    | name = INT ( ELLIPSIS {$isEllipse = true;}) # TypeIntArray
     | name = INT # TypeInt
     | name = BOOL # TypeBool
     | name = STRING # TypeString
     | name = ID # TypeVariable
     ;
 
-//NOTE alternado?
-// '[]' não reconhecido como []
 methodDecl locals[boolean isPublic=false]
     : (PUBLIC {$isPublic=true;})?
         type name=ID
-        LPAREN (param (',' param)*)? RPAREN
+        LPAREN (param (COMMA param)*)? RPAREN
         LCURLY
         varDecl* stmt*
         RETURN expr SEMI
@@ -106,7 +105,7 @@ methodDecl locals[boolean isPublic=false]
     | (PUBLIC {$isPublic=true;})?
         STATIC VOID MAIN
         LPAREN
-        STRING  LSQUARE . RSQUARE name=ID
+        STRING LSQUARE RSQUARE name=ID
         RPAREN
         LCURLY
         varDecl* stmt*
@@ -117,9 +116,6 @@ param
     : type name=ID
     ;
 
-//Note expr EQUALS expr SEMI //#AssignStmt // devia ser ID?
-// Return? RETURN expr SEMI //#ReturnStmt
-// IF sem Else?
 stmt
     : LCURLY stmt* RCURLY # ScopeStmt
     | IF LPAREN expr RPAREN stmt
@@ -131,22 +127,24 @@ stmt
     | RETURN expr SEMI # ReturnStmt
     ;
 
-//NOTE o resto dos operadores
 expr
-    // Binary expressions
-    : NOT expr # NegExpr
+    : LPAREN expr RPAREN # ParenthExpr
+    | expr LSQUARE expr RSQUARE # ArrayExpr
+    // members and methods access
+    | expr DOT LENGTH # LengthAttrExpr
+    | expr DOT name = ID LPAREN (expr (COMMA expr)*)? RPAREN # MethodExpr
+    // unary
+    | NOT expr # NegExpr
+    // new
+    | NEW INT LSQUARE expr RSQUARE # NewArrayExpr
+    | NEW name = ID LPAREN RPAREN # NewObjExpr
+    | LSQUARE (expr (COMMA expr)*)? RSQUARE # InitArrayExpr // qual precedencia?
+    // Binary
     | expr op= (MUL | DIV) expr # BinaryExpr
     | expr op= (ADD | SUB) expr # BinaryExpr
     | expr op= LT expr # BinaryExpr
     | expr op= AND expr # BinaryExpr
-    // others
-    | expr LSQUARE expr RSQUARE # ArrayExpr
-    | expr DOT LENGTH # LengthAttrExpr// ID?
-    | expr DOT name = ID LPAREN (expr (COMMA expr)*)? RPAREN # MethodExpr
-    | NEW INT LSQUARE expr RSQUARE # NewArrayExpr
-    | NEW name = ID LPAREN RPAREN # NewObjExpr// Dafult?
-    | LPAREN expr RPAREN # ParenthExpr
-    | LSQUARE (expr (COMMA expr)*)? RSQUARE # InitArrayExpr
+    // Literals
     | value= (TRUE | FALSE) # BoolLiteral
     | THIS # This
     | value=INTEGER # IntegerLiteral
