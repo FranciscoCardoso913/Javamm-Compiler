@@ -11,6 +11,7 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
     private List<String> imports;
     private String className;
     private String superName;
+    private List<Symbol> fields;
     private List<String> methods;
     private Map<String, Type> returnTypes;
     private Map<String, List<Symbol>> params;
@@ -18,6 +19,7 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
 
     public JmmSymbolTableBuilder() {
         imports = new ArrayList<>();
+        fields = new ArrayList<>();
         methods = new ArrayList<>();
         returnTypes = new HashMap<>();
         params = new HashMap<>();
@@ -30,6 +32,7 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
                 imports,
                 className,
                 superName,
+                fields,
                 methods,
                 returnTypes,
                 params,
@@ -42,6 +45,7 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
         addVisit("Program", this::dealWithProgram);
         addVisit("ImportDecl", this::dealWithImport);
         addVisit("ClassDecl", this::dealWithClass);
+        addVisit("VarDecl", this::dealWithVarDecl);
     }
 
     private Void dealWithProgram(JmmNode jmmNode, Void v) {
@@ -61,9 +65,26 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
         className = jmmNode.get("name");
         superName = jmmNode.getOptional("extendedClass").orElse("");
 
-        // TODO: Visit the rest of the nodes (vars, funcs, rets...)
+        for (JmmNode child : jmmNode.getChildren())
+            visit(child);
 
         return null;
+    }
+
+    private Void dealWithVarDecl(JmmNode jmmNode, Void v) {
+        fields.add(new Symbol(getType(jmmNode.getJmmChild(0)), jmmNode.get("name")));
+        return null;
+    }
+
+    private Type getType(JmmNode typeNode) {
+        // TODO: Verify if node is actually a type or use visit? To use visit we have to change the return type
+        // of the node which may be strange as it will only be used here...
+        // System.out.println(typeNode.getKind());
+
+        // TODO: Its probably better to not distinguish between '...' and '[]' in node annotation
+        boolean isArray = Boolean.parseBoolean(typeNode.get("isArray")) || Boolean.parseBoolean(typeNode.get("isEllipse"));
+
+        return new Type(typeNode.get("name"), isArray);
     }
 
     /*
