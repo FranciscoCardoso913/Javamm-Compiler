@@ -4,14 +4,8 @@ import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp2024.ast.Kind;
-import pt.up.fe.comp2024.ast.TypeUtils;
-import pt.up.fe.specs.util.SpecsCheck;
 
 import java.util.*;
-
-import static pt.up.fe.comp2024.ast.Kind.METHOD_DECL;
-import static pt.up.fe.comp2024.ast.Kind.VAR_DECL;
 
 public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
     private List<String> imports;
@@ -47,6 +41,7 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
     protected void buildVisitor() {
         addVisit("Program", this::dealWithProgram);
         addVisit("ImportDecl", this::dealWithImport);
+        addVisit("ClassDecl", this::dealWithClass);
     }
 
     private Void dealWithProgram(JmmNode jmmNode, Void v) {
@@ -59,6 +54,15 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
     private Void dealWithImport(JmmNode jmmNode, Void v) {
         List<String> sub_paths = jmmNode.getObjectAsList("path", String.class);
         imports.add(String.join(".", sub_paths));
+        return null;
+    }
+
+    private Void dealWithClass(JmmNode jmmNode, Void v) {
+        className = jmmNode.get("name");
+        superName = jmmNode.getOptional("extendedClass").orElse("");
+
+        // TODO: Visit the rest of the nodes (vars, funcs, rets...)
+
         return null;
     }
 
