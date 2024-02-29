@@ -105,7 +105,7 @@ methodDecl locals[boolean isPublic=false]
     | (PUBLIC {$isPublic=true;})?
         STATIC VOID MAIN
         LPAREN
-        STRING LSQUARE RSQUARE name=ID
+        STRING LSQUARE RSQUARE argName=ID
         RPAREN
         LCURLY
         varDecl* stmt*

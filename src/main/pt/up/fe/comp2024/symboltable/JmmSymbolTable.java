@@ -40,7 +40,7 @@ public class JmmSymbolTable implements SymbolTable {
 
     @Override
     public List<String> getImports() {
-        return imports;
+        return Collections.unmodifiableList(imports);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class JmmSymbolTable implements SymbolTable {
 
     @Override
     public List<Symbol> getFields() {
-        return fields;
+        return Collections.unmodifiableList(fields);
     }
 
     @Override
@@ -65,8 +65,7 @@ public class JmmSymbolTable implements SymbolTable {
 
     @Override
     public Type getReturnType(String methodSignature) {
-        // TODO: Simple implementation that needs to be expanded
-        return new Type(TypeUtils.getIntTypeName(), false);
+        return returnTypes.get(methodSignature);
     }
 
     @Override

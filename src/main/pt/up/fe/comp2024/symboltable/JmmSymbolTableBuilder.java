@@ -4,6 +4,7 @@ import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp2024.ast.Kind;
 
 import java.util.*;
 
@@ -46,6 +47,8 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
         addVisit("ImportDecl", this::dealWithImport);
         addVisit("ClassDecl", this::dealWithClass);
         addVisit("VarDecl", this::dealWithVarDecl);
+        addVisit("Method", this::dealWithMethod);
+        addVisit("MainMethod", this::dealWithMainMethod);
     }
 
     private Void dealWithProgram(JmmNode jmmNode, Void v) {
@@ -72,19 +75,39 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
     }
 
     private Void dealWithVarDecl(JmmNode jmmNode, Void v) {
-        fields.add(new Symbol(getType(jmmNode.getJmmChild(0)), jmmNode.get("name")));
+        // TODO: Reflect about adding node annotation to type
+        fields.add(new Symbol(getType(jmmNode.getChild(0)), jmmNode.get("name")));
         return null;
     }
 
     private Type getType(JmmNode typeNode) {
-        // TODO: Verify if node is actually a type or use visit? To use visit we have to change the return type
-        // of the node which may be strange as it will only be used here...
-        // System.out.println(typeNode.getKind());
-
         // TODO: Its probably better to not distinguish between '...' and '[]' in node annotation
         boolean isArray = Boolean.parseBoolean(typeNode.get("isArray")) || Boolean.parseBoolean(typeNode.get("isEllipse"));
 
         return new Type(typeNode.get("name"), isArray);
+    }
+
+    private Void dealWithMethod(JmmNode jmmNode, Void v) {
+        List<Symbol> methodParams = new ArrayList<>();
+        String methodName = jmmNode.get("name");
+
+        methods.add(methodName);
+        returnTypes.put(methodName, getType(jmmNode.getChild(0)));
+        for (JmmNode param : jmmNode.getChildren(Kind.PARAM)) {
+            methodParams.add(new Symbol(getType(param.getChild(0)), param.get("name")));
+        }
+        // TODO: Should we still had an empty list in methods without parameters?
+        params.put(methodName, methodParams);
+
+        return null;
+    }
+
+    private Void dealWithMainMethod(JmmNode jmmNode, Void v) {
+        methods.add("main");
+        returnTypes.put("main", new Type("void", false));
+        params.put("main", List.of(new Symbol(new Type("String", true), jmmNode.get("argName"))));
+        System.out.println(params);
+        return null;
     }
 
     /*
