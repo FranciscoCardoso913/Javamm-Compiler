@@ -55,7 +55,7 @@ STATIC: 'static';
 MAIN: 'main';
 
 
-INTEGER : [0-9]+ ;
+INTEGER: [1-9] [0-9]* | '0' ;
 ID : [a-zA-Z_$]+ [a-zA-Z_0-9$]*  ;
 
 SINGLE_COMMENTS: ('//' ~[\n\r]* '\r'?'\n') -> skip;
