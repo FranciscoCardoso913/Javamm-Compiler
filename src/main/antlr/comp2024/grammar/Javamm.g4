@@ -103,7 +103,7 @@ methodDecl locals[boolean isPublic=false]
         RETURN expr SEMI
         RCURLY # Method
     | (PUBLIC {$isPublic=true;})?
-        STATIC VOID MAIN
+        STATIC VOID name=MAIN // Adding the name annotation was necessary to pass the test
         LPAREN
         STRING LSQUARE RSQUARE argName=ID
         RPAREN

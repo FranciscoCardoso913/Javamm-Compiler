@@ -89,6 +89,7 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
 
     private Void dealWithMethod(JmmNode jmmNode, Void v) {
         List<Symbol> methodParams = new ArrayList<>();
+        List<Symbol> methodLocals = new ArrayList<>();
         String methodName = jmmNode.get("name");
 
         methods.add(methodName);
@@ -96,17 +97,29 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
         for (JmmNode param : jmmNode.getChildren(Kind.PARAM)) {
             methodParams.add(new Symbol(getType(param.getChild(0)), param.get("name")));
         }
-        // TODO: Should we still had an empty list in methods without parameters?
+        // TODO: Should we still have an empty list in methods without parameters?
         params.put(methodName, methodParams);
+
+        for (JmmNode varDecl : jmmNode.getChildren(Kind.VAR_DECL)) {
+            methodLocals.add(new Symbol(getType(varDecl.getChild(0)), varDecl.get("name")));
+        }
+        locals.put(methodName, methodLocals);
 
         return null;
     }
 
+    // Probably merge this code in the function above, handling the main method as any regular method with node annotations
     private Void dealWithMainMethod(JmmNode jmmNode, Void v) {
+        List<Symbol> methodLocals = new ArrayList<>();
+
         methods.add("main");
         returnTypes.put("main", new Type("void", false));
         params.put("main", List.of(new Symbol(new Type("String", true), jmmNode.get("argName"))));
-        System.out.println(params);
+        for (JmmNode varDecl : jmmNode.getChildren(Kind.VAR_DECL)) {
+            methodLocals.add(new Symbol(getType(varDecl.getChild(0)), varDecl.get("name")));
+        }
+        locals.put("main", methodLocals);
+
         return null;
     }
 
