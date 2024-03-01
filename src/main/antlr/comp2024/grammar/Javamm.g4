@@ -82,7 +82,8 @@ classDecl
 
 
 varDecl
-    : type name=ID SEMI
+    : type name = MAIN SEMI
+    | type name= ID SEMI
     ;
 
 type locals[ boolean isArray= false, boolean isEllipse = false]
@@ -113,7 +114,8 @@ methodDecl locals[boolean isPublic=false]
     ;
 
 param
-    : type name=ID
+    : type name = MAIN
+    | type name=ID
     ;
 
 stmt
