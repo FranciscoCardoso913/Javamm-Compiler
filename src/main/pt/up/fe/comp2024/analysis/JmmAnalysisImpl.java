@@ -6,6 +6,7 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp.jmm.report.Report;
+import pt.up.fe.comp.jmm.report.ReportType;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2024.analysis.passes.UndeclaredVariable;
 import pt.up.fe.comp2024.symboltable.JmmSymbolTableBuilder;
@@ -29,9 +30,14 @@ public class JmmAnalysisImpl implements JmmAnalysis {
 
         JmmNode rootNode = parserResult.getRootNode();
 
-        SymbolTable table = new JmmSymbolTableBuilder().build(rootNode);
+        JmmSymbolTableBuilder tableBuilder = new JmmSymbolTableBuilder();
+        SymbolTable table = tableBuilder.build(rootNode);
 
-        List<Report> reports = new ArrayList<>();
+        List<Report> reports = tableBuilder.getReports();
+
+        for (Report report : reports) {
+            if(report.getType() == ReportType.ERROR) new JmmSemanticsResult(parserResult, table, reports);
+        }
 
         // Visit all nodes in the AST
         for (var analysisPass : analysisPasses) {

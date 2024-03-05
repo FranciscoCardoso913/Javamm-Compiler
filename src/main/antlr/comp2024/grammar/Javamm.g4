@@ -22,8 +22,6 @@ ADD : '+' ;
 SUB : '-';
 DIV : '/';
 
-
-
 AND: '&&';
 LT: '<';
 NOT: '!';
@@ -40,7 +38,6 @@ IF : 'if';
 ELSE : 'else';
 WHILE: 'while';
 NEW : 'new';
-LENGTH: 'length';
 
 
 CLASS : 'class' ;
@@ -52,8 +49,6 @@ EXTEND: 'extends';
 IMPORT : 'import';
 
 STATIC: 'static';
-MAIN: 'main';
-
 
 INTEGER: [1-9] [0-9]* | '0' ;
 ID : [a-zA-Z_$]+ [a-zA-Z_0-9$]*  ;
@@ -82,8 +77,7 @@ classDecl
 
 
 varDecl
-    : type name = MAIN SEMI
-    | type name= ID SEMI
+    : type name= ID SEMI
     ;
 
 type locals[ boolean isArray= false, boolean isEllipse = false]
@@ -104,7 +98,7 @@ methodDecl locals[boolean isPublic=false]
         RETURN expr SEMI
         RCURLY # Method
     | (PUBLIC {$isPublic=true;})?
-        STATIC VOID name=MAIN // Adding the name annotation was necessary to pass the test
+        STATIC VOID name=ID // Adding the name annotation was necessary to pass the test
         LPAREN
         STRING LSQUARE RSQUARE argName=ID
         RPAREN
@@ -114,8 +108,7 @@ methodDecl locals[boolean isPublic=false]
     ;
 
 param
-    : type name = MAIN
-    | type name=ID
+    : type name = ID
     ;
 
 stmt
@@ -133,7 +126,7 @@ expr
     : LPAREN expr RPAREN # ParenthExpr
     | expr LSQUARE expr RSQUARE # ArrayExpr
     // members and methods access
-    | expr DOT LENGTH # LengthAttrExpr
+    | expr DOT name=ID # LengthAttrExpr
     | expr DOT name = ID LPAREN (expr (COMMA expr)*)? RPAREN # MethodExpr
     // unary
     | NOT expr # NegExpr
