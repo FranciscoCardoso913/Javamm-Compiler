@@ -59,6 +59,7 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
         addVisit("VarDecl", this::dealWithVarDecl);
         addVisit("Method", this::dealWithMethod);
         addVisit("MainMethod", this::dealWithMainMethod);
+        addVisit("LengthAttrExpr", this::dealWithLength);
     }
 
     private Void dealWithProgram(JmmNode jmmNode, Void v) {
@@ -112,6 +113,10 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
         }
         locals.put(methodName, methodLocals);
 
+        for (JmmNode expr : jmmNode.getChildren(Kind.LENGTH_ATTR_EXPR)) {
+            visit(expr);
+        }
+
         return null;
     }
 
@@ -142,4 +147,23 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
 
         return null;
     }
+
+    private Void dealWithLength(JmmNode jmmNode, Void v) {
+        if ( !jmmNode.get("name").equals("length")){
+            this.reports.add( Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(jmmNode),
+                    NodeUtils.getColumn(jmmNode),
+                    ("Expected Length attribute, got '" + jmmNode.get("name") + "' instead"),
+                    null
+                )
+            );
+        }
+        return null;
+    }
+
+
+
 }
+
+

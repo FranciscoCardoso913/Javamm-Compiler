@@ -86,6 +86,7 @@ type locals[ boolean isArray= false, boolean isEllipse = false]
     | name = INT # TypeInt
     | name = BOOL # TypeBool
     | name = STRING # TypeString
+    | name = VOID # TypeVoid
     | name = ID # TypeVariable
     ;
 
@@ -94,7 +95,7 @@ methodDecl locals[boolean isPublic=false]
         type name=ID
         LPAREN (param (COMMA param)*)? RPAREN
         LCURLY
-        varDecl* stmt*
+        (varDecl | stmt)*
         RETURN expr SEMI
         RCURLY # Method
     | (PUBLIC {$isPublic=true;})?
