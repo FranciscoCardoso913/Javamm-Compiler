@@ -95,7 +95,7 @@ methodDecl locals[boolean isPublic=false]
         type name=ID
         LPAREN (param (COMMA param)*)? RPAREN
         LCURLY
-        (varDecl | stmt)*
+        varDecl* stmt*
         RETURN expr SEMI
         RCURLY # Method
     | (PUBLIC {$isPublic=true;})?
