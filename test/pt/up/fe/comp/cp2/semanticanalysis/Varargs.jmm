@@ -1,0 +1,12 @@
+class Varargs {
+
+    public int foo() {
+        int a;
+        a = varargs(10, 20, 30);
+        return a;
+    }
+
+    public int varargs(int... a) {
+        return a[0];
+    }
+}
