@@ -37,15 +37,8 @@ public class OllirTest {
 
             var testName = new File(resource).getName();
             System.out.println(testName + ":\n" + result.getJasminCode());
-            var runOutput = result.runWithFullOutput();
-            assertEquals("Error while running compiled Jasmin: " + runOutput.getOutput(), 0,
-                    runOutput.getReturnValue());
-            System.out.println("\n Result: " + runOutput.getOutput());
 
-            if (executionOutput != null) {
-                assertEquals(executionOutput, runOutput.getOutput());
-            }
-
+            // Initial tests do not run code since the initial grammar does not support main methods
             return;
         }
 

@@ -1,0 +1,15 @@
+class Basic {
+
+	public int method(int a) {
+	    int intLocal;
+
+		intLocal = 0;
+
+		return 0;
+	}
+
+	public int othermethod(int intParam) {
+		return intParam;
+	}
+
+}
