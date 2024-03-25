@@ -116,12 +116,29 @@ public class JasminGenerator {
                 method.getMethodAccessModifier().name().toLowerCase() + " " :
                 "";
 
+        // TODO: deal with final, conscrtuctors, etc
+        if (method.isStaticMethod()) {
+            modifier += "static ";
+        }
+
         var methodName = method.getMethodName();
 
+        // get params
+        var paramsTypes = "(";
+        for (var param : method.getParams()) {
+            paramsTypes += getType(param.getType());
+        }
+        paramsTypes += ")";
+
+        var retType = getType(method.getReturnType());
+
+        // primeiro (params), depois o return type
         // TODO: Hardcoded param types and return type, needs to be expanded
-        code.append("\n.method ").append(modifier).append(methodName).append("(I)I").append(NL);
+//        code.append("\n.method ").append(modifier).append(methodName).append("(I)I").append(NL);
+        code.append("\n.method ").append(modifier).append(methodName).append(paramsTypes).append(retType).append(NL);
 
         // Add limits
+        // TODO: could it be better than 99?
         code.append(TAB).append(".limit stack 99").append(NL);
         code.append(TAB).append(".limit locals 99").append(NL);
 
@@ -138,6 +155,20 @@ public class JasminGenerator {
         currentMethod = null;
 
         return code.toString();
+    }
+
+    private static String getType(Type type) {
+        return switch (type.getTypeOfElement()) {
+            case INT32 -> "I";
+            case BOOLEAN -> "Z";
+            case ARRAYREF -> // TODO: fix it
+                    "[" + type.getTypeOfElement().name().toLowerCase() + ";";
+            case OBJECTREF -> "L" + type.getTypeOfElement().name().toLowerCase() + ";";
+            case CLASS -> "L" + type.getTypeOfElement().name().toLowerCase() + ";";
+            case THIS -> "L" + type.getTypeOfElement().name().toLowerCase() + ";";
+            case STRING -> "Ljava/lang/String;";
+            case VOID -> "V";
+        };
     }
 
     private String generateAssign(AssignInstruction assign) {
