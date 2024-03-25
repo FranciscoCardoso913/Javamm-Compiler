@@ -41,6 +41,7 @@ public class JasminGenerator {
 
         this.generators = new FunctionClassMap<>();
         generators.put(ClassUnit.class, this::generateClassUnit);
+        generators.put(Field.class, this::generateField);
         generators.put(Method.class, this::generateMethod);
         generators.put(AssignInstruction.class, this::generateAssign);
         generators.put(SingleOpInstruction.class, this::generateSingleOp);
@@ -76,7 +77,12 @@ public class JasminGenerator {
         // TODO: Hardcoded to Object, needs to be expanded
         code.append(".super java/lang/Object").append(NL);
 
+        for (var field : ollirResult.getOllirClass().getFields()) {
+            code.append(generators.apply(field));
+        }
+
         // generate a single constructor method
+        // TODO: Hardcoded to Object, needs to be expanded
         var defaultConstructor = """
                 ;default constructor
                 .method public <init>()V
@@ -103,6 +109,14 @@ public class JasminGenerator {
         return code.toString();
     }
 
+    private String generateField(Field field) {
+        // TODO: check it; how is field represented in jasmin?
+
+        return ".field " +
+                field.getFieldAccessModifier().name().toLowerCase() + " " +
+                field.getFieldName() + " " +
+                getType(field.getFieldType()) + " ";
+    }
 
     private String generateMethod(Method method) {
 
@@ -124,11 +138,11 @@ public class JasminGenerator {
         var methodName = method.getMethodName();
 
         // get params
-        var paramsTypes = "(";
+        StringBuilder paramsTypes = new StringBuilder("(");
         for (var param : method.getParams()) {
-            paramsTypes += getType(param.getType());
+            paramsTypes.append(getType(param.getType()));
         }
-        paramsTypes += ")";
+        paramsTypes.append(")");
 
         var retType = getType(method.getReturnType());
 
@@ -138,7 +152,6 @@ public class JasminGenerator {
         code.append("\n.method ").append(modifier).append(methodName).append(paramsTypes).append(retType).append(NL);
 
         // Add limits
-        // TODO: could it be better than 99?
         code.append(TAB).append(".limit stack 99").append(NL);
         code.append(TAB).append(".limit locals 99").append(NL);
 
@@ -157,15 +170,20 @@ public class JasminGenerator {
         return code.toString();
     }
 
-    private static String getType(Type type) {
+    private String getType(Type type) {
         return switch (type.getTypeOfElement()) {
             case INT32 -> "I";
             case BOOLEAN -> "Z";
-            case ARRAYREF -> // TODO: fix it
-                    "[" + type.getTypeOfElement().name().toLowerCase() + ";";
-            case OBJECTREF -> "L" + type.getTypeOfElement().name().toLowerCase() + ";";
-            case CLASS -> "L" + type.getTypeOfElement().name().toLowerCase() + ";";
-            case THIS -> "L" + type.getTypeOfElement().name().toLowerCase() + ";";
+            case ARRAYREF -> // TODO: get type of arrau; next checkpoint?
+                    "[" + ";"; //getType(type)
+//            case OBJECTREF -> "Ljava/lang/Object;";
+
+            //?
+            case OBJECTREF, CLASS -> "L" + currentMethod.getClass().getName().toLowerCase() + ";";
+
+//            case THIS -> "aload_0";
+            case THIS -> "L" + currentMethod.getOllirClass().getClassName() + ";";
+
             case STRING -> "Ljava/lang/String;";
             case VOID -> "V";
         };
