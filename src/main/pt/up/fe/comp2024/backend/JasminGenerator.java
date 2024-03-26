@@ -72,9 +72,11 @@ public class JasminGenerator {
 
         // generate class name
         var className = ollirResult.getOllirClass().getClassName();
+        // TODO: public
         code.append(".class ").append(className).append(NL).append(NL);
 
         // TODO: Hardcoded to Object, needs to be expanded
+        // how?
         code.append(".super java/lang/Object").append(NL);
 
         for (var field : ollirResult.getOllirClass().getFields()) {
@@ -83,6 +85,7 @@ public class JasminGenerator {
 
         // generate a single constructor method
         // TODO: Hardcoded to Object, needs to be expanded
+        // may use extended class
         var defaultConstructor = """
                 ;default constructor
                 .method public <init>()V
@@ -115,7 +118,7 @@ public class JasminGenerator {
         return ".field " +
                 field.getFieldAccessModifier().name().toLowerCase() + " " +
                 field.getFieldName() + " " +
-                getType(field.getFieldType()) + " ";
+                getType(field.getFieldType()) + "\n";
     }
 
     private String generateMethod(Method method) {
@@ -175,7 +178,7 @@ public class JasminGenerator {
             case INT32 -> "I";
             case BOOLEAN -> "Z";
             case ARRAYREF -> // TODO: get type of arrau; next checkpoint?
-                    "[" + ";"; //getType(type)
+                    "[Ljava/lang/String" + ";"; //getType(type)
 //            case OBJECTREF -> "Ljava/lang/Object;";
 
             //?
@@ -210,6 +213,7 @@ public class JasminGenerator {
         var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
 
         // TODO: Hardcoded for int type, needs to be expanded
+        // istore_ ?
         code.append("istore ").append(reg).append(NL);
 
         return code.toString();
@@ -220,6 +224,7 @@ public class JasminGenerator {
     }
 
     private String generateLiteral(LiteralElement literal) {
+        // TODO: iconst here?
         return "ldc " + literal.getLiteral() + NL;
     }
 

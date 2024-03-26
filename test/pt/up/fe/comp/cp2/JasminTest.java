@@ -13,6 +13,7 @@ import static org.junit.Assert.assertEquals;
 
 public class JasminTest {
 
+    // esse teste passa, mas nao acho que deveria kkkkkk
     @Test
     public void ollirToJasminBasic() {
         testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminBasic.ollir");
