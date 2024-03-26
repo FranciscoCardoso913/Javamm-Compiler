@@ -192,6 +192,7 @@ public class JasminGenerator {
     private String generateAssign(AssignInstruction assign) {
         var code = new StringBuilder();
 
+        System.out.println("Rhs type: " + assign.getRhs().getInstType());
         // generate code for loading what's on the right
         code.append(generators.apply(assign.getRhs()));
 
@@ -199,6 +200,7 @@ public class JasminGenerator {
         var lhs = assign.getDest();
 
         if (!(lhs instanceof Operand)) {
+            System.out.println("lhs: " + lhs.getClass() + " is not an Operand");
             throw new NotImplementedException(lhs.getClass());
         }
 
@@ -238,7 +240,10 @@ public class JasminGenerator {
         var op = switch (binaryOp.getOperation().getOpType()) {
             case ADD -> "iadd";
             case MUL -> "imul";
-            default -> throw new NotImplementedException(binaryOp.getOperation().getOpType());
+            default -> {
+                System.out.println("Operation not implemented: " + binaryOp.getOperation().getOpType());
+                throw new NotImplementedException(binaryOp.getOperation().getOpType());
+            }
         };
 
         code.append(op).append(NL);
@@ -251,8 +256,21 @@ public class JasminGenerator {
 
         // TODO: Hardcoded to int return type, needs to be expanded
 
-        code.append(generators.apply(returnInst.getOperand()));
-        code.append("ireturn").append(NL);
+        System.out.println("Return type: " + returnInst.getReturnType());
+        System.out.println("ReturnType.typeofelement: " + returnInst.getReturnType().getTypeOfElement());
+        System.out.println("Return operand: " + returnInst.getOperand());
+        //System.out.println("Return operand type: " + returnInst.getOperand().getType());
+
+        ElementType type = returnInst.getReturnType().getTypeOfElement();
+        switch (type) {
+            case INT32, BOOLEAN -> {
+                // what should it do?
+                code.append(generators.apply(returnInst.getOperand()));
+                code.append("ireturn").append(NL);
+            }
+            case VOID -> code.append("return").append(NL);
+            default -> throw new NotImplementedException(type);
+        }
 
         return code.toString();
     }
