@@ -13,7 +13,6 @@ import static org.junit.Assert.assertEquals;
 
 public class JasminTest {
 
-    // esse teste passa, mas nao acho que deveria kkkkkk
     @Test
     public void ollirToJasminBasic() {
         testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminBasic.ollir");
@@ -60,6 +59,7 @@ public class JasminTest {
         assertEquals("Error while running compiled Jasmin: " + runOutput.getOutput(), 0, runOutput.getReturnValue());
         System.out.println("\n Result: " + runOutput.getOutput());
 
+        System.out.println("Expected: " + expectedOutput);
         if (expectedOutput != null) {
             assertEquals(expectedOutput, runOutput.getOutput());
         }

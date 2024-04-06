@@ -44,11 +44,14 @@ public class JasminGenerator {
         generators.put(Field.class, this::generateField);
         generators.put(Method.class, this::generateMethod);
         generators.put(AssignInstruction.class, this::generateAssign);
-        generators.put(SingleOpInstruction.class, this::generateSingleOp);
+        generators.put(SingleOpInstruction.class, this::generateSingleOp); //
         generators.put(LiteralElement.class, this::generateLiteral);
-        generators.put(Operand.class, this::generateOperand);
+        generators.put(Operand.class, this::generateOperand); //
         generators.put(BinaryOpInstruction.class, this::generateBinaryOp);
         generators.put(ReturnInstruction.class, this::generateReturn);
+        generators.put(PutFieldInstruction.class, this::generatePutField);
+        generators.put(GetFieldInstruction.class, this::generateGetField);
+        generators.put(CallInstruction.class, this::generateCall);
     }
 
     public List<Report> getReports() {
@@ -72,12 +75,14 @@ public class JasminGenerator {
 
         // generate class name
         var className = ollirResult.getOllirClass().getClassName();
-        // TODO: public
-        code.append(".class ").append(className).append(NL).append(NL);
+        // TODO: could be other than public?
+        code.append(".class public ").append(className).append(NL).append(NL);
 
-        // TODO: Hardcoded to Object, needs to be expanded
-        // how?
-        code.append(".super java/lang/Object").append(NL);
+        code.append(".super ");
+        if (classUnit.getSuperClass() != null)
+            code.append(classUnit.getSuperClass()).append(NL);
+        else
+            code.append("java/lang/Object").append(NL); //
 
         for (var field : ollirResult.getOllirClass().getFields()) {
             code.append(generators.apply(field));
@@ -86,14 +91,24 @@ public class JasminGenerator {
         // generate a single constructor method
         // TODO: Hardcoded to Object, needs to be expanded
         // may use extended class
-        var defaultConstructor = """
+        StringBuilder defaultConstructor = new StringBuilder("""
                 ;default constructor
                 .method public <init>()V
                     aload_0
-                    invokespecial java/lang/Object/<init>()V
+                    invokespecial""");
+        defaultConstructor.append((" "));
+
+        if (classUnit.getSuperClass() != null)
+            defaultConstructor.append(classUnit.getSuperClass());
+        else
+            defaultConstructor.append("java/lang/Object");
+
+        defaultConstructor.append("/<init>()V").append(NL);
+        defaultConstructor.append("""
                     return
                 .end method
-                """;
+                """);
+
         code.append(defaultConstructor);
 
         // generate code for all other methods
@@ -113,12 +128,17 @@ public class JasminGenerator {
     }
 
     private String generateField(Field field) {
-        // TODO: check it; how is field represented in jasmin?
-
-        return ".field " +
-                field.getFieldAccessModifier().name().toLowerCase() + " " +
-                field.getFieldName() + " " +
-                getType(field.getFieldType()) + "\n";
+        var code = new StringBuilder();
+        code.append(".field");
+        switch (field.getFieldAccessModifier()) {
+            case PUBLIC -> code.append(" public ");
+            case PRIVATE -> code.append(" private ");
+            case PROTECTED -> code.append(" protected ");
+            case DEFAULT -> code.append(" ");
+        }
+        code.append(field.getFieldName()).append(" ");
+        code.append(getType(field.getFieldType())).append(NL);
+        return code.toString();
     }
 
     private String generateMethod(Method method) {
@@ -133,7 +153,7 @@ public class JasminGenerator {
                 method.getMethodAccessModifier().name().toLowerCase() + " " :
                 "";
 
-        // TODO: deal with final, conscrtuctors, etc
+        // TODO: deal with final, constructors, etc
         if (method.isStaticMethod()) {
             modifier += "static ";
         }
@@ -149,8 +169,6 @@ public class JasminGenerator {
 
         var retType = getType(method.getReturnType());
 
-        // primeiro (params), depois o return type
-        // TODO: Hardcoded param types and return type, needs to be expanded
 //        code.append("\n.method ").append(modifier).append(methodName).append("(I)I").append(NL);
         code.append("\n.method ").append(modifier).append(methodName).append(paramsTypes).append(retType).append(NL);
 
@@ -192,6 +210,45 @@ public class JasminGenerator {
         };
     }
 
+    private String generateGetField(GetFieldInstruction getFieldInstruction) {
+//        a.i32 :=.i32 getfield(this, intField.i32).i32;
+//        aload 0 ; this
+//        getfield Test/intField I
+//        istore 1
+
+        return "aload 0" + NL + // push this to stack
+                "getfield " + currentMethod.getOllirClass().getClassName() + "/" +
+                getFieldInstruction.getField().getName() + " " +
+                getType(getFieldInstruction.getField().getType()) + NL;
+    }
+
+    private String generatePutField(PutFieldInstruction putFieldInstruction) {
+
+        // putfield(this, intField.i32, 10.i32).V;
+        // sipush 10 // push 10 to stack
+        // putfield Test/intField I
+
+        return "aload 0" + NL + generators.apply(putFieldInstruction.getValue()) +
+                "putfield " + currentMethod.getOllirClass().getClassName() + "/" +
+                putFieldInstruction.getField().getName() + " " +
+                getType(putFieldInstruction.getField().getType()) +
+                NL;
+    }
+
+    private String generateCall(CallInstruction callInstruction) {
+        var code = new StringBuilder();
+//        test.Test :=.Test new(Test).Test;
+//        invokespecial(test.Test,"<init>").V;
+
+//        new Test            ; cria um novo objeto do tipo Test
+//        dup                 ; duplica a referência ao objeto no topo da pilha
+//                            ; (pois o construtor <init> vai consumir uma e queremos manter uma na pilha)
+//        invokespecial Test/<init>()V  ; chama o construtor da classe Test
+//        astore_1            ; armazena a referência ao objeto na variável local 1 (ou outro índice apropriado)
+
+        return code.toString();
+    }
+
     private String generateAssign(AssignInstruction assign) {
         var code = new StringBuilder();
 
@@ -210,12 +267,12 @@ public class JasminGenerator {
         var operand = (Operand) lhs;
 
         // get register
-        var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
-
+        var name = currentMethod.getVarTable().get(operand.getName());
+        var reg = name.getVirtualReg();
         // TODO: Hardcoded for int type, needs to be expanded
         // istore_ ?
         code.append("istore ").append(reg).append(NL);
-
+        // astore
         return code.toString();
     }
 
@@ -258,13 +315,6 @@ public class JasminGenerator {
 
     private String generateReturn(ReturnInstruction returnInst) {
         var code = new StringBuilder();
-
-        // TODO: Hardcoded to int return type, needs to be expanded
-
-        System.out.println("Return type: " + returnInst.getReturnType());
-        System.out.println("ReturnType.typeofelement: " + returnInst.getReturnType().getTypeOfElement());
-        System.out.println("Return operand: " + returnInst.getOperand());
-        //System.out.println("Return operand type: " + returnInst.getOperand().getType());
 
         ElementType type = returnInst.getReturnType().getTypeOfElement();
         switch (type) {
