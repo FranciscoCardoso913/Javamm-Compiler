@@ -34,7 +34,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
     @Override
     protected void buildVisitor() {
-
         addVisit(PROGRAM, this::visitProgram);
         addVisit(CLASS_DECL, this::visitClass);
         addVisit(METHOD_DECL, this::visitMethodDecl);
@@ -193,14 +192,28 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                 "}\n";
     }
 
-
     private String visitProgram(JmmNode node, Void unused) {
 
         StringBuilder code = new StringBuilder();
 
+        code.append(buildImports());
+
         node.getChildren().stream()
                 .map(this::visit)
                 .forEach(code::append);
+
+
+        return code.toString();
+    }
+
+    private String buildImports () {
+        StringBuilder code = new StringBuilder();
+
+        for (String importStmt : table.getImports()) {
+            code.append("import ").append(importStmt).append(";").append(NL);
+        }
+
+        if (!table.getImports().isEmpty()) code.append(NL);
 
         return code.toString();
     }
@@ -213,7 +226,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
      * @return
      */
     private String defaultVisit(JmmNode node, Void unused) {
-        System.out.println("Type not caught: " + node.getKind());
         for (var child : node.getChildren()) {
             visit(child);
         }
