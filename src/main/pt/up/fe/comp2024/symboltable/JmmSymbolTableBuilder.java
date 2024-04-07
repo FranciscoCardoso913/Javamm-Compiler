@@ -77,7 +77,7 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
 
     private Void dealWithClass(JmmNode jmmNode, Void v) {
         className = jmmNode.get("name");
-        superName = jmmNode.getOptional("extendedClass").orElse("");
+        superName = jmmNode.getOptional("extendedClass").orElse(null);
 
         for (JmmNode child : jmmNode.getChildren())
             visit(child);

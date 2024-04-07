@@ -158,7 +158,12 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         StringBuilder code = new StringBuilder();
 
+        boolean hasExtend = table.getSuper() != null;
+
         code.append(table.getClassName());
+        if (hasExtend) {
+            code.append(" extends ").append(table.getSuper());
+        }
         code.append(L_BRACKET);
 
         code.append(NL);
@@ -208,7 +213,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
      * @return
      */
     private String defaultVisit(JmmNode node, Void unused) {
-
+        System.out.println("Type not caught: " + node.getKind());
         for (var child : node.getChildren()) {
             visit(child);
         }
