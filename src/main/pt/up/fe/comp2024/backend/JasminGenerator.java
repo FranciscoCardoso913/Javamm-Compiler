@@ -8,6 +8,7 @@ import pt.up.fe.specs.util.classmap.FunctionClassMap;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 import pt.up.fe.specs.util.utilities.StringLines;
 
+import java.lang.constant.ConstantDesc;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -221,11 +222,12 @@ public class JasminGenerator {
     private String generateCall(CallInstruction callInstruction) {
         var code = new StringBuilder();
         switch (callInstruction.getInvocationType()) {
-            case invokespecial -> code.append("invokespecial ").append(currentMethod.getOllirClass().getClassName()).append("/<init>()V").append(NL);
-            case NEW -> {
-                code.append("new ").append(currentMethod.getOllirClass().getClassName()).append(NL);
-                code.append("dup").append(NL);
+            case invokespecial -> {
+                // might have more than one operand?
+                code.append(generators.apply(callInstruction.getOperands().get(0))).append(NL);
+                code.append("invokespecial ").append(currentMethod.getOllirClass().getClassName()).append("/<init>()V").append(NL);
             }
+            case NEW -> code.append("new ").append(currentMethod.getOllirClass().getClassName()).append(NL);
             default -> throw new NotImplementedException(callInstruction.getInvocationType());
         }
         return code.toString();
@@ -270,9 +272,15 @@ public class JasminGenerator {
     }
 
     private String generateOperand(Operand operand) {
+        var code = new StringBuilder();
         // get register
         var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
-        return "iload " + reg + NL;
+        switch (currentMethod.getVarTable().get(operand.getName()).getVarType().getTypeOfElement()) {
+            case INT32, BOOLEAN -> code.append("iload ").append(reg).append(NL);
+            case OBJECTREF -> code.append("aload ").append(reg).append(NL);
+            default -> throw new NotImplementedException(currentMethod.getVarTable().get(operand.getName()).getVarType().getTypeOfElement());
+        }
+        return code.toString();
     }
 
     private String generateBinaryOp(BinaryOpInstruction binaryOp) {
