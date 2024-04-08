@@ -169,7 +169,6 @@ public class JasminGenerator {
 
         var retType = getType(method.getReturnType());
 
-//        code.append("\n.method ").append(modifier).append(methodName).append("(I)I").append(NL);
         code.append("\n.method ").append(modifier).append(methodName).append(paramsTypes).append(retType).append(NL);
 
         // Add limits
@@ -196,26 +195,15 @@ public class JasminGenerator {
             case INT32 -> "I";
             case BOOLEAN -> "Z";
             case ARRAYREF -> // TODO: get type of arrau; next checkpoint?
-                    "[Ljava/lang/String" + ";"; //getType(type)
-//            case OBJECTREF -> "Ljava/lang/Object;";
-
-            //?
+                    "[Ljava/lang/String" + ";";
             case OBJECTREF, CLASS -> "L" + currentMethod.getClass().getName().toLowerCase() + ";";
-
-//            case THIS -> "aload_0";
             case THIS -> "L" + currentMethod.getOllirClass().getClassName() + ";";
-
             case STRING -> "Ljava/lang/String;";
             case VOID -> "V";
         };
     }
 
     private String generateGetField(GetFieldInstruction getFieldInstruction) {
-//        a.i32 :=.i32 getfield(this, intField.i32).i32;
-//        aload 0 ; this
-//        getfield Test/intField I
-//        istore 1
-
         return "aload 0" + NL + // push this to stack
                 "getfield " + currentMethod.getOllirClass().getClassName() + "/" +
                 getFieldInstruction.getField().getName() + " " +
@@ -223,11 +211,6 @@ public class JasminGenerator {
     }
 
     private String generatePutField(PutFieldInstruction putFieldInstruction) {
-
-        // putfield(this, intField.i32, 10.i32).V;
-        // sipush 10 // push 10 to stack
-        // putfield Test/intField I
-
         return "aload 0" + NL + generators.apply(putFieldInstruction.getValue()) +
                 "putfield " + currentMethod.getOllirClass().getClassName() + "/" +
                 putFieldInstruction.getField().getName() + " " +
@@ -237,22 +220,20 @@ public class JasminGenerator {
 
     private String generateCall(CallInstruction callInstruction) {
         var code = new StringBuilder();
-//        test.Test :=.Test new(Test).Test;
-//        invokespecial(test.Test,"<init>").V;
-
-//        new Test            ; cria um novo objeto do tipo Test
-//        dup                 ; duplica a referência ao objeto no topo da pilha
-//                            ; (pois o construtor <init> vai consumir uma e queremos manter uma na pilha)
-//        invokespecial Test/<init>()V  ; chama o construtor da classe Test
-//        astore_1            ; armazena a referência ao objeto na variável local 1 (ou outro índice apropriado)
-
+        switch (callInstruction.getInvocationType()) {
+            case invokespecial -> code.append("invokespecial ").append(currentMethod.getOllirClass().getClassName()).append("/<init>()V").append(NL);
+            case NEW -> {
+                code.append("new ").append(currentMethod.getOllirClass().getClassName()).append(NL);
+                code.append("dup").append(NL);
+            }
+            default -> throw new NotImplementedException(callInstruction.getInvocationType());
+        }
         return code.toString();
     }
 
     private String generateAssign(AssignInstruction assign) {
         var code = new StringBuilder();
 
-        System.out.println("Rhs type: " + assign.getRhs().getInstType());
         // generate code for loading what's on the right
         code.append(generators.apply(assign.getRhs()));
 
@@ -269,10 +250,13 @@ public class JasminGenerator {
         // get register
         var name = currentMethod.getVarTable().get(operand.getName());
         var reg = name.getVirtualReg();
-        // TODO: Hardcoded for int type, needs to be expanded
-        // istore_ ?
-        code.append("istore ").append(reg).append(NL);
-        // astore
+
+        switch (name.getVarType().getTypeOfElement()) {
+            case INT32, BOOLEAN -> code.append("istore ").append(reg).append(NL);
+            case OBJECTREF -> code.append("astore ").append(reg).append(NL);
+            default -> throw new NotImplementedException(name.getVarType().getTypeOfElement());
+        }
+
         return code.toString();
     }
 
@@ -319,7 +303,6 @@ public class JasminGenerator {
         ElementType type = returnInst.getReturnType().getTypeOfElement();
         switch (type) {
             case INT32, BOOLEAN -> {
-                // what should it do?
                 code.append(generators.apply(returnInst.getOperand()));
                 code.append("ireturn").append(NL);
             }
