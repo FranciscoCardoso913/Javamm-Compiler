@@ -77,17 +77,17 @@ classDecl
 
 
 varDecl
-    : type name= ID SEMI
+    : type name=ID SEMI
     ;
 
 type locals[ boolean isArray= false, boolean isEllipse = false]
-    : name = INT (LSQUARE RSQUARE {$isArray = true;})  # TypeIntArray
-    | name = INT ( ELLIPSIS {$isEllipse = true;}) # TypeIntArray
-    | name = INT # TypeInt
-    | name = BOOL # TypeBool
-    | name = STRING # TypeString
-    | name = VOID # TypeVoid
-    | name = ID # TypeVariable
+    : name = INT (LSQUARE RSQUARE {$isArray = true;})
+    | name = INT ( ELLIPSIS {$isEllipse = true;})
+    | name = INT
+    | name = BOOL
+    | name = STRING
+    | name = VOID
+    | name = ID
     ;
 
 methodDecl locals[boolean isPublic=false]

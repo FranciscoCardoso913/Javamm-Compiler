@@ -7,6 +7,7 @@ import pt.up.fe.comp2024.ast.NodeUtils;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 
 import java.util.List;
+import java.util.MissingFormatArgumentException;
 import java.util.Optional;
 
 import static pt.up.fe.comp2024.ast.Kind.TYPE;
@@ -31,23 +32,25 @@ public class OptUtils {
     }
 
     public static String toOllirType(JmmNode typeNode) {
-
         TYPE.checkOrThrow(typeNode);
 
         String typeName = typeNode.get("name");
 
-        return toOllirType(typeName);
+        return toOllirType(typeName, NodeUtils.getBooleanAttribute(typeNode, "isArray", "false"));
     }
 
-    public static String toOllirType(Type type) {
-        return toOllirType(type.getName());
+    public static String toOllirType(Type type, boolean isArray) {
+        return toOllirType(type.getName(), isArray);
     }
 
-    private static String toOllirType(String typeName) {
+    private static String toOllirType(String typeName, boolean isArray) {
+        String type = (isArray ? ".array" : "");
 
-        String type = "." + switch (typeName) {
+        type = type + "." + switch (typeName) {
             case "int" -> "i32";
-            default -> throw new NotImplementedException(typeName);
+            case "boolean" -> "bool";
+            case "String" -> "String";
+            default -> typeName;
         };
 
         return type;

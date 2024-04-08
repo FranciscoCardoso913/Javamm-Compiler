@@ -1,11 +1,13 @@
 package pt.up.fe.comp2024.optimization;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2024.ast.NodeUtils;
 import pt.up.fe.comp2024.ast.TypeUtils;
+import pt.up.fe.comp2024.optimization.OptUtils;
 
 import static pt.up.fe.comp2024.ast.Kind.*;
 
@@ -36,6 +38,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     protected void buildVisitor() {
         addVisit(PROGRAM, this::visitProgram);
         addVisit(CLASS_DECL, this::visitClass);
+        addVisit(VAR_DECL, this::visitVarDecl);
         addVisit(METHOD_DECL, this::visitMethodDecl);
         addVisit(PARAM, this::visitParam);
         addVisit(RETURN_STMT, this::visitReturn);
@@ -59,7 +62,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         // code to compute self
         // statement has type of lhs
         Type thisType = TypeUtils.getExprType(node.getJmmChild(0), table);
-        String typeString = OptUtils.toOllirType(thisType);
+        // TODO: Check this
+        String typeString = OptUtils.toOllirType(thisType, false);
 
 
         code.append(lhs.getCode());
@@ -92,7 +96,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         code.append(expr.getComputation());
         code.append("ret");
-        code.append(OptUtils.toOllirType(retType));
+        // TODO: Change this line to allow return of arrays
+        code.append(OptUtils.toOllirType(retType, false));
         code.append(SPACE);
 
         code.append(expr.getCode());
@@ -151,7 +156,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         return code.toString();
     }
-
 
     private String visitClass(JmmNode node, Void unused) {
 
@@ -214,6 +218,15 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         }
 
         if (!table.getImports().isEmpty()) code.append(NL);
+
+        return code.toString();
+    }
+
+    private String visitVarDecl(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+
+        String varField = OptUtils.toOllirType(node.getChild(0));
+        code.append(".field public ").append(node.get("name")).append(varField).append(";").append(NL);
 
         return code.toString();
     }
