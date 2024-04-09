@@ -100,6 +100,32 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
         List<Symbol> methodParams = new ArrayList<>();
         List<Symbol> methodLocals = new ArrayList<>();
         String methodName = jmmNode.get("name");
+        // TODO: change to boolean
+        if(jmmNode.get("isMain").equals("true")){
+            String error_message = "";
+            if(!methodName.equals("main"))
+                error_message = "Expected 'main' as method's name, got '" + jmmNode.get("name") + "' instead";
+            else if(jmmNode.getChildren(Kind.PARAM).size() != 1)
+                error_message = "Expected 1 param for mainMethod, got '" + jmmNode.getChildren(Kind.PARAM).size() + "' instead";
+            else if (!jmmNode.getChildren(Kind.PARAM).get(0).getChild(0).get("name").equals("String"))
+                error_message = "Expected mainMethod param should be of type 'String', got '" + jmmNode.getChildren(Kind.PARAM).get(0).getChild(0).get("name") + "' instead";
+            else if (!jmmNode.getChildren(Kind.PARAM).get(0).getChild(0).get("isArray").equals("true"))
+                error_message = "Expected mainMethod param to be an array";
+
+
+            if(!error_message.isEmpty()){
+                this.reports.add( Report.newError(
+                                Stage.SEMANTIC,
+                                NodeUtils.getLine(jmmNode),
+                                NodeUtils.getColumn(jmmNode),
+                                error_message,
+                                null
+                        )
+                );
+                return null;
+            }
+
+        }
 
         methods.add(methodName);
         returnTypes.put(methodName, getType(jmmNode.getChild(0)));
@@ -125,13 +151,15 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
         List<Symbol> methodLocals = new ArrayList<>();
 
         if (jmmNode.get("name").equals("main")) {
-            methods.add("main");
-            returnTypes.put("main", new Type("void", false));
-            params.put("main", List.of(new Symbol(new Type("String", true), jmmNode.get("argName"))));
-            for (JmmNode varDecl : jmmNode.getChildren(Kind.VAR_DECL)) {
-                methodLocals.add(new Symbol(getType(varDecl.getChild(0)), varDecl.get("name")));
+            if(jmmNode.getChildren(Kind.PARAM).get(0).get("name").equals("String")){
+                methods.add("main");
+                returnTypes.put("main", new Type("void", false));
+                params.put("main", List.of(new Symbol(new Type("String", true), jmmNode.get("argName"))));
+                for (JmmNode varDecl : jmmNode.getChildren(Kind.VAR_DECL)) {
+                    methodLocals.add(new Symbol(getType(varDecl.getChild(0)), varDecl.get("name")));
+                }
+                locals.put("main", methodLocals);
             }
-            locals.put("main", methodLocals);
         }
         else {
             this.reports.add( Report.newError(
