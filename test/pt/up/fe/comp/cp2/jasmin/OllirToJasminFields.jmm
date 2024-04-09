@@ -1,0 +1,17 @@
+class Test {
+
+	int intField;
+
+	public static void main(String[] args) {
+	}
+
+	
+	public int foo() {
+        int a;
+
+		intField = 10;
+		a = intField;
+
+		return a;
+	}
+}

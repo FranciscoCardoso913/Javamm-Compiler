@@ -1,0 +1,12 @@
+class Arithmetic {
+
+    public int foo(int a) {
+        int b;
+        int c;
+
+        b = 2;
+        c = a + b;
+
+        return c;
+    }
+}
