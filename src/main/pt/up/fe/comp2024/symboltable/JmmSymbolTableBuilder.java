@@ -58,7 +58,6 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
         addVisit("ClassDecl", this::dealWithClass);
         addVisit("VarDecl", this::dealWithVarDecl);
         addVisit("Method", this::dealWithMethod);
-        addVisit("MainMethod", this::dealWithMainMethod);
         addVisit("LengthAttrExpr", this::dealWithLength);
     }
 
@@ -142,36 +141,6 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
         for (JmmNode expr : jmmNode.getChildren(Kind.LENGTH_ATTR_EXPR)) {
             visit(expr);
         }
-
-        return null;
-    }
-
-    // Probably merge this code in the function above, handling the main method as any regular method with node annotations
-    private Void dealWithMainMethod(JmmNode jmmNode, Void v) {
-        List<Symbol> methodLocals = new ArrayList<>();
-
-        if (jmmNode.get("name").equals("main")) {
-            if(jmmNode.getChildren(Kind.PARAM).get(0).get("name").equals("String")){
-                methods.add("main");
-                returnTypes.put("main", new Type("void", false));
-                params.put("main", List.of(new Symbol(new Type("String", true), jmmNode.get("argName"))));
-                for (JmmNode varDecl : jmmNode.getChildren(Kind.VAR_DECL)) {
-                    methodLocals.add(new Symbol(getType(varDecl.getChild(0)), varDecl.get("name")));
-                }
-                locals.put("main", methodLocals);
-            }
-        }
-        else {
-            this.reports.add( Report.newError(
-                    Stage.SEMANTIC,
-                    NodeUtils.getLine(jmmNode),
-                    NodeUtils.getColumn(jmmNode),
-                    ("Expected Main Method, got '" + jmmNode.get("name") + "' instead"),
-                    null
-                )
-            );
-        }
-
 
         return null;
     }
