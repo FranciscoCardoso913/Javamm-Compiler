@@ -39,8 +39,8 @@ public class OptUtils {
         return toOllirType(typeName, NodeUtils.getBooleanAttribute(typeNode, "isArray", "false"));
     }
 
-    public static String toOllirType(Type type, boolean isArray) {
-        return toOllirType(type.getName(), isArray);
+    public static String toOllirType(Type type) {
+        return toOllirType(type.getName(), type.isArray());
     }
 
     private static String toOllirType(String typeName, boolean isArray) {

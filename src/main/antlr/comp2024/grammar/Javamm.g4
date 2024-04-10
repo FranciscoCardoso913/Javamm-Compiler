@@ -96,7 +96,7 @@ methodDecl locals[boolean isPublic=false]
         LPAREN (param (COMMA param)*)? RPAREN
         LCURLY
         varDecl* stmt*
-        RETURN expr SEMI
+        (RETURN expr SEMI)?
         RCURLY # Method
     | (PUBLIC {$isPublic=true;})?
         STATIC VOID name=ID // Adding the name annotation was necessary to pass the test
