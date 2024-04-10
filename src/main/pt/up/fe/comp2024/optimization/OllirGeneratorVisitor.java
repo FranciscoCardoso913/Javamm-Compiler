@@ -25,12 +25,11 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private final String NL = "\n";
     private final String L_BRACKET = " {\n";
     private final String R_BRACKET = "}\n";
-
-
     private final SymbolTable table;
 
     private final OllirExprGeneratorVisitor exprVisitor;
-
+    // TODO: Add tabs to ollir code
+    private int tabs = 0;
     public OllirGeneratorVisitor(SymbolTable table) {
         this.table = table;
         exprVisitor = new OllirExprGeneratorVisitor(table);
@@ -53,23 +52,19 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
     private String visitAssignStmt(JmmNode node, Void unused) {
 
-        var lhs = exprVisitor.visit(node.getJmmChild(0));
-        var rhs = exprVisitor.visit(node.getJmmChild(1));
+        var rhs = exprVisitor.visit(node.getJmmChild(0));
 
         StringBuilder code = new StringBuilder();
 
         // code to compute the children
-        code.append(lhs.getComputation());
         code.append(rhs.getComputation());
 
         // code to compute self
         // statement has type of lhs
-        Type thisType = TypeUtils.getExprType(node.getJmmChild(0), table);
-        // TODO: Check this
-        String typeString = OptUtils.toOllirType(thisType);
+        String typeString = OptUtils.toOllirType(OptUtils.getAssignType(node, table));
 
-
-        code.append(lhs.getCode());
+        code.append(node.get("name"));
+        code.append(typeString);
         code.append(SPACE);
 
         code.append(ASSIGN);
@@ -123,7 +118,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
 
     private String visitMethodDecl(JmmNode node, Void unused) {
-
         StringBuilder code = new StringBuilder(".method ");
 
         boolean isPublic = NodeUtils.getBooleanAttribute(node, "isPublic", "false");
@@ -148,8 +142,10 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         var afterParam = 1 + table.getParameters(name).size();
         for (int i = afterParam; i < node.getNumChildren(); i++) {
             var child = node.getJmmChild(i);
-            var childCode = visit(child);
-            code.append(childCode);
+            if (child.isInstance(ASSIGN_STMT)) {
+                var childCode = visit(child);
+                code.append(childCode);
+            }
         }
 
         code.append(R_BRACKET);
