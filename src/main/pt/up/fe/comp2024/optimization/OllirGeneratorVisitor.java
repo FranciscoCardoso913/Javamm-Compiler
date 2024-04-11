@@ -94,7 +94,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         code.append(expr.getComputation());
         code.append("ret");
-        // TODO: Change this line to allow return of arrays
         code.append(OptUtils.toOllirType(retType));
         code.append(SPACE);
 
@@ -142,7 +141,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         var afterParam = 1 + table.getParameters(name).size();
         for (int i = afterParam; i < node.getNumChildren(); i++) {
             var child = node.getJmmChild(i);
-            if (child.isInstance(ASSIGN_STMT)) {
+            if (!child.isInstance(VAR_DECL)) {
                 var childCode = visit(child);
                 code.append(childCode);
             }

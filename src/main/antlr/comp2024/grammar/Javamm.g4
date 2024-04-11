@@ -134,7 +134,7 @@ expr
     // new
     | NEW INT LSQUARE expr RSQUARE # NewArrayExpr
     | NEW name = ID LPAREN RPAREN # NewObjExpr
-    | LSQUARE (expr (COMMA expr)*)? RSQUARE # InitArrayExpr // qual precedencia?
+    | LSQUARE (expr (COMMA expr)*)? RSQUARE # InitArrayExpr
     // Binary
     | expr op= (MUL | DIV) expr # BinaryExpr
     | expr op= (ADD | SUB) expr # BinaryExpr
