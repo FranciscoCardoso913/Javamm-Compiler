@@ -89,9 +89,6 @@ public class JasminGenerator {
             code.append(generators.apply(field));
         }
 
-        // generate a single constructor method
-        // TODO: Hardcoded to Object, needs to be expanded
-        // may use extended class
         StringBuilder defaultConstructor = new StringBuilder("""
                 ;default constructor
                 .method public <init>()V
@@ -224,10 +221,26 @@ public class JasminGenerator {
         switch (callInstruction.getInvocationType()) {
             case invokespecial -> {
                 // might have more than one operand?
-                code.append(generators.apply(callInstruction.getOperands().get(0))).append(NL);
-                code.append("invokespecial ").append(currentMethod.getOllirClass().getClassName()).append("/<init>()V").append(NL);
+                Type typeInstance = callInstruction.getCaller().getType();
+                if (typeInstance instanceof ClassType) {
+                    ClassType classTypeInstance = (ClassType) typeInstance;
+                    String name = classTypeInstance.getName();
+                    code.append(generators.apply(callInstruction.getOperands().get(0)));
+                    code.append("invokespecial ").append(name).append("/<init>()V").append(NL);
+                } else {
+                    throw new NotImplementedException(typeInstance.getClass());
+                }
             }
-            case NEW -> code.append("new ").append(currentMethod.getOllirClass().getClassName()).append(NL);
+            case NEW -> {
+                Type typeInstance = callInstruction.getCaller().getType();
+                if (typeInstance instanceof ClassType) {
+                    ClassType classTypeInstance = (ClassType) typeInstance;
+                    String name = classTypeInstance.getName();
+                    code.append("new ").append(name).append(NL);
+                } else {
+                    throw new NotImplementedException(typeInstance.getClass());
+                }
+            }
             default -> throw new NotImplementedException(callInstruction.getInvocationType());
         }
         return code.toString();
