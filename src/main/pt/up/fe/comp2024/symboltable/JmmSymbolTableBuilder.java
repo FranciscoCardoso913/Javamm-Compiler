@@ -90,9 +90,11 @@ public class JmmSymbolTableBuilder extends AJmmVisitor<Void, Void> {
     }
 
     private Type getType(JmmNode typeNode) {
-        boolean isArray = Boolean.parseBoolean(typeNode.get("isArray")) || Boolean.parseBoolean(typeNode.get("isEllipse"));
-
-        return new Type(typeNode.get("name"), isArray);
+        boolean isArray = Boolean.parseBoolean(typeNode.get("isArray")) ;
+        boolean isEllipse = Boolean.parseBoolean(typeNode.get("isEllipse"));
+        Type type= new Type(typeNode.get("name"), isArray);
+        type.putObject("isEllipse", isEllipse);
+        return type;
     }
 
     private Void dealWithMethod(JmmNode jmmNode, Void v) {

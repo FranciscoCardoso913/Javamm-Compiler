@@ -38,8 +38,9 @@ public class Launcher {
         // Semantic Analysis stage
         JmmAnalysisImpl sema = new JmmAnalysisImpl();
         JmmSemanticsResult semanticsResult = sema.semanticAnalysis(parserResult);
+        System.out.println(parserResult.getRootNode().toTree());
         TestUtils.noErrors(semanticsResult.getReports());
-        System.out.println(semanticsResult.getSymbolTable().getLocalVariables("main"));
+        //System.out.println(semanticsResult.getSymbolTable().getLocalVariables("main"));
 
 /*
         // Optimization stage

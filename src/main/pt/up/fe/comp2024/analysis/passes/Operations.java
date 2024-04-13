@@ -16,7 +16,7 @@ import static pt.up.fe.comp2024.ast.TypeUtils.getExprType;
 public class Operations extends AnalysisVisitor {
     private String currentMethod = "main";
 
-    Pattern array_pattern = Pattern.compile("([a-zA-Z0-9]+)(_array)?");
+    Pattern array_pattern = Pattern.compile("([a-zA-Z0-9]+)(_array)?(_ellipse)?");
 
     @Override
     protected void buildVisitor() {
@@ -104,12 +104,17 @@ public class Operations extends AnalysisVisitor {
     }
 
     private Void visitArrayExpression(JmmNode node, SymbolTable table) {
+        System.out.println("boas1");
         var left = node.getChild(0);
         var right = node.getChild(1);
         visit(left, table);
         visit(right, table);
         Matcher matcher = array_pattern.matcher(left.get("node_type"));
-        if (!(matcher.find() && matcher.group(2) != null)) {
+        System.out.println("boas2");
+
+        if (!(matcher.find() && (matcher.group(2) != null || matcher.group(3) !=null))) {
+
+            System.out.println("boas3");
             String message = String.format(
                     "Array expected, got %s instead",
                     left.get("node_type")
@@ -124,6 +129,7 @@ public class Operations extends AnalysisVisitor {
             return null;
         }
         if (!right.get("node_type").equals("int")) {
+            System.out.println("boas4");
             String message = String.format(
                     "Array index must be of type int, got %s instead",
                     right.get("node_type")
@@ -137,6 +143,7 @@ public class Operations extends AnalysisVisitor {
             );
             return null;
         }
+        System.out.println("boas5");
         node.put("node_type", matcher.group(1));
         return null;
     }
@@ -184,6 +191,10 @@ public class Operations extends AnalysisVisitor {
             String type = matcher.group(1);
 
             boolean isArray = matcher.group(2) != null;
+            if (return_value.get("node_type").equals("unknown")){
+                node.put("node_type",method_type);
+                return null;
+            }
             if (type.equals(method_type) && Boolean.parseBoolean(node.getChild(0).get("isArray")) == isArray) {
                 node.put("node_type", return_value.get("node_type"));
                 return null;
@@ -302,9 +313,8 @@ public class Operations extends AnalysisVisitor {
         //Check if method belongs to object
         var object = node.getChild(0);
         visit(object, table);
-        System.out.println(table.getSuper());
         if(table.getImports().contains(object.get("node_type"))){
-            node.put("node_type", "void");
+            node.put("node_type", "unknown");
             return null;
         }
         if (object.get("node_type").equals(table.getClassName())) {
@@ -314,7 +324,9 @@ public class Operations extends AnalysisVisitor {
             }
             if (table.getMethods().contains(node.get("name"))) {
                 var method_params = table.getParameters(node.get("name"));
-                if (method_params.size() != (node.getChildren().size() - 1)) {
+                /*if (method_params.size() != (node.getChildren().size() - 1)) {
+                    System.out.println(method_params);
+                    node.put("node_type", "undefined");
                     String message = String.format(
                             "Expected to receive %s parameter, got %s instead.",
                             method_params.size(),
@@ -328,9 +340,11 @@ public class Operations extends AnalysisVisitor {
                             null)
                     );
                     return null;
-                }
-                int i = 1;
-                for (var method_param : method_params) {
+                }*/
+
+                int method_param_idx= 0;
+                for (int i =1; i< node.getChildren().size();i++) {
+                    var method_param = method_params.get(method_param_idx);
                     String param_type = method_param.getType().getName() + (method_param.getType().isArray() ? "_array" : "");
                     var param = node.getChild(i);
                     visit(param, table);
@@ -350,7 +364,7 @@ public class Operations extends AnalysisVisitor {
                         );
                         return null;
                     }
-                    i++;
+                    if(!method_param.getType().getObject("isEllipse", Boolean.class)) method_param_idx++;
                 }
                 var return_type = table.getReturnType(node.get("name"));
                 node.put("node_type", return_type.getName() + (return_type.isArray() ? "_array" : ""));
@@ -373,7 +387,11 @@ public class Operations extends AnalysisVisitor {
         var variable_type = NodeUtils.getLocalVariableType(node.get("name"), currentMethod, table);
         var expr = node.getChild(0);
         visit( expr, table);
-        if( variable_type.equals(expr.get("node_type")))
+        // TODO ors instead of if-else
+        if(expr.get("node_type").equals("unknown") ){
+            node.put("node_type", variable_type);
+        }
+        else if( variable_type.equals(expr.get("node_type")))
             node.put("node_type", variable_type);
         else if(expr.get("node_type").equals(table.getClassName()) && variable_type.equals(table.getSuper())){
             node.put("node_type", variable_type);
