@@ -302,7 +302,16 @@ public class Operations extends AnalysisVisitor {
         //Check if method belongs to object
         var object = node.getChild(0);
         visit(object, table);
+        System.out.println(table.getSuper());
+        if(table.getImports().contains(object.get("node_type"))){
+            node.put("node_type", "void");
+            return null;
+        }
         if (object.get("node_type").equals(table.getClassName())) {
+            if(table.getSuper() != null){
+                node.put("node_type", "void");
+                return null;
+            }
             if (table.getMethods().contains(node.get("name"))) {
                 var method_params = table.getParameters(node.get("name"));
                 if (method_params.size() != (node.getChildren().size() - 1)) {
@@ -366,6 +375,12 @@ public class Operations extends AnalysisVisitor {
         visit( expr, table);
         if( variable_type.equals(expr.get("node_type")))
             node.put("node_type", variable_type);
+        else if(expr.get("node_type").equals(table.getClassName()) && variable_type.equals(table.getSuper())){
+            node.put("node_type", variable_type);
+        }
+        else if (table.getImports().contains(variable_type) && table.getImports().contains(expr.get("node_type"))){
+            node.put("node_type", variable_type);
+        }
         else {
             String message = String.format(
                     "Variable of type %s cannot be assign a value of type %s.",
