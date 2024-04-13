@@ -24,7 +24,11 @@ public enum Kind {
 
     PARENTH_EXPR,
 
-    ARRAY_EXPR;
+    ARRAY_EXPR,
+
+    METHOD,
+
+    METHOD_EXPR;
 
 
 

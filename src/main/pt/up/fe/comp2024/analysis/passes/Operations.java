@@ -14,11 +14,12 @@ import java.util.regex.Pattern;
 import static pt.up.fe.comp2024.ast.TypeUtils.getExprType;
 
 public class Operations extends AnalysisVisitor {
-    private String currentMethod = "foo";
+    private String currentMethod = "main";
 
     Pattern array_pattern = Pattern.compile("([a-zA-Z0-9]+)(_array)?");
     @Override
     protected void buildVisitor() {
+        addVisit(Kind.METHOD, this::visitMethod);
         addVisit(Kind.LENGTH_ATTR_EXPR, this::visitLengthAttributeExpression);
         addVisit(Kind.PARENTH_EXPR, this::visitParenthExpression);
         addVisit(Kind.BINARY_EXPR, this::visitBinaryExpression);
@@ -140,7 +141,6 @@ public class Operations extends AnalysisVisitor {
             return null;
         }
         if(!right.get("node_type").equals("int")){
-            System.out.println(right.get("node_type"));
             String message = String.format(
                     "Array index must be of type int, got %s instead",
                     right.get("node_type")
@@ -178,6 +178,45 @@ public class Operations extends AnalysisVisitor {
         }
 
         node.put("node_type","int");
+        return null;
+    }
+    private Void visitMethod(JmmNode node, SymbolTable table){
+        currentMethod = node.get("name");
+        var return_statements = node.getChildren(Kind.RETURN_STMT);
+        var method_type = node.getChild(0).get("name");
+        String message = "";
+        if (return_statements.isEmpty()){
+            if (method_type.equals("void")){
+                return null;
+            }else{
+                 message = "Method of non type void should always return";
+            }
+        } else {
+            var return_statement = return_statements.get(0);
+            var return_value = return_statement.getChild(0);
+            visit(return_value,table);
+            Matcher matcher = array_pattern.matcher(return_value.get("node_type"));
+            matcher.find();
+            String type = matcher.group(1);
+
+            boolean isArray = matcher.group(2) != null;
+            if(type.equals(method_type) && Boolean.parseBoolean(node.getChild(0).get("isArray")) == isArray){
+                node.put("node_type",return_value.get("node_type"));
+                return null;
+            }else {
+                message = String.format(
+                        "Return value should be the same type as method type, got %s instead",
+                        return_value.get("node_type")
+                );
+            }
+        }
+        addReport(Report.newError(
+                Stage.SEMANTIC,
+                NodeUtils.getLine(node),
+                NodeUtils.getColumn(node),
+                message,
+                null)
+        );
         return null;
     }
 
