@@ -34,7 +34,9 @@ public enum Kind {
 
     NEW_ARRAY_EXPR,
 
-    INIT_ARRAY_EXPR;
+    INIT_ARRAY_EXPR,
+
+    NEW_OBJ_EXPR;
 
 
 

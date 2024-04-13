@@ -19,6 +19,7 @@ public class Operations extends AnalysisVisitor {
     Pattern array_pattern = Pattern.compile("([a-zA-Z0-9]+)(_array)?");
     @Override
     protected void buildVisitor() {
+        addVisit(Kind.NEW_OBJ_EXPR, this::visitNewObjectExpression);
         addVisit(Kind.INIT_ARRAY_EXPR, this::visitInitArrayExpression);
         addVisit(Kind.NEW_ARRAY_EXPR, this::visitNewArrayExpression);
         addVisit(Kind.METHOD, this::visitMethod);
@@ -282,6 +283,32 @@ public class Operations extends AnalysisVisitor {
             }
         }
         node.put("node_type",type + "_array");
+        return null;
+    }
+    public Void visitNewObjectExpression(JmmNode node, SymbolTable table){
+        // Verify if the class exists
+        boolean isImported = false;
+        for (var imported_path : table.getImports()){
+            String[] parts = imported_path.split("\\.");
+            String className = parts[parts.length - 1];
+            if ( className.equals(node.get("name"))){
+                isImported = true;
+                break;
+            }
+        }
+        if( node.get("name").equals(table.getClassName()) || isImported){
+            node.put("node_type",node.get("name"));
+            return null;
+        }
+
+        addReport(Report.newError(
+                Stage.SEMANTIC,
+                NodeUtils.getLine(node),
+                NodeUtils.getColumn(node),
+                node.get("name") + "class is undeclared.",
+                null)
+        );
+
         return null;
     }
 
