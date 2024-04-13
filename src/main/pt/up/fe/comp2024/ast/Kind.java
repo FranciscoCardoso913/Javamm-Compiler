@@ -20,7 +20,12 @@ public enum Kind {
     INTEGER_LITERAL,
     LENGTH_ATTR_EXPR,
     VAR_REF_EXPR,
-    BOOL_LITERAL;
+    BOOL_LITERAL,
+
+    PARENTH_EXPR,
+
+    ARRAY_EXPR;
+
 
 
     private static final Set<Kind> STATEMENTS = Set.of(ASSIGN_STMT, RETURN_STMT);
