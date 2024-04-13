@@ -19,6 +19,8 @@ public class Operations extends AnalysisVisitor {
     Pattern array_pattern = Pattern.compile("([a-zA-Z0-9]+)(_array)?");
     @Override
     protected void buildVisitor() {
+        addVisit(Kind.METHOD_EXPR, this::visitMethodExpr);
+        addVisit(Kind.THIS, this::visitThis);
         addVisit(Kind.NEW_OBJ_EXPR, this::visitNewObjectExpression);
         addVisit(Kind.INIT_ARRAY_EXPR, this::visitInitArrayExpression);
         addVisit(Kind.NEW_ARRAY_EXPR, this::visitNewArrayExpression);
@@ -285,7 +287,7 @@ public class Operations extends AnalysisVisitor {
         node.put("node_type",type + "_array");
         return null;
     }
-    public Void visitNewObjectExpression(JmmNode node, SymbolTable table){
+    private Void visitNewObjectExpression(JmmNode node, SymbolTable table){
         // Verify if the class exists
         boolean isImported = false;
         for (var imported_path : table.getImports()){
@@ -311,5 +313,73 @@ public class Operations extends AnalysisVisitor {
 
         return null;
     }
+
+    public Void visitThis(JmmNode node, SymbolTable table){
+        node.put("node_type", table.getClassName());
+        return null;
+    }
+    private Void visitMethodExpr(JmmNode node, SymbolTable table){
+        //Check if method belongs to object
+        var object = node.getChild(0);
+        visit(object, table);
+        if(object.get("node_type").equals(table.getClassName())){
+            if(table.getMethods().contains(node.get("name"))){
+                var method_params =  table.getParameters(node.get("name"));
+                if(method_params.size() != (node.getChildren().size() -1)){
+                    String message = String.format(
+                            "Expected to receive %s parameter, got %s instead.",
+                            method_params.size(),
+                            (node.getChildren().size() -1)
+                    );
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            NodeUtils.getLine(node),
+                            NodeUtils.getColumn(node),
+                            message,
+                            null)
+                    );
+                    return  null;
+                }
+                int i = 1;
+                for (var method_param : method_params){
+                    String param_type = method_param.getType().getName() + (method_param.getType().isArray()? "_array":"");
+                    var param = node.getChild(i);
+                    visit(param, table);
+                    if(!(param.get("node_type").equals(param_type))){
+                        String message = String.format(
+                                "Expected parameter %s to be type %s, got %s instead.",
+                                method_param.getName(),
+                                param_type,
+                                param.get("node_type")
+                        );
+                        addReport(Report.newError(
+                                Stage.SEMANTIC,
+                                NodeUtils.getLine(node),
+                                NodeUtils.getColumn(node),
+                                message,
+                                null)
+                        );
+                        return  null;
+                    }
+                    i++;
+                }
+                var return_type = table.getReturnType(node.get("name"));
+                node.put("node_type", return_type.getName() + (return_type.isArray()?"_array":""));
+                return null;
+            }
+            String message = String.format("%s does not contain method %s.",object.get("node_type"), node.get("name") );
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(node),
+                    NodeUtils.getColumn(node),
+                    message,
+                    null)
+            );
+
+        }
+        return null;
+    }
+
+
 
 }
