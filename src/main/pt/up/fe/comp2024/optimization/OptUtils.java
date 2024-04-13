@@ -5,6 +5,7 @@ import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp2024.ast.Kind;
 import pt.up.fe.comp2024.ast.NodeUtils;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 
@@ -38,8 +39,8 @@ public class OptUtils {
     }
 
     public static String toOllirType(JmmNode typeNode) {
-        TYPE.checkOrThrow(typeNode);
-
+        if (!Kind.fromString(typeNode.getKind()).isType())
+            throw new RuntimeException("Node '" + typeNode + "' is not a type");
         String typeName = typeNode.get("name");
 
         return toOllirType(typeName, NodeUtils.getBooleanAttribute(typeNode, "isArray", "false"));

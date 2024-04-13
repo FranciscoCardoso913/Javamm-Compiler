@@ -87,7 +87,6 @@ type locals[ boolean isArray= false, boolean isEllipse = false]
     | name = VOID # TypeVoid
     | name = ID (LSQUARE RSQUARE {$isArray = true;})? # TypeVariable
     | name = ID ( ELLIPSIS {$isEllipse = true;})? # TypeVariable
-
     ;
 
 methodDecl locals[boolean isPublic=false, boolean isStatic = false, boolean isMain = false]

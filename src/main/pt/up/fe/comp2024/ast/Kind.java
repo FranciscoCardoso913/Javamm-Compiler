@@ -13,6 +13,9 @@ public enum Kind {
     VAR_DECL,
     TYPE,
     TYPE_INT,
+    TYPE_BOOL,
+    TYPE_VOID,
+    TYPE_VARIABLE,
     METHOD_DECL,
     PARAM,
     ASSIGN_STMT,
@@ -53,7 +56,7 @@ public enum Kind {
 
     private static final Set<Kind> STATEMENTS = Set.of(ASSIGN_STMT, RETURN_STMT);
     private static final Set<Kind> EXPRESSIONS = Set.of(BINARY_EXPR, INTEGER_LITERAL, VAR_REF_EXPR, LENGTH_ATTR_EXPR);
-
+    private static final Set<Kind> TYPES = Set.of(TYPE_INT, TYPE_BOOL, TYPE_VOID, TYPE_VARIABLE);
     private final String name;
 
     private Kind(String name) {
@@ -95,6 +98,10 @@ public enum Kind {
      */
     public boolean isExpr() {
         return EXPRESSIONS.contains(this);
+    }
+
+    public boolean isType() {
+        return TYPES.contains(this);
     }
 
     /**
