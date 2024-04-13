@@ -77,17 +77,17 @@ classDecl
 
 
 varDecl
-    : type name= ID SEMI
+    : type name=ID SEMI
     ;
 
 type locals[ boolean isArray= false, boolean isEllipse = false]
-    : name = INT (LSQUARE RSQUARE {$isArray = true;})  # TypeIntArray
-    | name = INT ( ELLIPSIS {$isEllipse = true;}) # TypeIntArray
-    | name = INT # TypeInt
-    | name = BOOL # TypeBool
-    | name = STRING # TypeString
-    | name = VOID # TypeVoid
-    | name = ID # TypeVariable
+    : name = INT (LSQUARE RSQUARE {$isArray = true;})
+    | name = INT ( ELLIPSIS {$isEllipse = true;})
+    | name = INT
+    | name = BOOL
+    | name = STRING
+    | name = VOID
+    | name = ID
     ;
 
 methodDecl locals[boolean isPublic=false]
@@ -96,7 +96,7 @@ methodDecl locals[boolean isPublic=false]
         LPAREN (param (COMMA param)*)? RPAREN
         LCURLY
         varDecl* stmt*
-        RETURN expr SEMI
+        (RETURN expr SEMI)?
         RCURLY # Method
     | (PUBLIC {$isPublic=true;})?
         STATIC VOID name=ID // Adding the name annotation was necessary to pass the test
@@ -128,13 +128,13 @@ expr
     | expr LSQUARE expr RSQUARE # ArrayExpr
     // members and methods access
     | expr DOT name=ID # LengthAttrExpr
-    | expr DOT name = ID LPAREN (expr (COMMA expr)*)? RPAREN # MethodExpr
+    | expr DOT name=ID LPAREN (expr (COMMA expr)*)? RPAREN # MethodExpr
     // unary
     | NOT expr # NegExpr
     // new
     | NEW INT LSQUARE expr RSQUARE # NewArrayExpr
     | NEW name = ID LPAREN RPAREN # NewObjExpr
-    | LSQUARE (expr (COMMA expr)*)? RSQUARE # InitArrayExpr // qual precedencia?
+    | LSQUARE (expr (COMMA expr)*)? RSQUARE # InitArrayExpr
     // Binary
     | expr op= (MUL | DIV) expr # BinaryExpr
     | expr op= (ADD | SUB) expr # BinaryExpr
