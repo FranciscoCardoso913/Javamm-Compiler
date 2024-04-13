@@ -19,6 +19,7 @@ public class Operations extends AnalysisVisitor {
     Pattern array_pattern = Pattern.compile("([a-zA-Z0-9]+)(_array)?");
     @Override
     protected void buildVisitor() {
+        addVisit(Kind.INIT_ARRAY_EXPR, this::visitInitArrayExpression);
         addVisit(Kind.NEW_ARRAY_EXPR, this::visitNewArrayExpression);
         addVisit(Kind.METHOD, this::visitMethod);
         addVisit(Kind.LENGTH_ATTR_EXPR, this::visitLengthAttributeExpression);
@@ -261,6 +262,26 @@ public class Operations extends AnalysisVisitor {
                 message,
                 null)
         );
+        return null;
+    }
+
+    private Void visitInitArrayExpression(JmmNode node, SymbolTable table){
+        visit(node.getChild(0), table);
+        var type = node.getChild(0).get("node_type");
+        for (var element : node.getChildren()){
+            visit(element,table);
+            if (!element.get("node_type").equals(type)){
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        NodeUtils.getLine(node),
+                        NodeUtils.getColumn(node),
+                        "Array can only be composed by elements of one type, multiple found.",
+                        null)
+                );
+                return null;
+            }
+        }
+        node.put("node_type",type + "_array");
         return null;
     }
 

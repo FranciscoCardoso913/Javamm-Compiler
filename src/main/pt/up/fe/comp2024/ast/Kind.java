@@ -32,7 +32,9 @@ public enum Kind {
 
     NEG_EXPR,
 
-    NEW_ARRAY_EXPR;
+    NEW_ARRAY_EXPR,
+
+    INIT_ARRAY_EXPR;
 
 
 
