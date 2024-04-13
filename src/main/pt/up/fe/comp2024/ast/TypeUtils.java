@@ -42,7 +42,7 @@ public class TypeUtils {
 
         return switch (operator) {
             case "+", "*","-", "/" -> new Type(INT_TYPE_NAME, false);
-            case "&&", "<" -> new Type(BOOL_TYPE_NAME, false);
+            case "&&", "<", "!" -> new Type(BOOL_TYPE_NAME, false);
             default ->
                     throw new RuntimeException("Unknown operator '" + operator + "' of expression '" + binaryExpr + "'");
         };

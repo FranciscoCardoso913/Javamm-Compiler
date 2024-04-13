@@ -28,7 +28,9 @@ public enum Kind {
 
     METHOD,
 
-    METHOD_EXPR;
+    METHOD_EXPR,
+
+    NEG_EXPR;
 
 
 

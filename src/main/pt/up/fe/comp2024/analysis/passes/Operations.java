@@ -27,6 +27,7 @@ public class Operations extends AnalysisVisitor {
         addVisit(Kind.INTEGER_LITERAL, this::visitIntegerLiteral );
         addVisit(Kind.BOOL_LITERAL, this::visitBooleanLiteral );
         addVisit(Kind.VAR_REF_EXPR, this::visitVarRef);
+        addVisit(Kind.NEG_EXPR, this::visitNegationExpression);
     }
     private Void visitBinaryExpression(JmmNode node, SymbolTable table){
         String node_type = getExprType(node, table).getName();
@@ -217,6 +218,27 @@ public class Operations extends AnalysisVisitor {
                 message,
                 null)
         );
+        return null;
+    }
+
+    private Void visitNegationExpression(JmmNode node, SymbolTable table){
+        var expr =node.getChild(0);
+        visit(expr, table);
+        if( expr.get("node_type").equals("boolean")){
+            node.put("node_type", "boolean");
+        } else {
+            String message = String.format(
+                    "Negation requires operand of type boolean, got %s instead.",
+                    expr.get("node_type")
+            );
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(node),
+                    NodeUtils.getColumn(node),
+                    message,
+                    null)
+            );
+        }
         return null;
     }
 
