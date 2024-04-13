@@ -20,6 +20,7 @@ public class Operations extends AnalysisVisitor {
 
     @Override
     protected void buildVisitor() {
+        addVisit(Kind.WHILE_STMT, this::visitWhileStatement);
         addVisit(Kind.IF_STMT, this::visitIfStatement);
         addVisit(Kind.ASSIGN_STMT, this::visitAssignStatement);
         addVisit(Kind.METHOD_EXPR, this::visitMethodExpr);
@@ -423,6 +424,26 @@ public class Operations extends AnalysisVisitor {
         if(!node.getChild(0).get("node_type").equals("boolean")){
             String message = String.format(
                     "If statement should receive type boolean, got %s instead",
+                    node.getChild(0).get("node_type")
+            );
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(node),
+                    NodeUtils.getColumn(node),
+                    message,
+                    null)
+            );
+        }
+
+
+        return null;
+    }
+
+    private Void visitWhileStatement(JmmNode node, SymbolTable table) {
+        visit(node.getChild(0), table);
+        if(!node.getChild(0).get("node_type").equals("boolean")){
+            String message = String.format(
+                    "While statement should receive type boolean, got %s instead",
                     node.getChild(0).get("node_type")
             );
             addReport(Report.newError(
