@@ -8,7 +8,8 @@ public class JasminBackendImpl implements JasminBackend {
 
     @Override
     public JasminResult toJasmin(OllirResult ollirResult) {
-
+        // converts an OLLIR ClassUnit
+        // to a String representing Jasmin bytecode
         var jasminGenerator = new JasminGenerator(ollirResult);
         var jasminCode = jasminGenerator.build();
 
