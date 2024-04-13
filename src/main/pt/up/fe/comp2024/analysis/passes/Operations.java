@@ -19,7 +19,7 @@ public class Operations extends AnalysisVisitor {
     Pattern array_pattern = Pattern.compile("([a-zA-Z0-9]+)(_array)?");
     @Override
     protected void buildVisitor() {
-        //addVisit(Kind.LENGTH_ATTR_EXPR, this::visitLengthAttributeExpression);
+        addVisit(Kind.LENGTH_ATTR_EXPR, this::visitLengthAttributeExpression);
         addVisit(Kind.PARENTH_EXPR, this::visitParenthExpression);
         addVisit(Kind.BINARY_EXPR, this::visitBinaryExpression);
         addVisit(Kind.ARRAY_EXPR, this::visitArrayExpression);
@@ -158,12 +158,13 @@ public class Operations extends AnalysisVisitor {
         return null;
     }
 
-    /*private Void visitLengthAttributeExpression(JmmNode node, SymbolTable table){
+    private Void visitLengthAttributeExpression(JmmNode node, SymbolTable table){
         var variable = node.getChild(0);
         visit(variable,table);
-        if(!variable.get("node_type").equals("int")){
+        Matcher matcher = array_pattern.matcher(variable.get("node_type"));
+        if(!(matcher.find() && matcher.group(2) != null)){
             String message = String.format(
-                    "Array index must be of type int, got %s instead",
+                    "Length attribute requires array, got %s instead",
                     variable.get("node_type")
             );
             addReport(Report.newError(
@@ -176,8 +177,8 @@ public class Operations extends AnalysisVisitor {
             return null;
         }
 
-        //node.put("node_type",left.get("node_type"));
+        node.put("node_type","int");
         return null;
-    }*/
+    }
 
 }
