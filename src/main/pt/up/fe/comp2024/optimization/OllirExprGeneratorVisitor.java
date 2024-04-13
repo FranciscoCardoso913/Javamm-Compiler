@@ -32,6 +32,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         addVisit(VAR_REF_EXPR, this::visitVarRef);
         addVisit(BINARY_EXPR, this::visitBinExpr);
         addVisit(INTEGER_LITERAL, this::visitInteger);
+        addVisit(METHOD_EXPR, this::visitMethodExpr);
 
         setDefaultVisit(this::defaultVisit);
     }
@@ -74,6 +75,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
 
     private OllirExprResult visitVarRef(JmmNode node, Void unused) {
+        // TODO: Change this whole method when the AST is annotated
         StringBuilder code = new StringBuilder();
         Optional<JmmNode> method = node.getAncestor(METHOD_DECL);
         Optional<JmmNode> returnStmt = node.getAncestor(RETURN_STMT);
@@ -94,8 +96,31 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         }
 
         Type type = TypeUtils.getExprType(node, table);
+
+        // Variable is an import
+        if (type == null)
+            return OllirExprResult.EMPTY;
+
         String ollirType = OptUtils.toOllirType(type);
         code.append(id).append(ollirType);
+
+        return new OllirExprResult(code.toString());
+    }
+
+    private OllirExprResult visitMethodExpr(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+
+        code.append(OptUtils.getOllirMethod(node));
+
+        code.append(", ").append("\"").append(node.get("name")).append("\"");
+
+        for (int i = 1; i < node.getChildren().size(); i++) {
+            JmmNode param = node.getChild(i);
+            OllirExprResult res = visit(param);
+            code.append(", ").append(res.getCode());
+        }
+
+        code.append(").V").append(END_STMT);
 
         return new OllirExprResult(code.toString());
     }

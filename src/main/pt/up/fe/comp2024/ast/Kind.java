@@ -22,6 +22,7 @@ public enum Kind {
     LENGTH_ATTR_EXPR,
     VAR_REF_EXPR,
     METHOD_EXPR,
+    EXPR_STMT,
     THIS;
 
 
