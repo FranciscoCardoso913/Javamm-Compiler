@@ -128,7 +128,7 @@ expr
     | expr LSQUARE expr RSQUARE # ArrayExpr
     // members and methods access
     | expr DOT name=ID # LengthAttrExpr
-    | expr DOT name = ID LPAREN (expr (COMMA expr)*)? RPAREN # MethodExpr
+    | expr DOT name=ID LPAREN (expr (COMMA expr)*)? RPAREN # MethodExpr
     // unary
     | NOT expr # NegExpr
     // new

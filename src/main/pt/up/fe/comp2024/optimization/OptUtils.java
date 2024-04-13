@@ -12,11 +12,14 @@ import java.util.List;
 import java.util.MissingFormatArgumentException;
 import java.util.Optional;
 
-import static pt.up.fe.comp2024.ast.Kind.METHOD_DECL;
-import static pt.up.fe.comp2024.ast.Kind.TYPE;
+import static pt.up.fe.comp2024.ast.Kind.*;
 
 public class OptUtils {
     private static int tempNumber = -1;
+
+    private final static String VIRTUAL_FUNC = "invokevirtual";
+    private final static String STATIC_FUNC = "invokestatic";
+    private final static String SPECIAL_FUNC = "invokespecial";
 
     public static String getTemp() {
 
@@ -57,6 +60,18 @@ public class OptUtils {
         };
 
         return type;
+    }
+
+    public static String getOllirMethod(JmmNode node) {
+        StringBuilder code = new StringBuilder();
+
+        if (node.isInstance(THIS)) {
+            code.append(VIRTUAL_FUNC).append("(this");
+        } else {
+            code.append(STATIC_FUNC).append("(").append(node.getChild(0).get("name"));
+        }
+
+        return code.toString();
     }
 
     // TODO: Remove this when tree is annotated

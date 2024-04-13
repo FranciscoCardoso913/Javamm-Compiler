@@ -45,13 +45,15 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(PARAM, this::visitParam);
         addVisit(RETURN_STMT, this::visitReturn);
         addVisit(ASSIGN_STMT, this::visitAssignStmt);
+        addVisit(METHOD_EXPR, this::visitMethodExpr);
 
         setDefaultVisit(this::defaultVisit);
     }
 
 
     private String visitAssignStmt(JmmNode node, Void unused) {
-
+        // TODO: assignments with lhs equal to a class field need to use putfield(), implement here
+        // TODO: assignments with rhs with this.field need to use getfield(), implement in exprVisitor
         var rhs = exprVisitor.visit(node.getJmmChild(0));
 
         StringBuilder code = new StringBuilder();
@@ -117,6 +119,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
 
     private String visitMethodDecl(JmmNode node, Void unused) {
+        // TODO: Need to change code to support constructors (add invokespecial at the end of the method)
+
         StringBuilder code = new StringBuilder(".method ");
 
         boolean isPublic = NodeUtils.getBooleanAttribute(node, "isPublic", "false");
@@ -246,6 +250,27 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         return code.toString();
     }
 
+    private String visitMethodExpr(JmmNode node, Void unused) {
+        // TODO: get type of ollir method: virtual or static
+        // TODO: get method parameters in ollir
+        // TODO: construct code
+        StringBuilder code = new StringBuilder();
+
+        code.append(OptUtils.getOllirMethod(node));
+
+        code.append(", ").append("\"").append(node.get("name")).append("\"");
+
+        for (int i = 1; i < node.getChildren().size(); i++) {
+            JmmNode param = node.getChild(i);
+            OllirExprResult res = exprVisitor.visit(param);
+            code.append(", ").append(res.getCode());
+        }
+
+        code.append(").V;").append(NL);
+
+        return code.toString();
+    }
+
     /**
      * Default visitor. Visits every child node and return an empty string.
      *
@@ -254,10 +279,12 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
      * @return
      */
     private String defaultVisit(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+
         for (var child : node.getChildren()) {
-            visit(child);
+            code.append(visit(child));
         }
 
-        return "";
+        return code.toString();
     }
 }

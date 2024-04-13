@@ -1,8 +1,12 @@
 package pt.up.fe.comp2024.ast;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+
+import static pt.up.fe.comp2024.ast.Kind.METHOD_DECL;
+import static pt.up.fe.comp2024.ast.Kind.THIS;
 
 public class TypeUtils {
 
@@ -28,6 +32,7 @@ public class TypeUtils {
             case BINARY_EXPR -> getBinExprType(expr);
             case VAR_REF_EXPR -> getVarExprType(expr, table);
             case INTEGER_LITERAL -> new Type(INT_TYPE_NAME, false);
+            case METHOD_EXPR -> getMethodExprType(expr, table);
             default -> throw new UnsupportedOperationException("Can't compute type for expression kind '" + kind + "'");
         };
 
@@ -46,10 +51,43 @@ public class TypeUtils {
         };
     }
 
-
+    // TODO: Remove this after having the annotated tree
     private static Type getVarExprType(JmmNode varRefExpr, SymbolTable table) {
-        // TODO: Simple implementation that needs to be expanded
-        return new Type(INT_TYPE_NAME, false);
+        if (varRefExpr.getAncestor(METHOD_DECL).isEmpty())
+            return null;
+
+        JmmNode methodNode = varRefExpr.getAncestor(METHOD_DECL).get();
+        String methodName = methodNode.get("name");
+        String varName = varRefExpr.get("name");
+
+        for (Symbol param: table.getParameters(methodName)) {
+            if (param.getName().equals(varName))
+                return param.getType();
+        }
+
+        for (Symbol local: table.getLocalVariables(methodName)) {
+            if (local.getName().equals(varName))
+                return local.getType();
+        }
+
+        for (Symbol field: table.getFields()) {
+            if (field.getName().equals(varName))
+                return field.getType();
+        }
+
+        return null;
+    }
+
+    private static Type getMethodExprType(JmmNode node, SymbolTable table) {
+        String methodName = node.get("name");
+
+        if (node.getChild(0).isInstance(THIS)) {
+            return table.getReturnType(methodName);
+        }
+        else {
+            // TODO: it is a method from an import, has to be defined by lhs of AssignStmt
+            return new Type("", false);
+        }
     }
 
 
