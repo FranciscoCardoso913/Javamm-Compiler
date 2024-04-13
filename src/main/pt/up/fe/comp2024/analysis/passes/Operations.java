@@ -19,6 +19,7 @@ public class Operations extends AnalysisVisitor {
     Pattern array_pattern = Pattern.compile("([a-zA-Z0-9]+)(_array)?");
     @Override
     protected void buildVisitor() {
+        addVisit(Kind.NEW_ARRAY_EXPR, this::visitNewArrayExpression);
         addVisit(Kind.METHOD, this::visitMethod);
         addVisit(Kind.LENGTH_ATTR_EXPR, this::visitLengthAttributeExpression);
         addVisit(Kind.PARENTH_EXPR, this::visitParenthExpression);
@@ -239,6 +240,27 @@ public class Operations extends AnalysisVisitor {
                     null)
             );
         }
+        return null;
+    }
+
+    private Void visitNewArrayExpression(JmmNode node, SymbolTable table){
+        var size = node.getChild(0);
+        visit(size,table);
+        if(size.get("node_type").equals("int")){
+            node.put("node_type", "int_array");
+            return null;
+        }
+        String message = String.format(
+                "Array size must be of type int, got %s instead",
+                size.get("node_type")
+        );
+        addReport(Report.newError(
+                Stage.SEMANTIC,
+                NodeUtils.getLine(node),
+                NodeUtils.getColumn(node),
+                message,
+                null)
+        );
         return null;
     }
 

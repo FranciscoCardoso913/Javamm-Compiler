@@ -30,7 +30,9 @@ public enum Kind {
 
     METHOD_EXPR,
 
-    NEG_EXPR;
+    NEG_EXPR,
+
+    NEW_ARRAY_EXPR;
 
 
 
