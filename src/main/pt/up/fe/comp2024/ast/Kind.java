@@ -40,7 +40,11 @@ public enum Kind {
 
     NEW_OBJ_EXPR,
 
-    THIS;
+    THIS,
+
+    IF_STMT,
+
+    WHILE_STMT;
 
 
 
