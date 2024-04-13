@@ -8,6 +8,7 @@ import java.util.Set;
 
 public enum Kind {
     PROGRAM,
+    IMPORT_DECL,
     CLASS_DECL,
     VAR_DECL,
     TYPE,
@@ -20,6 +21,7 @@ public enum Kind {
     INTEGER_LITERAL,
     LENGTH_ATTR_EXPR,
     VAR_REF_EXPR,
+
     BOOL_LITERAL,
 
     PARENTH_EXPR,
@@ -39,6 +41,9 @@ public enum Kind {
     NEW_OBJ_EXPR,
 
     THIS;
+
+
+
 
 
 

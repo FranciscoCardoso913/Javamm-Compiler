@@ -4,7 +4,7 @@ class VarargsWrong {
         int a;
         boolean b;
         b = false;
-        a = varargs(10, 20, 30, b);
+        a = this.varargs(10, 20, 30, b);
         return a;
     }
 

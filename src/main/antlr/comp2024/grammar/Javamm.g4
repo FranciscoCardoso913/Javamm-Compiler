@@ -76,7 +76,7 @@ classDecl
 
 
 varDecl
-    : type name= ID SEMI
+    : type name=ID SEMI
     ;
 
 type locals[ boolean isArray= false, boolean isEllipse = false]
@@ -87,6 +87,7 @@ type locals[ boolean isArray= false, boolean isEllipse = false]
     | name = VOID # TypeVoid
     | name = ID (LSQUARE RSQUARE {$isArray = true;})? # TypeVariable
     | name = ID ( ELLIPSIS {$isEllipse = true;})? # TypeVariable
+
     ;
 
 methodDecl locals[boolean isPublic=false, boolean isStatic = false, boolean isMain = false]
@@ -97,6 +98,7 @@ methodDecl locals[boolean isPublic=false, boolean isStatic = false, boolean isMa
         LPAREN (param (COMMA param)*)? RPAREN
         LCURLY
         varDecl* stmt*
+        (RETURN expr SEMI)?
         RCURLY # Method
     ;
 
@@ -120,13 +122,13 @@ expr
     | expr LSQUARE expr RSQUARE # ArrayExpr
     // members and methods access
     | expr DOT name=ID # LengthAttrExpr
-    | expr DOT name = ID LPAREN (expr (COMMA expr)*)? RPAREN # MethodExpr
+    | expr DOT name=ID LPAREN (expr (COMMA expr)*)? RPAREN # MethodExpr
     // unary
     | NOT expr # NegExpr
     // new
     | NEW INT LSQUARE expr RSQUARE # NewArrayExpr
     | NEW name = ID LPAREN RPAREN # NewObjExpr
-    | LSQUARE (expr (COMMA expr)*)? RSQUARE # InitArrayExpr // qual precedencia?
+    | LSQUARE (expr (COMMA expr)*)? RSQUARE # InitArrayExpr
     // Binary
     | expr op= (MUL | DIV) expr # BinaryExpr
     | expr op= (ADD | SUB) expr # BinaryExpr

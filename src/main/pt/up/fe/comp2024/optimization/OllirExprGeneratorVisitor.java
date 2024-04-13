@@ -1,10 +1,14 @@
 package pt.up.fe.comp2024.optimization;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
 import pt.up.fe.comp2024.ast.TypeUtils;
+
+import java.util.List;
+import java.util.Optional;
 
 import static pt.up.fe.comp2024.ast.Kind.*;
 
@@ -70,14 +74,30 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
 
     private OllirExprResult visitVarRef(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        Optional<JmmNode> method = node.getAncestor(METHOD_DECL);
+        Optional<JmmNode> returnStmt = node.getAncestor(RETURN_STMT);
 
-        var id = node.get("name");
+        String id = node.get("name");
+
+        if (method.isPresent() && returnStmt.isEmpty()) {
+            String methodName = method.get().get("name");
+            List<Symbol> params = table.getParameters(methodName);
+
+            for (int i = 1; i <= params.size(); i++) {
+                if (params.get(i - 1).getName().equals(id)) {
+                    // TODO: Check if '$' makes the tests be wrong or have problems with jasmin
+                    code.append("$.").append(i);
+                    break;
+                }
+            }
+        }
+
         Type type = TypeUtils.getExprType(node, table);
         String ollirType = OptUtils.toOllirType(type);
+        code.append(id).append(ollirType);
 
-        String code = id + ollirType;
-
-        return new OllirExprResult(code);
+        return new OllirExprResult(code.toString());
     }
 
     /**
