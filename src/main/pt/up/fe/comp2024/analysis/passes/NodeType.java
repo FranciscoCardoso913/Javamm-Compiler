@@ -94,6 +94,9 @@ public class NodeType extends AnalysisVisitor {
 
     private Void visitMethod(JmmNode node, SymbolTable table) {
         currentMethod = node.get("name");
+        if( Boolean.parseBoolean(node.get("isMain")) && !node.getDescendants(Kind.THIS).isEmpty() ){
+            addSemanticReport(node, "this nuts");
+        }
         var method_type = node.getChild(0).get("name");
         String isArray = Boolean.parseBoolean(node.getChild(0).get("isArray"))?"_array":"";
         node.put("node_type", method_type +isArray);
