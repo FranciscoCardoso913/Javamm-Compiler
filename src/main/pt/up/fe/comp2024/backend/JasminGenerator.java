@@ -8,7 +8,6 @@ import pt.up.fe.specs.util.classmap.FunctionClassMap;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 import pt.up.fe.specs.util.utilities.StringLines;
 
-import java.lang.constant.ConstantDesc;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -194,6 +193,7 @@ public class JasminGenerator {
             case BOOLEAN -> "Z";
             case ARRAYREF -> // TODO: get type of arrau; next checkpoint?
                     "[Ljava/lang/String" + ";";
+            // TODO: might not bet current method class?
             case OBJECTREF, CLASS -> "L" + currentMethod.getClass().getName().toLowerCase() + ";";
             case THIS -> "L" + currentMethod.getOllirClass().getClassName() + ";";
             case STRING -> "Ljava/lang/String;";
@@ -215,38 +215,132 @@ public class JasminGenerator {
                 getType(putFieldInstruction.getField().getType()) +
                 NL;
     }
+// invokevirtual
+//  Utilizada para chamar métodos de instância não-privados,
+//  não-estáticos e não-final (exceto construtores e métodos privados).
+private String generateCall(CallInstruction callInstruction) {
+    var code = new StringBuilder();
+    switch (callInstruction.getInvocationType()) {
+        case invokespecial:
+            code.append(handleInvokeSpecial(callInstruction));
+            break;
+        case invokestatic:
+            code.append(handleInvokeStatic(callInstruction));
+            break;
+        case invokevirtual:
+            code.append(handleInvokeVirtual(callInstruction));
+            break;
+        case NEW:
+            code.append(handleNew(callInstruction));
+            break;
+        default:
+            throw new NotImplementedException(callInstruction.getInvocationType());
+    }
+    return code.toString();
+}
 
-    private String generateCall(CallInstruction callInstruction) {
-        var code = new StringBuilder();
-        switch (callInstruction.getInvocationType()) {
-            case invokespecial -> {
-                // might have more than one operand?
-                Type typeInstance = callInstruction.getCaller().getType();
-                if (typeInstance instanceof ClassType) {
-                    ClassType classTypeInstance = (ClassType) typeInstance;
-                    String name = classTypeInstance.getName();
-                    code.append(generators.apply(callInstruction.getOperands().get(0)));
-                    code.append("invokespecial ").append(name).append("/<init>()V").append(NL);
-                } else {
-                    throw new NotImplementedException(typeInstance.getClass());
-                }
-            }
-            case NEW -> {
-                Type typeInstance = callInstruction.getCaller().getType();
-                if (typeInstance instanceof ClassType) {
-                    ClassType classTypeInstance = (ClassType) typeInstance;
-                    String name = classTypeInstance.getName();
-                    code.append("new ").append(name).append(NL);
-                } else {
-                    throw new NotImplementedException(typeInstance.getClass());
-                }
-            }
-            default -> throw new NotImplementedException(callInstruction.getInvocationType());
+    private String handleInvokeSpecial(CallInstruction callInstruction) {
+        StringBuilder code = new StringBuilder();
+        Type typeInstance = callInstruction.getCaller().getType();
+        if (typeInstance instanceof ClassType classTypeInstance) {
+            //astore 1
+            //aload 1
+            //
+            //invokespecial Test/<init>()V
+            //return
+            //.end method
+
+            String name = classTypeInstance.getName();
+            String methodName = getMethodName(callInstruction);
+            code.append(generators.apply(callInstruction.getOperands().get(0)))
+                    .append("invokespecial ")
+                    .append(name).append("/")
+                    .append(methodName).append("(")
+                    .append(callInstruction.getArguments().stream()
+                            .map(arg -> getType(arg.getType()))
+                            .collect(Collectors.joining()))
+                    .append(")")
+                    .append(getType(callInstruction.getReturnType())).append(NL);
+        } else {
+            throw new NotImplementedException(typeInstance.getClass());
         }
         return code.toString();
     }
 
-    private String generateAssign(AssignInstruction assign) {
+    private String handleInvokeStatic(CallInstruction callInstruction) {
+        StringBuilder code = new StringBuilder();
+        Type typeInstance = callInstruction.getCaller().getType();
+        if (typeInstance instanceof ClassType classTypeInstance) {
+            String name = classTypeInstance.getName();
+            String methodName = callInstruction.getMethodName().toString();
+            callInstruction.getOperands().forEach(operand -> code.append(generators.apply(operand)));
+            code.append("invokestatic ")
+                    .append(name).append("/")
+                    .append(methodName)
+                    .append("(")
+                    .append(callInstruction.getArguments().stream()
+                            .map(arg -> getType(arg.getType()))
+                            .collect(Collectors.joining()))
+                    .append(")");
+            code.append(getType(callInstruction.getReturnType())).append(NL);
+        } else {
+            throw new NotImplementedException(typeInstance.getClass());
+        }
+        return code.toString();
+    }
+
+    private String handleInvokeVirtual(CallInstruction callInstruction) {
+        StringBuilder code = new StringBuilder();
+        Type typeInstance = callInstruction.getCaller().getType();
+        if (typeInstance instanceof ClassType classTypeInstance) {
+            String name = classTypeInstance.getName();
+            String methodName = callInstruction.getMethodName().toString();
+            code.append(generators.apply(callInstruction.getCaller()));
+            callInstruction.getOperands().forEach(operand -> code.append(generators.apply(operand)));
+            code.append("invokevirtual ")
+                    .append(name).append("/")
+                    .append(methodName)
+                    .append("(")
+                    .append(callInstruction.getArguments().stream()
+                            .map(arg -> getType(arg.getType()))
+                            .collect(Collectors.joining()))
+                    .append(")");
+            code.append(getType(callInstruction.getReturnType())).append(NL);
+        } else {
+            throw new NotImplementedException(typeInstance.getClass());
+        }
+        return code.toString();
+    }
+
+    private String handleNew(CallInstruction callInstruction) {
+        StringBuilder code = new StringBuilder();
+        Type typeInstance = callInstruction.getCaller().getType();
+        if (typeInstance instanceof ClassType classTypeInstance) {
+            String name = classTypeInstance.getName();
+            code.append("new ").append(name).append(NL);
+        } else {
+            throw new NotImplementedException(typeInstance.getClass());
+        }
+        return code.toString();
+    }
+
+    private String getMethodName(CallInstruction callInstruction) {
+        return callInstruction.getMethodNameTry()
+                .map(methodElement -> {
+                    if (methodElement instanceof LiteralElement) {
+                        String literal = ((LiteralElement) methodElement).getLiteral();
+                        if (literal.startsWith("\"") && literal.endsWith("\"") && literal.length() > 1) {
+                            return literal.substring(1, literal.length() - 1);
+                        }
+                        return literal;
+                    }
+                    return methodElement.toString();
+                })
+                .orElse("<init>");
+    }
+
+
+                    private String generateAssign(AssignInstruction assign) {
         var code = new StringBuilder();
 
         // generate code for loading what's on the right
