@@ -50,7 +50,7 @@ public class NodeUtils {
                 return variable.getType().getName() + isArray + isEllipse;
             }
         }
-        return null;
+        return "";
 
     }
 
