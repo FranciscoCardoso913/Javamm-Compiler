@@ -20,12 +20,17 @@ public class JasminTest {
 
     @Test
     public void ollirToJasminHello() {
-        testOllirToJasmin("pt/up/fe/comp/cp2/jasmin//OllirToJasminHello.ollir");
+        testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminHello.ollir");
     }
 
     @Test
     public void ollirToJasminSimple() {
-        testOllirToJasmin("pt/up/fe/comp/cp2/jasmin//OllirToJasminSimple.ollir");
+        testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminSimple.ollir");
+    }
+
+    @Test
+    public void ollirToJasminOperations() {
+        testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminOperations.ollir");
     }
 
     @Test
