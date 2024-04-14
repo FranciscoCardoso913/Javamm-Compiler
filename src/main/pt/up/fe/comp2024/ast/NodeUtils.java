@@ -25,7 +25,7 @@ public class NodeUtils {
         return Boolean.parseBoolean(line);
     }
     public static String getLocalVariableType(String varRefName, String currentMethod, SymbolTable table){
-
+        System.out.println(currentMethod);
         for (int i = 0; i < table.getLocalVariables(currentMethod).size(); i++) {
             var variable = table.getLocalVariables(currentMethod).get(i);
             if (variable.getName().equals(varRefName)) {
@@ -50,7 +50,7 @@ public class NodeUtils {
                 return variable.getType().getName() + isArray + isEllipse;
             }
         }
-        return null;
+        return "";
 
     }
 
