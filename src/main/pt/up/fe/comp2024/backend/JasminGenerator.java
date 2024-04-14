@@ -48,6 +48,7 @@ public class JasminGenerator {
         generators.put(LiteralElement.class, this::generateLiteral);
         generators.put(Operand.class, this::generateOperand);
         generators.put(BinaryOpInstruction.class, this::generateBinaryOp);
+        generators.put(UnaryOpInstruction.class, this::generateUnaryOp);
         generators.put(ReturnInstruction.class, this::generateReturn);
         generators.put(PutFieldInstruction.class, this::generatePutField);
         generators.put(GetFieldInstruction.class, this::generateGetField);
@@ -165,7 +166,6 @@ public class JasminGenerator {
         paramsTypes.append(")");
 
         var retType = getType(method.getReturnType());
-
         code.append("\n.method ").append(modifier).append(methodName).append(paramsTypes).append(retType).append(NL);
 
         // Add limits
@@ -343,12 +343,10 @@ public class JasminGenerator {
         // store value in the stack in destination
         var lhs = assign.getDest();
 
-        if (!(lhs instanceof Operand)) {
+        if (!(lhs instanceof Operand operand)) {
             System.out.println("lhs: " + lhs.getClass() + " is not an Operand");
             throw new NotImplementedException(lhs.getClass());
         }
-
-        var operand = (Operand) lhs;
 
         // get register
         var name = currentMethod.getVarTable().get(operand.getName());
@@ -361,10 +359,6 @@ public class JasminGenerator {
         }
 
         return code.toString();
-    }
-
-    private String generateSingleOp(SingleOpInstruction singleOp) {
-        return generators.apply(singleOp.getSingleOperand());
     }
 
     private String generateLiteral(LiteralElement literal) {
@@ -385,6 +379,29 @@ public class JasminGenerator {
         return code.toString();
     }
 
+    private String generateSingleOp(SingleOpInstruction singleOp) {
+        return generators.apply(singleOp.getSingleOperand());
+    }
+
+
+    private String generateUnaryOp(UnaryOpInstruction unaryOpInstruction) {
+        var code = new StringBuilder();
+
+        code.append(generators.apply(unaryOpInstruction.getOperand()));
+
+        var op = switch (unaryOpInstruction.getOperation().getOpType()) {
+            case NOTB -> "ixor";
+            case NOT -> "ineg";
+            default -> {
+                System.out.println("Not a single operation: " + unaryOpInstruction.getOperation());
+                throw new NotImplementedException(unaryOpInstruction.getOperation().getOpType());
+            }
+        };
+
+        code.append(op).append(NL);
+        return code.toString();
+    }
+
     private String generateBinaryOp(BinaryOpInstruction binaryOp) {
         var code = new StringBuilder();
 
@@ -393,11 +410,26 @@ public class JasminGenerator {
         code.append(generators.apply(binaryOp.getRightOperand()));
 
         // apply operation
+
         var op = switch (binaryOp.getOperation().getOpType()) {
             case ADD -> "iadd";
+            case SUB -> "isub";
             case MUL -> "imul";
+            case DIV -> "idiv";
+            case SHR -> "ishr"; // signed shift right
+            case SHL -> "ishl"; // signed shift left
+            case SHRR -> "iushr"; // unsigned shift right, logical
+            case XOR -> "ixor";
+            case AND, ANDB -> "iand";
+            case OR, ORB -> "ior";
+            case LTH -> "if_icmplt"; // TODO: fix it
+            case GTH -> "if_icmpgt";
+            case EQ -> "if_icmpeq";
+            case NEQ -> "if_icmpne";
+            case LTE -> "if_icmple";
+            case GTE -> "if_icmpge";
             default -> {
-                System.out.println("Operation not implemented: " + binaryOp.getOperation().getOpType());
+                System.out.println("Not a binary operation: " + binaryOp.getOperation().getOpType());
                 throw new NotImplementedException(binaryOp.getOperation().getOpType());
             }
         };
