@@ -57,6 +57,7 @@ public class OptUtils {
             case "int" -> "i32";
             case "boolean" -> "bool";
             case "String" -> "String";
+            case "void" -> "V";
             default -> typeName;
         };
 
