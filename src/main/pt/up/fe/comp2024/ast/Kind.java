@@ -24,35 +24,19 @@ public enum Kind {
     INTEGER_LITERAL,
     LENGTH_ATTR_EXPR,
     VAR_REF_EXPR,
-
     BOOL_LITERAL,
-
     PARENTH_EXPR,
-
     ARRAY_EXPR,
-
     METHOD,
-
     METHOD_EXPR,
-
-    NEG_EXPR,
-
-    NEW_ARRAY_EXPR,
-
-    INIT_ARRAY_EXPR,
-
-    NEW_OBJ_EXPR,
-
+    EXPR_STMT,
     THIS,
-
+    NEG_EXPR,
+    NEW_ARRAY_EXPR,
+    INIT_ARRAY_EXPR,
+    NEW_OBJ_EXPR,
     IF_STMT,
-
     WHILE_STMT;
-
-
-
-
-
 
     private static final Set<Kind> STATEMENTS = Set.of(ASSIGN_STMT, RETURN_STMT);
     private static final Set<Kind> EXPRESSIONS = Set.of(BINARY_EXPR, INTEGER_LITERAL, VAR_REF_EXPR, LENGTH_ATTR_EXPR);

@@ -45,7 +45,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(PARAM, this::visitParam);
         addVisit(RETURN_STMT, this::visitReturn);
         addVisit(ASSIGN_STMT, this::visitAssignStmt);
-        addVisit(METHOD_EXPR, this::visitMethodExpr);
+        addVisit(EXPR_STMT, this::visitExprStmt);
 
         setDefaultVisit(this::defaultVisit);
     }
@@ -124,9 +124,14 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         StringBuilder code = new StringBuilder(".method ");
 
         boolean isPublic = NodeUtils.getBooleanAttribute(node, "isPublic", "false");
+        boolean isStatic = NodeUtils.getBooleanAttribute(node, "isStatic", "false");
 
         if (isPublic) {
             code.append("public ");
+        }
+
+        if (isStatic) {
+            code.append("static ");
         }
 
         // name
@@ -233,7 +238,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         StringBuilder code = new StringBuilder();
 
         for (String importStmt : table.getImports()) {
-            code.append("import ").append(importStmt).append(";").append(NL);
+            code.append("import ").append(importStmt).append(END_STMT);
         }
 
         if (!table.getImports().isEmpty()) code.append(NL);
@@ -245,30 +250,14 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         StringBuilder code = new StringBuilder();
 
         String varField = OptUtils.toOllirType(node.getChild(0));
-        code.append(".field public ").append(node.get("name")).append(varField).append(";").append(NL);
+        code.append(".field public ").append(node.get("name")).append(varField).append(END_STMT);
 
         return code.toString();
     }
 
-    private String visitMethodExpr(JmmNode node, Void unused) {
-        // TODO: get type of ollir method: virtual or static
-        // TODO: get method parameters in ollir
-        // TODO: construct code
-        StringBuilder code = new StringBuilder();
-
-        code.append(OptUtils.getOllirMethod(node));
-
-        code.append(", ").append("\"").append(node.get("name")).append("\"");
-
-        for (int i = 1; i < node.getChildren().size(); i++) {
-            JmmNode param = node.getChild(i);
-            OllirExprResult res = exprVisitor.visit(param);
-            code.append(", ").append(res.getCode());
-        }
-
-        code.append(").V;").append(NL);
-
-        return code.toString();
+    private String visitExprStmt(JmmNode node, Void unused) {
+        var res = exprVisitor.visit(node.getChild(0));
+        return res.getComputation();
     }
 
     /**
