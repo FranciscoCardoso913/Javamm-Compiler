@@ -25,7 +25,6 @@ public class NodeUtils {
         return Boolean.parseBoolean(line);
     }
     public static String getLocalVariableType(String varRefName, String currentMethod, SymbolTable table){
-        System.out.println(currentMethod);
         for (int i = 0; i < table.getLocalVariables(currentMethod).size(); i++) {
             var variable = table.getLocalVariables(currentMethod).get(i);
             if (variable.getName().equals(varRefName)) {
@@ -50,8 +49,19 @@ public class NodeUtils {
                 return variable.getType().getName() + isArray + isEllipse;
             }
         }
-        return "";
+        return null;
 
+    }
+
+    public static boolean isImported(String name, SymbolTable table){
+        for (var imported_path : table.getImports()) {
+            String[] parts = imported_path.split("\\.");
+            String className = parts[parts.length - 1];
+            if (className.equals(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 

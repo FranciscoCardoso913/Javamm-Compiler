@@ -53,9 +53,7 @@ public class NodeType extends AnalysisVisitor {
 
     private Void visitVarRef(JmmNode node, SymbolTable table) {
         String varRefName = node.get("name");
-        System.out.println("ola");
         node.put("node_type", NodeUtils.getLocalVariableType(varRefName, currentMethod, table));
-        System.out.println(NodeUtils.getLocalVariableType(varRefName, currentMethod, table));
         return null;
     }
 
@@ -97,7 +95,8 @@ public class NodeType extends AnalysisVisitor {
     private Void visitMethod(JmmNode node, SymbolTable table) {
         currentMethod = node.get("name");
         var method_type = node.getChild(0).get("name");
-        node.put("node_type", method_type);
+        String isArray = Boolean.parseBoolean(node.getChild(0).get("isArray"))?"_array":"";
+        node.put("node_type", method_type +isArray);
         return null;
     }
 

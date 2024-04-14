@@ -4,6 +4,8 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
 import pt.up.fe.comp.jmm.report.Report;
+import pt.up.fe.comp.jmm.report.Stage;
+import pt.up.fe.comp2024.ast.NodeUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +24,16 @@ public abstract class AnalysisVisitor extends PreorderJmmVisitor<SymbolTable, Vo
     public AnalysisVisitor() {
         reports = new ArrayList<>();
         setDefaultValue(() -> null);
+    }
+
+    protected void addSemanticReport (JmmNode node, String message ){
+        this.addReport(Report.newError(
+                Stage.SEMANTIC,
+                NodeUtils.getLine(node),
+                NodeUtils.getColumn(node),
+                message,
+                null)
+        );
     }
 
     protected void addReport(Report report) {
