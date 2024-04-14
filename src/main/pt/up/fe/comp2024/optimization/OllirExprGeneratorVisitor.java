@@ -1,5 +1,6 @@
 package pt.up.fe.comp2024.optimization;
 
+import org.specs.comp.ollir.Ollir;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
@@ -19,8 +20,12 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
     private static final String SPACE = " ";
     private static final String ASSIGN = ":=";
-    private final String END_STMT = ";\n";
-
+    private static final String END_STMT = ";\n";
+    private static final String NEW = "new";
+    private static final String L_BRACKET = "(";
+    private static final String R_BRACKET = ")";
+    private static final String COMMA = ",";
+    private static final String INIT = "\"<init>\"";
     private final SymbolTable table;
 
     public OllirExprGeneratorVisitor(SymbolTable table) {
@@ -33,6 +38,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         addVisit(BINARY_EXPR, this::visitBinExpr);
         addVisit(INTEGER_LITERAL, this::visitInteger);
         addVisit(METHOD_EXPR, this::visitMethodExpr);
+        addVisit(NEW_OBJ_EXPR, this::visitNewObjExpr);
 
         setDefaultVisit(this::defaultVisit);
     }
@@ -117,6 +123,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         String returnType;
 
         if (table.getReturnType(methodName) == null) {
+            // TODO: With the annotated tree the return type isn't simply void.
             returnType = ".V";
         }
         else {
@@ -139,6 +146,23 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
         computation.append(")").append(returnType).append(END_STMT);
 
+
+        return new OllirExprResult(code.toString(), computation.toString());
+    }
+
+    private OllirExprResult visitNewObjExpr(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        StringBuilder computation = new StringBuilder();
+        String nextTemp = OptUtils.getTemp();
+        String objectClass = node.get("name");
+        String exprType = "." + objectClass;
+
+        computation.append(nextTemp).append(exprType).append(SPACE).append(ASSIGN).append(exprType).append(SPACE);
+        computation.append(NEW).append(L_BRACKET).append(objectClass).append(R_BRACKET).append(exprType).append(END_STMT);
+        computation.append("invokespecial").append(L_BRACKET).append(nextTemp).append(exprType).append(COMMA)
+                .append(SPACE).append(INIT).append(R_BRACKET).append(".V").append(END_STMT);
+
+        code.append(nextTemp).append(exprType);
 
         return new OllirExprResult(code.toString(), computation.toString());
     }
