@@ -15,4 +15,9 @@ gradle*
 output.ollir
 output.jasmin
 output.j
+
+
+inputFile.txt
+
 input.txt
+

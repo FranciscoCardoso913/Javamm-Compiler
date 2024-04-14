@@ -11,6 +11,7 @@ import static pt.up.fe.comp2024.ast.Kind.THIS;
 public class TypeUtils {
 
     private static final String INT_TYPE_NAME = "int";
+    private static final String BOOL_TYPE_NAME = "boolean";
 
     public static String getIntTypeName() {
         return INT_TYPE_NAME;
@@ -45,7 +46,8 @@ public class TypeUtils {
         String operator = binaryExpr.get("op");
 
         return switch (operator) {
-            case "+", "*" -> new Type(INT_TYPE_NAME, false);
+            case "+", "*","-", "/" -> new Type(INT_TYPE_NAME, false);
+            case "&&", "<", "!" -> new Type(BOOL_TYPE_NAME, false);
             default ->
                     throw new RuntimeException("Unknown operator '" + operator + "' of expression '" + binaryExpr + "'");
         };

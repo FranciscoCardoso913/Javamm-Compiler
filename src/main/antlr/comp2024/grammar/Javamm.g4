@@ -29,7 +29,6 @@ NOT: '!';
 INT : 'int' ;
 BOOL: 'boolean';
 VOID: 'void';
-STRING: 'String';
 
 TRUE : 'true';
 FALSE: 'false';
@@ -81,31 +80,25 @@ varDecl
     ;
 
 type locals[ boolean isArray= false, boolean isEllipse = false]
-    : name = INT (LSQUARE RSQUARE {$isArray = true;})
-    | name = INT ( ELLIPSIS {$isEllipse = true;})
-    | name = INT
-    | name = BOOL
-    | name = STRING
-    | name = VOID
-    | name = ID
+    : name = INT (LSQUARE RSQUARE {$isArray = true;})?  # TypeInt
+    | name = INT ( ELLIPSIS {$isEllipse = true;})? # TypeInt
+    | name = BOOL (LSQUARE RSQUARE {$isArray = true;})?  # TypeBool
+    | name = BOOL ( ELLIPSIS {$isEllipse = true;})? # TypeBool
+    | name = VOID # TypeVoid
+    | name = ID (LSQUARE RSQUARE {$isArray = true;})? # TypeVariable
+    | name = ID ( ELLIPSIS {$isEllipse = true;})? # TypeVariable
     ;
 
-methodDecl locals[boolean isPublic=false]
-    : (PUBLIC {$isPublic=true;})?
+methodDecl locals[boolean isPublic=false, boolean isStatic = false, boolean isMain = false]
+    :(PUBLIC {$isPublic=true;})?
+        (STATIC {$isStatic = true;})?
+        {$isMain = $isPublic && $isStatic;}
         type name=ID
         LPAREN (param (COMMA param)*)? RPAREN
         LCURLY
         varDecl* stmt*
         (RETURN expr SEMI)?
         RCURLY # Method
-    | (PUBLIC {$isPublic=true;})?
-        STATIC VOID name=ID // Adding the name annotation was necessary to pass the test
-        LPAREN
-        STRING LSQUARE RSQUARE argName=ID
-        RPAREN
-        LCURLY
-        varDecl* stmt*
-        RCURLY # MainMethod
     ;
 
 param

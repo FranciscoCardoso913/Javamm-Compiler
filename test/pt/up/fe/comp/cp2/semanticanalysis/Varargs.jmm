@@ -2,7 +2,7 @@ class Varargs {
 
     public int foo() {
         int a;
-        a = varargs(10, 20, 30);
+        a = this.varargs(10, 20, 30);
         return a;
     }
 
