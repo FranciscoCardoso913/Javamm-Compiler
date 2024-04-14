@@ -1,6 +1,5 @@
 package pt.up.fe.comp2024.optimization;
 
-import org.specs.comp.ollir.Ollir;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
@@ -95,7 +94,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
             for (int i = 1; i <= params.size(); i++) {
                 if (params.get(i - 1).getName().equals(id)) {
                     // TODO: Check if '$' makes the tests be wrong or have problems with jasmin
-                    code.append("$.").append(i);
+                    code.append("$").append(i).append(".");
                     break;
                 }
             }
@@ -118,7 +117,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
         StringBuilder code = new StringBuilder();
         StringBuilder computation = new StringBuilder();
-        String ollirMethod = OptUtils.getOllirMethod(node.getChild(0));
+        String ollirMethod = OptUtils.getOllirMethod(node.getChild(0), table);
         String methodName = node.get("name");
         String returnType;
 
