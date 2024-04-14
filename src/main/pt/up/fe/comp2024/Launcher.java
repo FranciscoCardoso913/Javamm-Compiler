@@ -40,6 +40,7 @@ public class Launcher {
         JmmSemanticsResult semanticsResult = sema.semanticAnalysis(parserResult);
         System.out.println(parserResult.getRootNode().toTree());
         TestUtils.noErrors(semanticsResult.getReports());
+
         //System.out.println(semanticsResult.getSymbolTable().getLocalVariables("main"));
 
 /*

@@ -7,6 +7,7 @@ import pt.up.fe.comp.jmm.report.Report;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -14,6 +15,9 @@ import java.util.List;
 public abstract class AnalysisVisitor extends PreorderJmmVisitor<SymbolTable, Void> implements AnalysisPass {
 
     private List<Report> reports;
+    protected static String currentMethod = "main";
+
+    protected Pattern array_pattern = Pattern.compile("([a-zA-Z0-9]+)(_array)?(_ellipse)?");
 
     public AnalysisVisitor() {
         reports = new ArrayList<>();
