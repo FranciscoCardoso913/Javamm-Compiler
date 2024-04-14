@@ -5,7 +5,9 @@ import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp2024.ast.Kind;
 import pt.up.fe.comp2024.ast.NodeUtils;
+import pt.up.fe.comp2024.ast.TypeUtils;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 
 import java.util.List;
@@ -38,8 +40,8 @@ public class OptUtils {
     }
 
     public static String toOllirType(JmmNode typeNode) {
-        TYPE.checkOrThrow(typeNode);
-
+        if (!Kind.fromString(typeNode.getKind()).isType())
+            throw new RuntimeException("Node '" + typeNode + "' is not a type");
         String typeName = typeNode.get("name");
 
         return toOllirType(typeName, NodeUtils.getBooleanAttribute(typeNode, "isArray", "false"));
@@ -56,19 +58,28 @@ public class OptUtils {
             case "int" -> "i32";
             case "boolean" -> "bool";
             case "String" -> "String";
+            case "void" -> "V";
             default -> typeName;
         };
 
         return type;
     }
 
-    public static String getOllirMethod(JmmNode node) {
-        StringBuilder code = new StringBuilder();
+    public static String getOllirMethod(JmmNode node, SymbolTable table) {
+        // TODO: Refactor this code, imports never have types?
 
+        StringBuilder code = new StringBuilder();
+        System.out.println(node);
         if (node.isInstance(THIS)) {
             code.append(VIRTUAL_FUNC).append("(this");
         } else {
-            code.append(STATIC_FUNC).append("(").append(node.getChild(0).get("name"));
+            // TODO: null if node is an import
+            Type test = TypeUtils.getExprType(node, table);
+            String funcType = test != null ? VIRTUAL_FUNC : STATIC_FUNC;
+
+            code.append(funcType).append("(").append(node.get("name"));
+            if (TypeUtils.getExprType(node, table) != null)
+                code.append(OptUtils.toOllirType(TypeUtils.getExprType(node, table)));
         }
 
         return code.toString();

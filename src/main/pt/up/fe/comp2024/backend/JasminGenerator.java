@@ -8,7 +8,6 @@ import pt.up.fe.specs.util.classmap.FunctionClassMap;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 import pt.up.fe.specs.util.utilities.StringLines;
 
-import java.lang.constant.ConstantDesc;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -45,9 +44,9 @@ public class JasminGenerator {
         generators.put(Field.class, this::generateField);
         generators.put(Method.class, this::generateMethod);
         generators.put(AssignInstruction.class, this::generateAssign);
-        generators.put(SingleOpInstruction.class, this::generateSingleOp); //
+        generators.put(SingleOpInstruction.class, this::generateSingleOp);
         generators.put(LiteralElement.class, this::generateLiteral);
-        generators.put(Operand.class, this::generateOperand); //
+        generators.put(Operand.class, this::generateOperand);
         generators.put(BinaryOpInstruction.class, this::generateBinaryOp);
         generators.put(ReturnInstruction.class, this::generateReturn);
         generators.put(PutFieldInstruction.class, this::generatePutField);
@@ -194,6 +193,7 @@ public class JasminGenerator {
             case BOOLEAN -> "Z";
             case ARRAYREF -> // TODO: get type of arrau; next checkpoint?
                     "[Ljava/lang/String" + ";";
+            // TODO: might not bet current method class?
             case OBJECTREF, CLASS -> "L" + currentMethod.getClass().getName().toLowerCase() + ";";
             case THIS -> "L" + currentMethod.getOllirClass().getClassName() + ";";
             case STRING -> "Ljava/lang/String;";
@@ -217,33 +217,121 @@ public class JasminGenerator {
     }
 
     private String generateCall(CallInstruction callInstruction) {
-        var code = new StringBuilder();
-        switch (callInstruction.getInvocationType()) {
-            case invokespecial -> {
-                // might have more than one operand?
-                Type typeInstance = callInstruction.getCaller().getType();
-                if (typeInstance instanceof ClassType) {
-                    ClassType classTypeInstance = (ClassType) typeInstance;
-                    String name = classTypeInstance.getName();
-                    code.append(generators.apply(callInstruction.getOperands().get(0)));
-                    code.append("invokespecial ").append(name).append("/<init>()V").append(NL);
-                } else {
-                    throw new NotImplementedException(typeInstance.getClass());
-                }
-            }
-            case NEW -> {
-                Type typeInstance = callInstruction.getCaller().getType();
-                if (typeInstance instanceof ClassType) {
-                    ClassType classTypeInstance = (ClassType) typeInstance;
-                    String name = classTypeInstance.getName();
-                    code.append("new ").append(name).append(NL);
-                } else {
-                    throw new NotImplementedException(typeInstance.getClass());
-                }
-            }
+        return switch (callInstruction.getInvocationType()) {
+            case invokespecial -> generateInvokeSpecial(callInstruction);
+            case invokestatic -> generateInvokeStatic(callInstruction);
+            case invokevirtual -> generateInvokeVirtual(callInstruction);
+            case NEW -> generateNew(callInstruction);
             default -> throw new NotImplementedException(callInstruction.getInvocationType());
+        };
+    }
+
+    private String generateNew(CallInstruction callInstruction) {
+        StringBuilder code = new StringBuilder();
+        Type typeInstance = callInstruction.getCaller().getType();
+        if (typeInstance instanceof ClassType classTypeInstance) {
+            String name = classTypeInstance.getName();
+            code.append("new ").append(name).append(NL);
+        } else {
+            throw new NotImplementedException(typeInstance.getClass());
         }
         return code.toString();
+    }
+
+// invokevirtual
+//  Utilizada para chamar métodos de instância não-privados,
+//  não-estáticos e não-final (exceto construtores e métodos privados).
+    private String generateInvokeVirtual(CallInstruction callInstruction) {
+        StringBuilder code = new StringBuilder();
+        Type typeInstance = callInstruction.getCaller().getType();
+        if (typeInstance instanceof ClassType classTypeInstance) {
+            String name = classTypeInstance.getName();
+            String methodName = getMethodName(callInstruction);
+
+            code.append(generators.apply(callInstruction.getOperands().get(0)));
+
+            for (Element arg : callInstruction.getArguments()) {
+                code.append(generators.apply(arg));
+            }
+
+            code.append("invokevirtual ")
+                    .append(name).append("/")
+                    .append(methodName)
+                    .append("(")
+                    .append(callInstruction.getArguments().stream()
+                            .map(arg -> getType(arg.getType()))
+                            .collect(Collectors.joining()))
+                    .append(")");
+            code.append(getType(callInstruction.getReturnType())).append(NL);
+        } else {
+            throw new NotImplementedException(typeInstance.getClass());
+        }
+        return code.toString();
+    }
+
+    private String generateInvokeStatic(CallInstruction callInstruction) {
+        StringBuilder code = new StringBuilder();
+        if (callInstruction.getCaller() instanceof Operand operand) {
+            String methodName = getMethodName(callInstruction);
+
+            for (Element arg : callInstruction.getArguments()) {
+                code.append(generators.apply(arg));
+            }
+
+            code.append("invokestatic ")
+                    .append(operand.getName()).append("/")
+                    .append(methodName)
+                    .append("(")
+                    .append(callInstruction.getArguments().stream()
+                            .map(arg -> getType(arg.getType()))
+                            .collect(Collectors.joining()))
+                    .append(")");
+            code.append(getType(callInstruction.getReturnType())).append(NL);
+        } else {
+            throw new NotImplementedException(callInstruction.getCaller().getClass());
+        }
+        return code.toString();
+    }
+
+    private String generateInvokeSpecial(CallInstruction callInstruction) {
+        StringBuilder code = new StringBuilder();
+        Type typeInstance = callInstruction.getCaller().getType();
+        if (typeInstance instanceof ClassType classTypeInstance) {
+            String name = classTypeInstance.getName();
+            String methodName = getMethodName(callInstruction);
+            code.append(generators.apply(callInstruction.getOperands().get(0)));
+
+            for (Element arg : callInstruction.getArguments()) {
+                code.append(generators.apply(arg));
+            }
+            code.append("invokespecial ")
+                    .append(name).append("/")
+                    .append(methodName).append("(")
+                    .append(callInstruction.getArguments().stream()
+                            .map(arg -> getType(arg.getType()))
+                            .collect(Collectors.joining()))
+                    .append(")")
+                    .append(getType(callInstruction.getReturnType())).append(NL);
+        } else {
+            throw new NotImplementedException(typeInstance.getClass());
+        }
+        return code.toString();
+    }
+
+
+    private String getMethodName(CallInstruction callInstruction) {
+        return callInstruction.getMethodNameTry()
+                .map(methodElement -> {
+                    if (methodElement instanceof LiteralElement) {
+                        String literal = ((LiteralElement) methodElement).getLiteral();
+                        if (literal.startsWith("\"") && literal.endsWith("\"") && literal.length() > 1) {
+                            return literal.substring(1, literal.length() - 1);
+                        }
+                        return literal;
+                    }
+                    return methodElement.toString();
+                })
+                .orElse("<init>");
     }
 
     private String generateAssign(AssignInstruction assign) {
@@ -291,6 +379,7 @@ public class JasminGenerator {
         switch (currentMethod.getVarTable().get(operand.getName()).getVarType().getTypeOfElement()) {
             case INT32, BOOLEAN -> code.append("iload ").append(reg).append(NL);
             case OBJECTREF -> code.append("aload ").append(reg).append(NL);
+            case THIS -> code.append("aload 0").append(NL);
             default -> throw new NotImplementedException(currentMethod.getVarTable().get(operand.getName()).getVarType().getTypeOfElement());
         }
         return code.toString();
