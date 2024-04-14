@@ -53,7 +53,13 @@ public class NodeType extends AnalysisVisitor {
 
     private Void visitVarRef(JmmNode node, SymbolTable table) {
         String varRefName = node.get("name");
-        node.put("node_type", NodeUtils.getLocalVariableType(varRefName, currentMethod, table));
+        String message = NodeUtils.getLocalVariableType(varRefName, currentMethod, table) ;
+        if(message==null) {
+            addSemanticReport(node, "Field "+ node.get("name") + " cannot be accessed");
+            node.put("node_type", "undefined");
+            return null;
+        }
+        node.put("node_type",message );
         return null;
     }
 
@@ -138,19 +144,20 @@ public class NodeType extends AnalysisVisitor {
 
         for(var child: node.getChildren())
             visit(child, table);
-        System.out.println(table.getImports());
         if(table.getImports().contains(object.get("node_type")) || object.get("node_type").equals("unknown")){
             node.put("node_type", "unknown");
             return null;
         }
         if (object.get("node_type").equals(table.getClassName())) {
-            if(table.getSuper() != null){
-                node.put("node_type", "unknown");
-                return null;
-            }
+
             if (table.getMethods().contains(node.get("name"))) {
                 var return_type = table.getReturnType(node.get("name"));
                 node.put("node_type", return_type.getName() + (return_type.isArray() ? "_array" : ""));
+                return null;
+            }
+            if(table.getSuper() != null){
+             
+                node.put("node_type", "unknown");
                 return null;
             }
             String message = String.format("%s does not contain method %s.", object.get("node_type"), node.get("name"));

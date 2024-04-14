@@ -41,14 +41,18 @@ public class NodeUtils {
                 return variable.getType().getName() + isArray + isEllipse;
             }
         }
-        for (int i = 0; i < table.getFields().size(); i++) {
-            var variable = table.getFields().get(i);
-            if (variable.getName().equals(varRefName)) {
-                String isArray = variable.getType().isArray() ? "_array" : "";
-                String isEllipse = variable.getType().getObject("isEllipse", Boolean.class)?"_ellipse":"";
-                return variable.getType().getName() + isArray + isEllipse;
+
+            for (int i = 0; i < table.getFields().size(); i++) {
+                var variable = table.getFields().get(i);
+                if (variable.getName().equals(varRefName)) {
+                    if(currentMethod.equals("main")){
+                        return null;
+                    }
+                    String isArray = variable.getType().isArray() ? "_array" : "";
+                    String isEllipse = variable.getType().getObject("isEllipse", Boolean.class)?"_ellipse":"";
+                    return variable.getType().getName() + isArray + isEllipse;
+                }
             }
-        }
         return "unknown";
 
     }
