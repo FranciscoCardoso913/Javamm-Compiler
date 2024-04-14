@@ -21,13 +21,18 @@ public class Method extends AnalysisVisitor {
     }
 
     private Void visitMethodExpr(JmmNode node, SymbolTable table) {
-        if (node.get("node_type").equals("unknown")) return null;
+        if (node.get("node_type").equals("unknown") || node.get("node_type").equals("undefined")) return null;
         var method_params = table.getParameters(node.get("name"));
         int method_param_idx = 0;
         int invoc_param_idx = 1;
-        do{
-            boolean isEll = method_params.get(method_param_idx).getType().getObject("isEllipse", Boolean.class);
-            if(!method_params.get(method_param_idx).getType().getName().equals( node.getChild(invoc_param_idx).get("node_type"))){
+        boolean isEll = false;
+        while (method_param_idx<method_params.size() && invoc_param_idx< node.getChildren().size()){
+             isEll = method_params.get(method_param_idx).getType().getObject("isEllipse", Boolean.class);
+             if (isEll && method_param_idx != method_params.size() -1){
+                 addSemanticReport(node, "Ellipses should be in the last parameter");
+                 return null;
+             }
+             if(!method_params.get(method_param_idx).getType().getName().equals( node.getChild(invoc_param_idx).get("node_type"))){
                 addSemanticReport(node, String.format(
                         "Expected parameter %s to be type %s, got %s instead.",
                         method_params.get(method_param_idx).getName(),
@@ -38,9 +43,13 @@ public class Method extends AnalysisVisitor {
             }
             if(!isEll) method_param_idx++;
             if(!isEllipse(node.getChild(invoc_param_idx).get("node_type"))) invoc_param_idx ++;
-        }while (method_param_idx<method_params.size() && invoc_param_idx< node.getChildren().size());
+        };
 
-        if (!(method_param_idx==method_params.size()-1 && invoc_param_idx==node.getChildren().size())){
+        int method_params_size = method_params.size();
+
+        if( isEll ) method_params_size --;
+
+        if (!(method_param_idx==method_params_size && invoc_param_idx==node.getChildren().size())){
             addSemanticReport(node, String.format(
                     "Expected %s parameters, got %s instead.",
                     method_params.size(),

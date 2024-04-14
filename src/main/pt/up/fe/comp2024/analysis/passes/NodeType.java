@@ -132,9 +132,11 @@ public class NodeType extends AnalysisVisitor {
     private Void visitMethodExpr(JmmNode node, SymbolTable table) {
         //Check if method belongs to object
         var object = node.getChild(0);
+
         for(var child: node.getChildren())
             visit(child, table);
-        if(table.getImports().contains(object.get("node_type"))){
+        System.out.println(table.getImports());
+        if(table.getImports().contains(object.get("node_type")) || object.get("node_type").equals("unknown")){
             node.put("node_type", "unknown");
             return null;
         }
@@ -158,6 +160,7 @@ public class NodeType extends AnalysisVisitor {
             );
 
         }
+        node.put("node_type", "undefined");
         return null;
     }
 
