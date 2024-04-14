@@ -218,26 +218,26 @@ public class JasminGenerator {
 // invokevirtual
 //  Utilizada para chamar métodos de instância não-privados,
 //  não-estáticos e não-final (exceto construtores e métodos privados).
-private String generateCall(CallInstruction callInstruction) {
-    var code = new StringBuilder();
-    switch (callInstruction.getInvocationType()) {
-        case invokespecial:
-            code.append(handleInvokeSpecial(callInstruction));
-            break;
-        case invokestatic:
-            code.append(handleInvokeStatic(callInstruction));
-            break;
-        case invokevirtual:
-            code.append(handleInvokeVirtual(callInstruction));
-            break;
-        case NEW:
-            code.append(handleNew(callInstruction));
-            break;
-        default:
-            throw new NotImplementedException(callInstruction.getInvocationType());
+    private String generateCall(CallInstruction callInstruction) {
+        var code = new StringBuilder();
+        switch (callInstruction.getInvocationType()) {
+            case invokespecial:
+                code.append(handleInvokeSpecial(callInstruction));
+                break;
+            case invokestatic:
+                code.append(handleInvokeStatic(callInstruction));
+                break;
+            case invokevirtual:
+                code.append(handleInvokeVirtual(callInstruction));
+                break;
+            case NEW:
+                code.append(handleNew(callInstruction));
+                break;
+            default:
+                throw new NotImplementedException(callInstruction.getInvocationType());
+        }
+        return code.toString();
     }
-    return code.toString();
-}
 
     private String handleInvokeSpecial(CallInstruction callInstruction) {
         StringBuilder code = new StringBuilder();
@@ -265,12 +265,13 @@ private String generateCall(CallInstruction callInstruction) {
 
     private String handleInvokeStatic(CallInstruction callInstruction) {
         StringBuilder code = new StringBuilder();
-        System.out.println("caller: " + callInstruction.getCaller());
         if (callInstruction.getCaller() instanceof Operand operand) {
-            System.out.println("operand.getName(): " + operand.getName());
             String methodName = getMethodName(callInstruction);
 
 //            invokestatic ioPlus/printHelloWorld()V
+            for (Element arg : callInstruction.getArguments()) {
+                code.append(generators.apply(arg));
+            }
 
             code.append("invokestatic ")
                     .append(operand.getName()).append("/")
@@ -289,13 +290,21 @@ private String generateCall(CallInstruction callInstruction) {
 
     //  TODO
     private String handleInvokeVirtual(CallInstruction callInstruction) {
+        //  temp_0.i32 :=.i32 invokevirtual(this, "constInstr").i32;
+        // aload_0
+        // invokevirtual Simple/constInstr()I
         StringBuilder code = new StringBuilder();
         Type typeInstance = callInstruction.getCaller().getType();
         if (typeInstance instanceof ClassType classTypeInstance) {
             String name = classTypeInstance.getName();
-            String methodName = callInstruction.getMethodName().toString();
-            code.append(generators.apply(callInstruction.getCaller()));
-            callInstruction.getOperands().forEach(operand -> code.append(generators.apply(operand)));
+            String methodName = getMethodName(callInstruction);
+
+            code.append(generators.apply(callInstruction.getOperands().get(0)));
+
+            for (Element arg : callInstruction.getArguments()) {
+                code.append(generators.apply(arg));
+            }
+
             code.append("invokevirtual ")
                     .append(name).append("/")
                     .append(methodName)
@@ -384,6 +393,7 @@ private String generateCall(CallInstruction callInstruction) {
         switch (currentMethod.getVarTable().get(operand.getName()).getVarType().getTypeOfElement()) {
             case INT32, BOOLEAN -> code.append("iload ").append(reg).append(NL);
             case OBJECTREF -> code.append("aload ").append(reg).append(NL);
+            case THIS -> code.append("aload 0").append(NL);
             default -> throw new NotImplementedException(currentMethod.getVarTable().get(operand.getName()).getVarType().getTypeOfElement());
         }
         return code.toString();

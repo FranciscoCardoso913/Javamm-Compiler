@@ -19,8 +19,13 @@ public class JasminTest {
     }
 
     @Test
-    public void ollirToJasminInvokeStatic() {
-        testOllirToJasmin("pt/up/fe/comp/cp2/jasmin//OllirToJasmininvokestatic.ollir");
+    public void ollirToJasminHello() {
+        testOllirToJasmin("pt/up/fe/comp/cp2/jasmin//OllirToJasminHello.ollir");
+    }
+
+    @Test
+    public void ollirToJasminSimple() {
+        testOllirToJasmin("pt/up/fe/comp/cp2/jasmin//OllirToJasminSimple.ollir");
     }
 
     @Test
