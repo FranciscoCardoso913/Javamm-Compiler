@@ -108,17 +108,26 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
     }
 
     private OllirExprResult visitMethodExpr(JmmNode node, Void unused) {
+        // TODO: Refactor this method
+
         StringBuilder code = new StringBuilder();
         StringBuilder computation = new StringBuilder();
         String ollirMethod = OptUtils.getOllirMethod(node.getChild(0));
         String methodName = node.get("name");
-        // TODO: in static methods we don't know it, need to handle that
-        String returnType = OptUtils.toOllirType(table.getReturnType(methodName));
-        String tmpVar = OptUtils.getTemp();
+        String returnType;
 
-        computation.append(tmpVar).append(returnType).append(SPACE).append(ASSIGN)
-                .append(returnType).append(SPACE);
-        computation.append(OptUtils.getOllirMethod(node.getChild(0)));
+        if (table.getReturnType(methodName) == null) {
+            returnType = ".V";
+        }
+        else {
+            String tmpVar = OptUtils.getTemp();
+            returnType = OptUtils.toOllirType(table.getReturnType(methodName));
+            code.append(tmpVar).append(returnType);
+            computation.append(tmpVar).append(returnType).append(SPACE).append(ASSIGN)
+                    .append(returnType).append(SPACE);
+        }
+
+        computation.append(ollirMethod);
 
         computation.append(", ").append("\"").append(methodName).append("\"");
 
@@ -130,7 +139,6 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
         computation.append(")").append(returnType).append(END_STMT);
 
-        code.append(tmpVar).append(returnType);
 
         return new OllirExprResult(code.toString(), computation.toString());
     }

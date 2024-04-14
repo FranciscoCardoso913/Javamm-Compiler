@@ -68,7 +68,7 @@ public class OptUtils {
         if (node.isInstance(THIS)) {
             code.append(VIRTUAL_FUNC).append("(this");
         } else {
-            code.append(STATIC_FUNC).append("(").append(node.getChild(0).get("name"));
+            code.append(STATIC_FUNC).append("(").append(node.get("name"));
         }
 
         return code.toString();
