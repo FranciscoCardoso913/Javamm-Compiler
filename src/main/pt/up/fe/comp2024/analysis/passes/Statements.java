@@ -16,6 +16,7 @@ public class Statements extends AnalysisVisitor {
         addVisit(Kind.WHILE_STMT, this::visitWhileStatement);
         addVisit(Kind.IF_STMT, this::visitIfStatement);
         addVisit(Kind.ASSIGN_STMT, this::visitAssignStatement);
+        addVisit(Kind.EXPR_STMT, this::visitExpressionStatement);
         addVisit(Kind.METHOD, this::visitMethod);
     }
 
@@ -40,6 +41,7 @@ public class Statements extends AnalysisVisitor {
                     expr.get("node_type")
             ));
         }
+        if(expr.get("node_type").equals("unknown")) expr.put("node_type", variable_type);
         return null;
     }
 
@@ -69,6 +71,11 @@ public class Statements extends AnalysisVisitor {
                     returnValueType
             ));
         }
+        return null;
+    }
+
+    private Void visitExpressionStatement(JmmNode node, SymbolTable table) {
+        if(!node.getChildren(Kind.METHOD_EXPR).isEmpty()) node.put("node_type", "void");
         return null;
     }
 
