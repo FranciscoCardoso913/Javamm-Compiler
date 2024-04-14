@@ -198,8 +198,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         code.append(NL);
 
-        code.append(buildConstructor());
-
         var needNl = true;
 
         for (var child : node.getChildren()) {
@@ -212,6 +210,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
             code.append(result);
         }
+
+        code.append(buildConstructor());
 
         code.append(R_BRACKET);
 
