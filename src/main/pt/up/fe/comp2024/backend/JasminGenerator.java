@@ -241,15 +241,11 @@ private String generateCall(CallInstruction callInstruction) {
 
     private String handleInvokeSpecial(CallInstruction callInstruction) {
         StringBuilder code = new StringBuilder();
+
+        System.out.println("caller: " + callInstruction.getCaller());
+        //caller: Operand: test.OBJECTREF(Test)
         Type typeInstance = callInstruction.getCaller().getType();
         if (typeInstance instanceof ClassType classTypeInstance) {
-            //astore 1
-            //aload 1
-            //
-            //invokespecial Test/<init>()V
-            //return
-            //.end method
-
             String name = classTypeInstance.getName();
             String methodName = getMethodName(callInstruction);
             code.append(generators.apply(callInstruction.getOperands().get(0)))
@@ -269,13 +265,15 @@ private String generateCall(CallInstruction callInstruction) {
 
     private String handleInvokeStatic(CallInstruction callInstruction) {
         StringBuilder code = new StringBuilder();
-        Type typeInstance = callInstruction.getCaller().getType();
-        if (typeInstance instanceof ClassType classTypeInstance) {
-            String name = classTypeInstance.getName();
-            String methodName = callInstruction.getMethodName().toString();
-            callInstruction.getOperands().forEach(operand -> code.append(generators.apply(operand)));
+        System.out.println("caller: " + callInstruction.getCaller());
+        if (callInstruction.getCaller() instanceof Operand operand) {
+            System.out.println("operand.getName(): " + operand.getName());
+            String methodName = getMethodName(callInstruction);
+
+//            invokestatic ioPlus/printHelloWorld()V
+
             code.append("invokestatic ")
-                    .append(name).append("/")
+                    .append(operand.getName()).append("/")
                     .append(methodName)
                     .append("(")
                     .append(callInstruction.getArguments().stream()
@@ -284,11 +282,12 @@ private String generateCall(CallInstruction callInstruction) {
                     .append(")");
             code.append(getType(callInstruction.getReturnType())).append(NL);
         } else {
-            throw new NotImplementedException(typeInstance.getClass());
+            throw new NotImplementedException(callInstruction.getCaller().getClass());
         }
         return code.toString();
     }
 
+    //  TODO
     private String handleInvokeVirtual(CallInstruction callInstruction) {
         StringBuilder code = new StringBuilder();
         Type typeInstance = callInstruction.getCaller().getType();
