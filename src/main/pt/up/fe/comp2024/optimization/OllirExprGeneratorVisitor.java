@@ -9,6 +9,7 @@ import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
 import pt.up.fe.comp2024.ast.NodeUtils;
 import pt.up.fe.comp2024.ast.TypeUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -169,6 +170,15 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
     private OllirExprResult visitMethodExpr(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
         StringBuilder computation = new StringBuilder();
+        List<String> tmpVars = new ArrayList<>();
+
+        // Visit params as they are expressions as well
+        for (int i = 1; i < node.getChildren().size(); i++) {
+            JmmNode param = node.getChild(i);
+            OllirExprResult res = visit(param);
+            computation.append(res.getComputation());
+            tmpVars.add(res.getCode());
+        }
 
         // visit lhs expr to get its ollir representation
         var object = visit(node.getChild(0));
@@ -189,10 +199,8 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
         computation.append(", ").append("\"").append(methodName).append("\"");
 
-        for (int i = 1; i < node.getChildren().size(); i++) {
-            JmmNode param = node.getChild(i);
-            OllirExprResult res = visit(param);
-            computation.append(", ").append(res.getCode());
+        for (String tmpVar: tmpVars) {
+            computation.append(", ").append(tmpVar);
         }
 
         computation.append(")").append(returnType).append(END_STMT);
