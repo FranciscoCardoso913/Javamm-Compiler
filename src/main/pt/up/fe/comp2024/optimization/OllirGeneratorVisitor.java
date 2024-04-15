@@ -52,7 +52,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
 
     private String visitAssignStmt(JmmNode node, Void unused) {
-        // TODO: assignments with lhs equal to a class field need to use putfield(), implement here
         var rhs = exprVisitor.visit(node.getJmmChild(0));
 
         StringBuilder code = new StringBuilder();
@@ -62,7 +61,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         // code to compute self
         // statement has type of lhs
-        String typeString = OptUtils.toOllirType(node.getChild(0));
+        // TODO: Change this when this node gets annotated
+        String typeString = OptUtils.toOllirType(TypeUtils.getExprType(node, table));
 
         // TODO: Refactor into two different functions
         if (NodeUtils.isFieldRef(node.get("name"), table, node.getAncestor(METHOD_DECL).get().get("name"))) {
