@@ -200,7 +200,12 @@ public class NodeType extends AnalysisVisitor {
     private Void visitAssignStatement(JmmNode node ,SymbolTable table){
         var variable = node.get("name");
         String variable_type =  NodeUtils.getLocalVariableType(variable, currentMethod, table);
-        node.put("node_type", variable_type);
+        if(variable_type == null) {
+            addSemanticReport(node, "Static method cannot use non static fields");
+            node.put("node_type", "undefined");
+        }
+        else
+            node.put("node_type", variable_type);
         return null;
     }
 
