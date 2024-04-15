@@ -8,7 +8,7 @@ import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.ReportType;
 import pt.up.fe.comp.jmm.report.Stage;
-import pt.up.fe.comp2024.analysis.passes.UndeclaredVariable;
+import pt.up.fe.comp2024.analysis.passes.*;
 import pt.up.fe.comp2024.symboltable.JmmSymbolTableBuilder;
 
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ public class JmmAnalysisImpl implements JmmAnalysis {
 
     public JmmAnalysisImpl() {
 
-        this.analysisPasses = List.of(new UndeclaredVariable());
+        this.analysisPasses = List.of(new UndeclaredVariable(),new NodeType(), new Operations(),new Init(), new Array(),  new Method(),new Statements());
 
     }
 
@@ -32,6 +32,7 @@ public class JmmAnalysisImpl implements JmmAnalysis {
 
         JmmSymbolTableBuilder tableBuilder = new JmmSymbolTableBuilder();
         SymbolTable table = tableBuilder.build(rootNode);
+
 
         List<Report> reports = tableBuilder.getReports();
 
