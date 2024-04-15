@@ -31,8 +31,7 @@ public class Statements extends AnalysisVisitor {
     }
 
     private Void visitAssignStatement(JmmNode node, SymbolTable table) {
-        var variable = node.get("name");
-        String variable_type =  NodeUtils.getLocalVariableType(variable, currentMethod, table);
+        String variable_type = node.get("node_type");
         var expr = node.getChild(0);
         if(! areTypesAssignable(expr.get("node_type"), variable_type, table)) {
             addSemanticReport(node, String.format(

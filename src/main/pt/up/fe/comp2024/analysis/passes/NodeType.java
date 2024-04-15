@@ -20,6 +20,8 @@ public class NodeType extends AnalysisVisitor {
 
     @Override
     protected void buildVisitor() {
+        addVisit(Kind.ASSIGN_STMT, this::visitAssignStatement);
+        addVisit(Kind.PARAM, this::visitParam);
         addVisit(Kind.VAR_DECL, this::visitVarDeclaration);
         addVisit(Kind.METHOD_EXPR, this::visitMethodExpr);
         addVisit(Kind.THIS, this::visitThis);
@@ -178,10 +180,29 @@ public class NodeType extends AnalysisVisitor {
     private Void visitVarDeclaration(JmmNode node, SymbolTable table){
         var type = node.getChild(0);
         if( Boolean.parseBoolean(type.get("isEllipse"))) addSemanticReport(node, "Variables cannot be declared as ellipses");
-        if( type.get("name").equals("void")) addSemanticReport(node, "Variables cannot be declared as void");
+        else if( type.get("name").equals("void")) addSemanticReport(node, "Variables cannot be declared as void");
+        else node.put("node_type", type.get("name") + (Boolean.parseBoolean(type.get("isArray"))?"_array":"") );
         return null;
     }
 
+    private Void visitParam(JmmNode node, SymbolTable table){
+        var type = node.getChild(0);
+        if( type.get("name").equals("void")) addSemanticReport(node, "Parameters cannot be declared as void");
+        else node.put(
+                "node_type",
+                type.get("name") +
+                        (Boolean.parseBoolean(type.get("isArray"))?"_array":"") +
+                        (Boolean.parseBoolean(type.get("isEllipse"))?"_ellipse":"")
+                );
+        return null;
+    }
+
+    private Void visitAssignStatement(JmmNode node ,SymbolTable table){
+        var variable = node.get("name");
+        String variable_type =  NodeUtils.getLocalVariableType(variable, currentMethod, table);
+        node.put("node_type", variable_type);
+        return null;
+    }
 
 
 

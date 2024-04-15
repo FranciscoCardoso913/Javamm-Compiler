@@ -65,8 +65,6 @@ public class Method extends AnalysisVisitor {
         int idx =1 ;
         for (var param : node.getChildren(Kind.PARAM)){
             var type = param.getChild(0);
-            if( type.get("name").equals("void"))
-                addSemanticReport(node, "Parameters cannot be of type void");
             if (Boolean.parseBoolean(type.get("isEllipse")) && idx != node.getChildren(Kind.PARAM).size() )
                 addSemanticReport(node, "Ellipse should be the last parameter");
             idx ++;
