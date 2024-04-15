@@ -3,6 +3,7 @@ package pt.up.fe.comp2024.optimization;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
+import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
 import pt.up.fe.comp2024.ast.NodeUtils;
@@ -16,7 +17,10 @@ import static pt.up.fe.comp2024.ast.Kind.*;
 /**
  * Generates OLLIR code from JmmNodes that are expressions.
  */
-public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExprResult> {
+
+// TODO: Changed the visitor from PreorderJmmVisitor to AJmmVisitor, to not have problems with temp values
+// TODO: Try to reuse PreorderJmmVisitor for the next checkpoint
+public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult> {
 
     private static final String SPACE = " ";
     private static final String ASSIGN = ":=";
@@ -48,9 +52,11 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
 
     private OllirExprResult visitInteger(JmmNode node, Void unused) {
+        System.out.println("Entered int");
         Type intType = new Type(TypeUtils.getIntTypeName(), false);
         String ollirIntType = OptUtils.toOllirType(intType);
         String code = node.get("value") + ollirIntType;
+        System.out.println("Exited int");
         return new OllirExprResult(code);
     }
 
@@ -65,6 +71,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
 
     private OllirExprResult visitBinExpr(JmmNode node, Void unused) {
+        System.out.println("Entered bin");
 
         var lhs = visit(node.getJmmChild(0));
         var rhs = visit(node.getJmmChild(1));
@@ -86,6 +93,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         computation.append(node.get("op")).append(OptUtils.toOllirType(node)).append(SPACE)
                 .append(rhs.getCode()).append(END_STMT);
 
+        System.out.println("Exited bin");
         return new OllirExprResult(code, computation);
     }
 
@@ -119,14 +127,17 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
     }
 
     private OllirExprResult buildGetField(JmmNode node) {
+        System.out.println("Entered getfield");
         StringBuilder code = new StringBuilder();
         StringBuilder computation = new StringBuilder();
         String varType = OptUtils.toOllirType(node);
 
-        code.append(OptUtils.getTemp()).append(varType);
+        String test = OptUtils.getTemp();
+        code.append(test).append(varType);
         computation.append(code).append(SPACE).append(ASSIGN).append(varType).append(SPACE).append("getfield(this, ")
                 .append(node.get("name")).append(varType).append(")").append(varType).append(END_STMT);
 
+        System.out.println("Exited getfield");
         return new OllirExprResult(code.toString(), computation.toString());
     }
 
@@ -226,6 +237,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
      * @return
      */
     private OllirExprResult defaultVisit(JmmNode node, Void unused) {
+        System.out.println(node);
 
         for (var child : node.getChildren()) {
             visit(child);

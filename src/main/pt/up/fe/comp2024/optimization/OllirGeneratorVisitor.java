@@ -53,7 +53,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
     private String visitAssignStmt(JmmNode node, Void unused) {
         // TODO: assignments with lhs equal to a class field need to use putfield(), implement here
-        // TODO: assignments with rhs with this.field need to use getfield(), implement in exprVisitor
+        System.out.println("Entered assign");
         var rhs = exprVisitor.visit(node.getJmmChild(0));
 
         StringBuilder code = new StringBuilder();
@@ -65,24 +65,30 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         // statement has type of lhs
         String typeString = OptUtils.toOllirType(node.getChild(0));
 
-        code.append(node.get("name"));
-        code.append(typeString);
-        code.append(SPACE);
+        // TODO: Refactor into two different functions
+        if (NodeUtils.isFieldRef(node.get("name"), table, node.getAncestor(METHOD_DECL).get().get("name"))) {
+            code.append("putfield(this, ").append(node.get("name")).append(typeString).append(", ")
+                    .append(rhs.getCode()).append(").V").append(END_STMT);
+        } else {
+            code.append(node.get("name"));
+            code.append(typeString);
+            code.append(SPACE);
 
-        code.append(ASSIGN);
-        code.append(typeString);
-        code.append(SPACE);
+            code.append(ASSIGN);
+            code.append(typeString);
+            code.append(SPACE);
 
-        code.append(rhs.getCode());
+            code.append(rhs.getCode());
 
-        code.append(END_STMT);
+            code.append(END_STMT);
+        }
 
+        System.out.println("Exited assign");
         return code.toString();
     }
 
 
     private String visitReturn(JmmNode node, Void unused) {
-
         String methodName = node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow();
         Type retType = table.getReturnType(methodName);
 
@@ -278,6 +284,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
      */
     private String defaultVisit(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
+
+        System.out.println(node);
 
         for (var child : node.getChildren()) {
             code.append(visit(child));
