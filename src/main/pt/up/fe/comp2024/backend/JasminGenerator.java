@@ -9,7 +9,9 @@ import pt.up.fe.specs.util.exceptions.NotImplementedException;
 import pt.up.fe.specs.util.utilities.StringLines;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -23,6 +25,7 @@ public class JasminGenerator {
     private static final String TAB = "   ";
 
     private final OllirResult ollirResult;
+    private final Map<String, String> classPathMap;
 
     List<Report> reports;
 
@@ -38,6 +41,19 @@ public class JasminGenerator {
         reports = new ArrayList<>();
         code = null;
         currentMethod = null;
+
+        classPathMap = new HashMap<>();
+        for (String importEntry : ollirResult.getOllirClass().getImports()) {
+            String[] parts = importEntry.split("\\.");
+            String simpleName = parts[parts.length - 1];
+            classPathMap.put(simpleName, importEntry.replace('.', '/'));
+        }
+
+        // print all contents of classPathMap
+        for (Map.Entry<String, String> entry : classPathMap.entrySet()) {
+            System.out.println(entry.getKey() + " -> " + entry.getValue());
+        }
+
 
         this.generators = new FunctionClassMap<>();
         generators.put(ClassUnit.class, this::generateClassUnit);
@@ -188,14 +204,18 @@ public class JasminGenerator {
     }
 
     private String getType(Type type) {
+
         ElementType elementType = type.getTypeOfElement();
         return switch (elementType) {
             case INT32 -> "I";
             case BOOLEAN -> "Z";
             case ARRAYREF -> // TODO: get type of arrau; next checkpoint?
                     "[Ljava/lang/String" + ";";
-            // TODO: might not bet current method class?
-            case OBJECTREF -> "L" + ((ClassType) type).getName() + ";";
+            case OBJECTREF -> {
+                String className = ((ClassType) type).getName();
+                String fullPath = classPathMap.getOrDefault(className, className);
+                yield "L" + fullPath + ";";
+            }
             case CLASS -> "L" + currentMethod.getClass().getName().toLowerCase() + ";";
             case THIS -> "L" + currentMethod.getOllirClass().getClassName() + ";";
             case STRING -> "Ljava/lang/String;";
@@ -232,8 +252,8 @@ public class JasminGenerator {
         StringBuilder code = new StringBuilder();
         Type typeInstance = callInstruction.getCaller().getType();
         if (typeInstance instanceof ClassType classTypeInstance) {
-            String name = classTypeInstance.getName();
-            code.append("new ").append(name).append(NL);
+            String className = classPathMap.getOrDefault(classTypeInstance.getName(), classTypeInstance.getName());
+            code.append("new ").append(className).append(NL);
         } else {
             throw new NotImplementedException(typeInstance.getClass());
         }
@@ -247,7 +267,7 @@ public class JasminGenerator {
         StringBuilder code = new StringBuilder();
         Type typeInstance = callInstruction.getCaller().getType();
         if (typeInstance instanceof ClassType classTypeInstance) {
-            String name = classTypeInstance.getName();
+            String className = classPathMap.getOrDefault(classTypeInstance.getName(), classTypeInstance.getName());
             String methodName = getMethodName(callInstruction);
 
             code.append(generators.apply(callInstruction.getOperands().get(0)));
@@ -257,7 +277,7 @@ public class JasminGenerator {
             }
 
             code.append("invokevirtual ")
-                    .append(name).append("/")
+                    .append(className).append("/")
                     .append(methodName)
                     .append("(")
                     .append(callInstruction.getArguments().stream()
@@ -275,6 +295,9 @@ public class JasminGenerator {
     private String generateInvokeStatic(CallInstruction callInstruction) {
         StringBuilder code = new StringBuilder();
         if (callInstruction.getCaller() instanceof Operand operand) {
+
+            String className = classPathMap.getOrDefault(operand.getName(), operand.getName());
+
             String methodName = getMethodName(callInstruction);
 
             for (Element arg : callInstruction.getArguments()) {
@@ -282,7 +305,7 @@ public class JasminGenerator {
             }
 
             code.append("invokestatic ")
-                    .append(operand.getName()).append("/")
+                    .append(className).append("/")
                     .append(methodName)
                     .append("(")
                     .append(callInstruction.getArguments().stream()
@@ -300,7 +323,7 @@ public class JasminGenerator {
         StringBuilder code = new StringBuilder();
         Type typeInstance = callInstruction.getCaller().getType();
         if (typeInstance instanceof ClassType classTypeInstance) {
-            String name = classTypeInstance.getName();
+            String className = classPathMap.getOrDefault(classTypeInstance.getName(), classTypeInstance.getName());
             String methodName = getMethodName(callInstruction);
             code.append(generators.apply(callInstruction.getOperands().get(0)));
 
@@ -308,7 +331,7 @@ public class JasminGenerator {
                 code.append(generators.apply(arg));
             }
             code.append("invokespecial ")
-                    .append(name).append("/")
+                    .append(className).append("/")
                     .append(methodName).append("(")
                     .append(callInstruction.getArguments().stream()
                             .map(arg -> getType(arg.getType()))

@@ -1,0 +1,20 @@
+import ioPlus;
+
+class Test extends ioPlus {
+    public static void main(String[] args) {
+    }
+
+    public int add(int a, int b) {
+
+        return a + b;
+    }
+
+    public void doSomething() {
+        int a;
+        int b;
+        a= 10;
+        b= a + 20;
+        ioPlus.println(b);
+    }
+
+}
