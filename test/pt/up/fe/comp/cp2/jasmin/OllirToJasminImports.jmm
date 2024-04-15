@@ -1,0 +1,21 @@
+
+import java.util.Random;
+import java.lang.Integer;
+
+class Example {
+
+    public static void main(String[] args) {
+    }
+
+    public void exampleMethod() {
+    }
+
+    public void useResultInAnotherCall() {
+        Random random;
+        int nextInt;
+        Integer result;
+        random = new Random();
+        nextInt = random.nextInt();
+        result = Integer.valueOf(nextInt);
+    }
+}

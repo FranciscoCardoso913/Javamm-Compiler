@@ -1,0 +1,30 @@
+
+import java.util.Random;
+import java.lang.Integer;
+
+Example {
+
+    .construct Example().V {
+    invokespecial(this, "<init>").V;
+    }
+
+    .method public static main(args.array.String).V {
+    ret.V ;
+    }
+
+    .method public exampleMethod().V {
+    ret.V ;
+    }
+
+    .method public useResultInAnotherCall().V {
+        tmp0.Random :=.Random new(Random).Random;
+        invokespecial(tmp0.Random, "<init>").V;
+        random.Random :=.Random tmp0.Random;
+        tmp1.i32 :=.i32 invokevirtual(random.Random, "nextInt").i32;
+        nextInt.i32 :=.i32 tmp1.i32;
+        tmp2.Integer :=.Integer invokestatic(Integer, "valueOf", nextInt.i32).Integer;
+        result.Integer :=.Integer tmp2.Integer;
+        ret.V ;
+    }
+
+}
