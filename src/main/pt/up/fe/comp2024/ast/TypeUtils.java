@@ -20,6 +20,10 @@ public class TypeUtils {
         return INT_TYPE_NAME;
     }
 
+    public static String getBoolTypeName() {
+        return BOOL_TYPE_NAME;
+    }
+
     /**
      * Gets the {@link Type} of an arbitrary expression.
      *

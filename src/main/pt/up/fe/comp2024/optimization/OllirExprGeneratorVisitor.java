@@ -37,6 +37,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         addVisit(VAR_REF_EXPR, this::visitVarRef);
         addVisit(BINARY_EXPR, this::visitBinExpr);
         addVisit(INTEGER_LITERAL, this::visitInteger);
+        addVisit(BOOL_LITERAL, this::visitBoolean);
         addVisit(METHOD_EXPR, this::visitMethodExpr);
         addVisit(NEW_OBJ_EXPR, this::visitNewObjExpr);
         addVisit(THIS, this::visitThis);
@@ -46,9 +47,18 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
 
     private OllirExprResult visitInteger(JmmNode node, Void unused) {
-        var intType = new Type(TypeUtils.getIntTypeName(), false);
+        Type intType = new Type(TypeUtils.getIntTypeName(), false);
         String ollirIntType = OptUtils.toOllirType(intType);
         String code = node.get("value") + ollirIntType;
+        return new OllirExprResult(code);
+    }
+
+    private OllirExprResult visitBoolean(JmmNode node, Void unused) {
+        Type boolType = new Type(TypeUtils.getBoolTypeName(), false);
+        String ollirIntType = OptUtils.toOllirType(boolType);
+        String ollirValue = node.get("value").equals("true") ? "1" : "0";
+
+        String code = ollirValue + ollirIntType;
         return new OllirExprResult(code);
     }
 
