@@ -194,6 +194,7 @@ public class JasminGenerator {
             case BOOLEAN -> "Z";
             case ARRAYREF -> // TODO: get type of arrau; next checkpoint?
                     "[Ljava/lang/String" + ";";
+            // TODO: might not bet current method class?
             case OBJECTREF -> "L" + ((ClassType) type).getName() + ";";
             case CLASS -> "L" + currentMethod.getClass().getName().toLowerCase() + ";";
             case THIS -> "L" + currentMethod.getOllirClass().getClassName() + ";";
