@@ -92,7 +92,6 @@ public class NodeType extends AnalysisVisitor {
                     message,
                     null)
             );
-            return null;
         }
         node.put("node_type", matcher.group(1));
         return null;

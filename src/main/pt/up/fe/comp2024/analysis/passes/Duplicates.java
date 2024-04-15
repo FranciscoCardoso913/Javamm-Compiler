@@ -56,7 +56,6 @@ public class Duplicates extends AnalysisVisitor {
     private Void visitImport(JmmNode node, SymbolTable table){
         Set<String> set = new HashSet<>();
         for (var imported_path: node.getChildren(Kind.IMPORT_DECL)) {
-            System.out.println(imported_path.get("path"));
             String[] parts = imported_path.get("path").replaceAll("[\\[\\]\\s]", "").split(",");
             String className = parts[parts.length - 1];
             if(set.contains(className)) addSemanticReport(node, String.format(
