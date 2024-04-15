@@ -1,5 +1,6 @@
 package pt.up.fe.comp2024.ast;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 
@@ -68,5 +69,23 @@ public class NodeUtils {
         return false;
     }
 
+    // TODO: Maybe annotate tree so it isn't necessary to do this in Ollir
+    public static boolean isFieldRef(String varRef, SymbolTable table, String currMethod) {
+        for (Symbol local: table.getLocalVariables(currMethod)) {
+            if (local.getName().equals(varRef))
+                return false;
+        }
 
+        for (Symbol param: table.getParameters(currMethod)) {
+            if (param.getName().equals(varRef))
+                return false;
+        }
+
+        for (Symbol field: table.getFields()) {
+            if (field.getName().equals(varRef))
+                return true;
+        }
+
+        return false;
+    }
 }

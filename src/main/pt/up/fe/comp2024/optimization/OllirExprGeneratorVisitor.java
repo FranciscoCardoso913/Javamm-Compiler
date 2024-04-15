@@ -108,7 +108,31 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
 
     private OllirExprResult visitVarRef(JmmNode node, Void unused) {
+        Optional<JmmNode> method = node.getAncestor(METHOD_DECL);
+
+        String id = node.get("name");
+
+        if (method.isPresent() && NodeUtils.isFieldRef(id, table, method.get().get("name")))
+            return buildGetField(node);
+
+        return buildCommonField(node);
+    }
+
+    private OllirExprResult buildGetField(JmmNode node) {
         StringBuilder code = new StringBuilder();
+        StringBuilder computation = new StringBuilder();
+        String varType = OptUtils.toOllirType(node);
+
+        code.append(OptUtils.getTemp()).append(varType);
+        computation.append(code).append(SPACE).append(ASSIGN).append(varType).append(SPACE).append("getfield(this, ")
+                .append(node.get("name")).append(varType).append(")").append(varType).append(END_STMT);
+
+        return new OllirExprResult(code.toString(), computation.toString());
+    }
+
+    private OllirExprResult buildCommonField(JmmNode node) {
+        StringBuilder code = new StringBuilder();
+        // TODO: Maybe annotate the information below?
         Optional<JmmNode> method = node.getAncestor(METHOD_DECL);
         Optional<JmmNode> returnStmt = node.getAncestor(RETURN_STMT);
 
