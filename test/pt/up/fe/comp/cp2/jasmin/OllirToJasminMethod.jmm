@@ -1,20 +1,18 @@
 import ioPlus;
+import Quicksort;
 
-class Test extends ioPlus {
-    public static void main(String[] args) {
-    }
-
+class Test  {
     public int add(int a, int b) {
-
         return a + b;
     }
 
-    public void doSomething() {
+    public static void main(String[] args) {
+        Test test;
         int a;
-        int b;
-        a= 10;
-        b= a + 20;
-        ioPlus.println(b);
-    }
+        test=new Test();
+        test.add(1,2);
+        a = test.add(1,2);
 
+    }
 }
+

@@ -26,6 +26,7 @@ public class JasminGenerator {
 
     private final OllirResult ollirResult;
     private final Map<String, String> classPathMap;
+    private boolean shouldPop = true;
 
     List<Report> reports;
 
@@ -209,7 +210,7 @@ public class JasminGenerator {
         return switch (elementType) {
             case INT32 -> "I";
             case BOOLEAN -> "Z";
-            case ARRAYREF -> // TODO: get type of arrau; next checkpoint?
+            case ARRAYREF -> // TODO: get type of array; next checkpoint?
                     "[Ljava/lang/String" + ";";
             case OBJECTREF -> {
                 String className = ((ClassType) type).getName();
@@ -248,12 +249,14 @@ public class JasminGenerator {
         };
     }
 
+
     private String generateNew(CallInstruction callInstruction) {
         StringBuilder code = new StringBuilder();
         Type typeInstance = callInstruction.getCaller().getType();
         if (typeInstance instanceof ClassType classTypeInstance) {
             String className = classPathMap.getOrDefault(classTypeInstance.getName(), classTypeInstance.getName());
             code.append("new ").append(className).append(NL);
+            shouldPop = false;
         } else {
             throw new NotImplementedException(typeInstance.getClass());
         }
@@ -276,6 +279,8 @@ public class JasminGenerator {
                 code.append(generators.apply(arg));
             }
 
+            String returnType = getType(callInstruction.getReturnType());
+
             code.append("invokevirtual ")
                     .append(className).append("/")
                     .append(methodName)
@@ -284,8 +289,11 @@ public class JasminGenerator {
                             .map(arg -> getType(arg.getType()))
                             .collect(Collectors.joining()))
                     .append(")");
-            code.append(getType(callInstruction.getReturnType())).append(NL);
+            code.append(returnType).append(NL);
 
+            if (shouldPop && !callInstruction.getReturnType().getTypeOfElement().equals(ElementType.VOID)) {
+                code.append("pop").append(NL);
+            }
         } else if (typeInstance instanceof ArrayType arrayTypeInstance) {
             throw new NotImplementedException(arrayTypeInstance);
         }
@@ -313,6 +321,9 @@ public class JasminGenerator {
                             .collect(Collectors.joining()))
                     .append(")");
             code.append(getType(callInstruction.getReturnType())).append(NL);
+            if (shouldPop && !callInstruction.getReturnType().getTypeOfElement().equals(ElementType.VOID)) {
+                code.append("pop").append(NL);
+            }
         } else {
             throw new NotImplementedException(callInstruction.getCaller().getClass());
         }
@@ -330,6 +341,8 @@ public class JasminGenerator {
             for (Element arg : callInstruction.getArguments()) {
                 code.append(generators.apply(arg));
             }
+
+            String returnType = getType(callInstruction.getReturnType());
             code.append("invokespecial ")
                     .append(className).append("/")
                     .append(methodName).append("(")
@@ -337,7 +350,11 @@ public class JasminGenerator {
                             .map(arg -> getType(arg.getType()))
                             .collect(Collectors.joining()))
                     .append(")")
-                    .append(getType(callInstruction.getReturnType())).append(NL);
+                    .append(returnType).append(NL);
+            if (shouldPop && !callInstruction.getReturnType().getTypeOfElement().equals(ElementType.VOID)) {
+                code.append("pop").append(NL);
+                shouldPop = true;
+            }
         } else {
             throw new NotImplementedException(typeInstance.getClass());
         }
@@ -363,8 +380,12 @@ public class JasminGenerator {
     private String generateAssign(AssignInstruction assign) {
         var code = new StringBuilder();
 
+        // if RHS is an invoke, we don't want to pop the result
+        shouldPop = false;
         // generate code for loading what's on the right
         code.append(generators.apply(assign.getRhs()));
+
+        shouldPop = true;
 
         // store value in the stack in destination
         var lhs = assign.getDest();
@@ -375,15 +396,22 @@ public class JasminGenerator {
         }
 
         // get register
-        var name = currentMethod.getVarTable().get(operand.getName());
-        var reg = name.getVirtualReg();
+        String operandName = operand.getName();
+        code.append(generateStore(operandName));
 
-        switch (name.getVarType().getTypeOfElement()) {
+        return code.toString();
+    }
+
+    private String generateStore(String name) {
+        var code = new StringBuilder();
+        var regName = currentMethod.getVarTable().get(name);
+        var reg = regName.getVirtualReg();
+
+        switch (regName.getVarType().getTypeOfElement()) {
             case INT32, BOOLEAN -> code.append("istore ").append(reg).append(NL);
             case OBJECTREF -> code.append("astore ").append(reg).append(NL);
-            default -> throw new NotImplementedException(name.getVarType().getTypeOfElement());
+            default -> throw new NotImplementedException(regName.getVarType().getTypeOfElement());
         }
-
         return code.toString();
     }
 
@@ -436,7 +464,6 @@ public class JasminGenerator {
         code.append(generators.apply(binaryOp.getRightOperand()));
 
         // apply operation
-
         var op = switch (binaryOp.getOperation().getOpType()) {
             case ADD -> "iadd";
             case SUB -> "isub";

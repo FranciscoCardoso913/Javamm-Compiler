@@ -1,8 +1,7 @@
 import ioPlus;
 HelloWorld {
 
-
-.method public static main(args.array.String).V {
+    .method public static main(args.array.String).V {
         invokestatic(ioPlus, "printHelloWorld").V;
         ret.V;
     }

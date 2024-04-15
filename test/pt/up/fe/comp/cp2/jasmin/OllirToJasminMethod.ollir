@@ -1,24 +1,22 @@
 import ioPlus;
-
-Test extends ioPlus {
-    .method public static main(args.array.String).V {
-        ret.V ;
-    }
-
+import Quicksort;
+Test {
     .method public add(a.i32, b.i32).i32 {
-    tmp0.i32 :=.i32 a.i32 +.i32 b.i32;
-    ret.i32 tmp0.i32;
+        tmp0.i32 :=.i32 a.i32 +.i32 b.i32;
+        ret.i32 tmp0.i32;
     }
 
-    .method public doSomething().V {
-        a.i32 :=.i32 10.i32;
-        tmp1.i32 :=.i32 a.i32 +.i32 20.i32;
-        b.i32 :=.i32 tmp1.i32;
-        invokestatic(ioPlus, "println", b.i32).V;
+    .method public static main(args.array.String).V {
+        tmp1.Test :=.Test new(Test).Test;
+        invokespecial(tmp1.Test, "<init>").V;
+        test.Test :=.Test tmp1.Test;
+        invokevirtual(test.Test, "add", 1.i32, 2.i32).i32;
+        tmp3.i32 :=.i32 invokevirtual(test.Test, "add", 1.i32, 2.i32).i32;
+        a.i32 :=.i32 tmp3.i32;
         ret.V ;
     }
 
     .construct Test().V {
-    invokespecial(this, "<init>").V;
+        invokespecial(this, "<init>").V;
     }
 }
