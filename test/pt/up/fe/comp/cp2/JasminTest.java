@@ -19,6 +19,25 @@ public class JasminTest {
     }
 
     @Test
+    public void ollirToJasminHello() {
+        testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminHello.ollir");
+    }
+
+    @Test
+    public void ollirToJasminSimple() {
+        testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminSimple.ollir");
+    }
+
+    @Test
+    public void ollirToJasminOperations() {
+        testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminOperations.ollir");
+    }
+    @Test
+    public void ollirToJasminImports() {
+        testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminImports.ollir");
+    }
+
+    @Test
     public void ollirToJasminArithmetics() {
         testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminArithmetics.ollir");
     }
