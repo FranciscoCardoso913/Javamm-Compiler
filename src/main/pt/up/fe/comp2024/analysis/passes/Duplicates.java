@@ -13,6 +13,7 @@ public class Duplicates extends AnalysisVisitor {
     protected void buildVisitor() {
         addVisit(Kind.CLASS_DECL, this::visitClassFields);
         addVisit(Kind.METHOD, this::visitMethods);
+        addVisit(Kind.PROGRAM, this::visitImport);
     }
     private Void visitClassFields(JmmNode node, SymbolTable table){
         Set<String> set = new HashSet<>();
@@ -50,6 +51,21 @@ public class Duplicates extends AnalysisVisitor {
             ));
             else set.add(varRef.get("name"));
         }
+        return null;
+    }
+    private Void visitImport(JmmNode node, SymbolTable table){
+        Set<String> set = new HashSet<>();
+        for (var imported_path: node.getChildren(Kind.IMPORT_DECL)) {
+            System.out.println(imported_path.get("path"));
+            String[] parts = imported_path.get("path").replaceAll("[\\[\\]\\s]", "").split(",");
+            String className = parts[parts.length - 1];
+            if(set.contains(className)) addSemanticReport(node, String.format(
+                    "Duplicated import %s",
+                    className
+            ));
+            else set.add(className);
+        }
+
         return null;
     }
 }
