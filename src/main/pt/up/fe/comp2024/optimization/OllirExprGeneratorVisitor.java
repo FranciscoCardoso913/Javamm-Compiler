@@ -152,7 +152,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
             for (int i = 1; i <= params.size(); i++) {
                 if (params.get(i - 1).getName().equals(id)) {
                     // TODO: Check if '$' makes the tests be wrong or have problems with jasmin
-                    code.append("$").append(i).append(".");
+                    //code.append("$").append(i).append(".");
                     break;
                 }
             }
