@@ -41,6 +41,7 @@ public class TypeUtils {
             case VAR_REF_EXPR -> getVarExprType(expr, table);
             case INTEGER_LITERAL -> new Type(INT_TYPE_NAME, false);
             case METHOD_EXPR -> getMethodExprType(expr, table);
+            case ASSIGN_STMT -> getVarExprType(expr, table); // TODO: Erase this when ASSIGN_STMT is annotated
             default -> throw new UnsupportedOperationException("Can't compute type for expression kind '" + kind + "'");
         };
 
