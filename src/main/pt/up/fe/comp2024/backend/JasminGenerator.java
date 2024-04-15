@@ -409,8 +409,7 @@ public class JasminGenerator {
 
         switch (regName.getVarType().getTypeOfElement()) {
             case INT32, BOOLEAN -> code.append("istore ").append(reg).append(NL);
-            case OBJECTREF -> code.append("astore ").append(reg).append(NL);
-            default -> throw new NotImplementedException(regName.getVarType().getTypeOfElement());
+            case OBJECTREF, STRING, CLASS -> code.append("astore ").append(reg).append(NL);
         }
         return code.toString();
     }
@@ -426,9 +425,8 @@ public class JasminGenerator {
         var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
         switch (currentMethod.getVarTable().get(operand.getName()).getVarType().getTypeOfElement()) {
             case INT32, BOOLEAN -> code.append("iload ").append(reg).append(NL);
-            case OBJECTREF -> code.append("aload ").append(reg).append(NL);
+            case OBJECTREF, CLASS, STRING -> code.append("aload ").append(reg).append(NL);
             case THIS -> code.append("aload 0").append(NL);
-            default -> throw new NotImplementedException(currentMethod.getVarTable().get(operand.getName()).getVarType().getTypeOfElement());
         }
         return code.toString();
     }
@@ -501,8 +499,11 @@ public class JasminGenerator {
                 code.append(generators.apply(returnInst.getOperand()));
                 code.append("ireturn").append(NL);
             }
+            case OBJECTREF, STRING, CLASS -> {
+                code.append(generators.apply(returnInst.getOperand()));
+                code.append("areturn").append(NL);
+            }
             case VOID -> code.append("return").append(NL);
-            default -> throw new NotImplementedException(type);
         }
 
         return code.toString();
