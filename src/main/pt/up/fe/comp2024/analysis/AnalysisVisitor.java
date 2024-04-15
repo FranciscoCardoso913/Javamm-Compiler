@@ -4,9 +4,12 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
 import pt.up.fe.comp.jmm.report.Report;
+import pt.up.fe.comp.jmm.report.Stage;
+import pt.up.fe.comp2024.ast.NodeUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -14,10 +17,23 @@ import java.util.List;
 public abstract class AnalysisVisitor extends PreorderJmmVisitor<SymbolTable, Void> implements AnalysisPass {
 
     private List<Report> reports;
+    protected static String currentMethod = "main";
+
+    protected Pattern array_pattern = Pattern.compile("([a-zA-Z0-9]+)(_array)?(_ellipse)?");
 
     public AnalysisVisitor() {
         reports = new ArrayList<>();
         setDefaultValue(() -> null);
+    }
+
+    protected void addSemanticReport (JmmNode node, String message ){
+        this.addReport(Report.newError(
+                Stage.SEMANTIC,
+                NodeUtils.getLine(node),
+                NodeUtils.getColumn(node),
+                message,
+                null)
+        );
     }
 
     protected void addReport(Report report) {

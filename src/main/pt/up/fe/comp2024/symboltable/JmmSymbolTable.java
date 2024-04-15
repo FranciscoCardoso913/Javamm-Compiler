@@ -6,6 +6,7 @@ import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp2024.ast.TypeUtils;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,8 @@ public class JmmSymbolTable implements SymbolTable {
     public List<String> getImports() {
         return Collections.unmodifiableList(imports);
     }
+
+
 
     @Override
     public String getClassName() {

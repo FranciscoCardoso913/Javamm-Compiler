@@ -53,6 +53,14 @@ public class UndeclaredVariable extends AnalysisVisitor {
             return null;
         }
 
+        // If the name is the end of an import, return
+        for (String currImport: table.getImports()) {
+            String[] paths = currImport.split("\\.");
+            System.out.println(paths[paths.length - 1]);
+            if (paths[paths.length - 1].equals(varRefName))
+                return null;
+        }
+
         // Create error report
         var message = String.format("Variable '%s' does not exist.", varRefName);
         addReport(Report.newError(

@@ -8,10 +8,14 @@ import java.util.Set;
 
 public enum Kind {
     PROGRAM,
+    IMPORT_DECL,
     CLASS_DECL,
     VAR_DECL,
     TYPE,
     TYPE_INT,
+    TYPE_BOOL,
+    TYPE_VOID,
+    TYPE_VARIABLE,
     METHOD_DECL,
     PARAM,
     ASSIGN_STMT,
@@ -19,12 +23,24 @@ public enum Kind {
     BINARY_EXPR,
     INTEGER_LITERAL,
     LENGTH_ATTR_EXPR,
-    VAR_REF_EXPR;
-
+    VAR_REF_EXPR,
+    BOOL_LITERAL,
+    PARENTH_EXPR,
+    ARRAY_EXPR,
+    METHOD,
+    METHOD_EXPR,
+    EXPR_STMT,
+    THIS,
+    NEG_EXPR,
+    NEW_ARRAY_EXPR,
+    INIT_ARRAY_EXPR,
+    NEW_OBJ_EXPR,
+    IF_STMT,
+    WHILE_STMT;
 
     private static final Set<Kind> STATEMENTS = Set.of(ASSIGN_STMT, RETURN_STMT);
     private static final Set<Kind> EXPRESSIONS = Set.of(BINARY_EXPR, INTEGER_LITERAL, VAR_REF_EXPR, LENGTH_ATTR_EXPR);
-
+    private static final Set<Kind> TYPES = Set.of(TYPE_INT, TYPE_BOOL, TYPE_VOID, TYPE_VARIABLE);
     private final String name;
 
     private Kind(String name) {
@@ -66,6 +82,10 @@ public enum Kind {
      */
     public boolean isExpr() {
         return EXPRESSIONS.contains(this);
+    }
+
+    public boolean isType() {
+        return TYPES.contains(this);
     }
 
     /**

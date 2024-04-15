@@ -31,23 +31,28 @@ public class Launcher {
         JmmParserImpl parser = new JmmParserImpl();
         JmmParserResult parserResult = parser.parse(code, config);
         TestUtils.noErrors(parserResult.getReports());
-
         // Print AST
         System.out.println(parserResult.getRootNode().toTree());
+
 
         // Semantic Analysis stage
         JmmAnalysisImpl sema = new JmmAnalysisImpl();
         JmmSemanticsResult semanticsResult = sema.semanticAnalysis(parserResult);
+        System.out.println(parserResult.getRootNode().toTree());
+        System.out.println("ola");
         TestUtils.noErrors(semanticsResult.getReports());
+        System.out.println("ola");
 
+        //System.out.println(semanticsResult.getSymbolTable().getLocalVariables("main"));
 
+/*
         // Optimization stage
         JmmOptimizationImpl ollirGen = new JmmOptimizationImpl();
         OllirResult ollirResult = ollirGen.toOllir(semanticsResult);
         TestUtils.noErrors(ollirResult.getReports());
 
         // Print OLLIR code
-        //System.out.println(ollirResult.getOllirCode());
+        System.out.println(ollirResult.getOllirCode());
 
         // Code generation stage
         JasminBackendImpl jasminGen = new JasminBackendImpl();
@@ -55,7 +60,7 @@ public class Launcher {
         TestUtils.noErrors(jasminResult.getReports());
 
         // Print Jasmin code
-        //System.out.println(jasminResult.getJasminCode());
+        //System.out.println(jasminResult.getJasminCode());*/
     }
 
 }

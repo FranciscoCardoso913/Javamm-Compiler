@@ -29,7 +29,6 @@ NOT: '!';
 INT : 'int' ;
 BOOL: 'boolean';
 VOID: 'void';
-STRING: 'String';
 
 TRUE : 'true';
 FALSE: 'false';
@@ -77,35 +76,29 @@ classDecl
 
 
 varDecl
-    : type name= ID SEMI
+    : type name=ID SEMI
     ;
 
 type locals[ boolean isArray= false, boolean isEllipse = false]
-    : name = INT (LSQUARE RSQUARE {$isArray = true;})  # TypeIntArray
-    | name = INT ( ELLIPSIS {$isEllipse = true;}) # TypeIntArray
-    | name = INT # TypeInt
-    | name = BOOL # TypeBool
-    | name = STRING # TypeString
+    : name = INT (LSQUARE RSQUARE {$isArray = true;})?  # TypeInt
+    | name = INT ( ELLIPSIS {$isEllipse = true;})? # TypeInt
+    | name = BOOL (LSQUARE RSQUARE {$isArray = true;})?  # TypeBool
+    | name = BOOL ( ELLIPSIS {$isEllipse = true;})? # TypeBool
     | name = VOID # TypeVoid
-    | name = ID # TypeVariable
+    | name = ID (LSQUARE RSQUARE {$isArray = true;})? # TypeVariable
+    | name = ID ( ELLIPSIS {$isEllipse = true;})? # TypeVariable
     ;
 
-methodDecl locals[boolean isPublic=false]
-    : (PUBLIC {$isPublic=true;})?
+methodDecl locals[boolean isPublic=false, boolean isStatic = false, boolean isMain = false]
+    :(PUBLIC {$isPublic=true;})?
+        (STATIC {$isStatic = true;})?
+        {$isMain = $isPublic && $isStatic;}
         type name=ID
         LPAREN (param (COMMA param)*)? RPAREN
         LCURLY
         varDecl* stmt*
-        RETURN expr SEMI
+        (RETURN expr SEMI)?
         RCURLY # Method
-    | (PUBLIC {$isPublic=true;})?
-        STATIC VOID name=ID // Adding the name annotation was necessary to pass the test
-        LPAREN
-        STRING LSQUARE RSQUARE argName=ID
-        RPAREN
-        LCURLY
-        varDecl* stmt*
-        RCURLY # MainMethod
     ;
 
 param
@@ -128,13 +121,13 @@ expr
     | expr LSQUARE expr RSQUARE # ArrayExpr
     // members and methods access
     | expr DOT name=ID # LengthAttrExpr
-    | expr DOT name = ID LPAREN (expr (COMMA expr)*)? RPAREN # MethodExpr
+    | expr DOT name=ID LPAREN (expr (COMMA expr)*)? RPAREN # MethodExpr
     // unary
     | NOT expr # NegExpr
     // new
     | NEW INT LSQUARE expr RSQUARE # NewArrayExpr
     | NEW name = ID LPAREN RPAREN # NewObjExpr
-    | LSQUARE (expr (COMMA expr)*)? RSQUARE # InitArrayExpr // qual precedencia?
+    | LSQUARE (expr (COMMA expr)*)? RSQUARE # InitArrayExpr
     // Binary
     | expr op= (MUL | DIV) expr # BinaryExpr
     | expr op= (ADD | SUB) expr # BinaryExpr
