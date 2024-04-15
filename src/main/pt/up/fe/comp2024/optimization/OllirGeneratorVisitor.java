@@ -63,7 +63,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         // code to compute self
         // statement has type of lhs
-        String typeString = OptUtils.toOllirType(OptUtils.getAssignType(node, table));
+        String typeString = OptUtils.toOllirType(node.getChild(0));
 
         code.append(node.get("name"));
         code.append(typeString);
@@ -254,7 +254,11 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private String visitVarDecl(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
 
-        String varField = OptUtils.toOllirType(node.getChild(0));
+        // TODO: Change when tree is fully annotated
+
+        JmmNode typeNode = node.getChild(0);
+        Type type = new Type(typeNode.get("name"), NodeUtils.getBooleanAttribute(typeNode, "isArray", "false"));
+        String varField = OptUtils.toOllirType(type);
         code.append(".field public ").append(node.get("name")).append(varField).append(END_STMT);
 
         return code.toString();

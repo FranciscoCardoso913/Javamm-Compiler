@@ -39,12 +39,9 @@ public class OptUtils {
         return tempNumber;
     }
 
-    public static String toOllirType(JmmNode typeNode) {
-        if (!Kind.fromString(typeNode.getKind()).isType())
-            throw new RuntimeException("Node '" + typeNode + "' is not a type");
-        String typeName = typeNode.get("name");
-
-        return toOllirType(typeName, NodeUtils.getBooleanAttribute(typeNode, "isArray", "false"));
+    public static String toOllirType(JmmNode node) {
+        String[] type = node.get("node_type").split("_");
+        return toOllirType(type[0], type.length > 1);
     }
 
     public static String toOllirType(Type type) {
@@ -66,49 +63,22 @@ public class OptUtils {
     }
 
     public static String getOllirMethod(JmmNode node, SymbolTable table) {
-        // TODO: Refactor this code, imports never have types?
-
+        // TODO: Need to add "recursion" to get object name if it is temporary value
+        // TODO: Visit the expr first, name is result.getCode(). Pass this value as a parameter or deal with this in visitor
         StringBuilder code = new StringBuilder();
-        System.out.println(node);
+
         if (node.isInstance(THIS)) {
             code.append(VIRTUAL_FUNC).append("(this");
         } else {
-            // TODO: null if node is an import
-            Type test = TypeUtils.getExprType(node, table);
-            String funcType = test != null ? VIRTUAL_FUNC : STATIC_FUNC;
+            String objName = node.get("name");
+            boolean isStatic = NodeUtils.isImported(objName, table) || objName.equals(table.getClassName());
+            String funcType = isStatic ? STATIC_FUNC : VIRTUAL_FUNC;
 
-            code.append(funcType).append("(").append(node.get("name"));
-            if (TypeUtils.getExprType(node, table) != null)
-                code.append(OptUtils.toOllirType(TypeUtils.getExprType(node, table)));
+            code.append(funcType).append("(").append(objName);
+            if (funcType.equals(VIRTUAL_FUNC))
+                code.append(OptUtils.toOllirType(node));
         }
 
         return code.toString();
-    }
-
-    // TODO: Remove this when tree is annotated
-    public static Type getAssignType(JmmNode assignNode, SymbolTable table) {
-        if (assignNode.getAncestor(METHOD_DECL).isEmpty())
-            return null;
-
-        JmmNode methodNode = assignNode.getAncestor(METHOD_DECL).get();
-        String methodName = methodNode.get("name");
-        String varName = assignNode.get("name");
-
-        for (Symbol param: table.getParameters(methodName)) {
-            if (param.getName().equals(varName))
-                return param.getType();
-        }
-
-        for (Symbol local: table.getLocalVariables(methodName)) {
-            if (local.getName().equals(varName))
-                return local.getType();
-        }
-
-        for (Symbol field: table.getFields()) {
-            if (field.getName().equals(varName))
-                return field.getType();
-        }
-
-        return null;
     }
 }
