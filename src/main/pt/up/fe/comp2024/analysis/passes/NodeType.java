@@ -20,6 +20,7 @@ public class NodeType extends AnalysisVisitor {
 
     @Override
     protected void buildVisitor() {
+        addVisit(Kind.LIST_ASSIGN_STMT,this::visitAssignStatement);
         addVisit(Kind.ASSIGN_STMT, this::visitAssignStatement);
         addVisit(Kind.PARAM, this::visitParam);
         addVisit(Kind.VAR_DECL, this::visitVarDeclaration);

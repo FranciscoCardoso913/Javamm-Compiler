@@ -8,7 +8,10 @@ import pt.up.fe.comp2024.analysis.AnalysisVisitor;
 import pt.up.fe.comp2024.ast.Kind;
 import pt.up.fe.comp2024.ast.NodeUtils;
 
+import java.util.regex.Matcher;
+
 import static pt.up.fe.comp2024.ast.TypeUtils.areTypesAssignable;
+import static pt.up.fe.comp2024.ast.TypeUtils.isArray;
 
 public class Statements extends AnalysisVisitor {
     @Override
@@ -18,6 +21,7 @@ public class Statements extends AnalysisVisitor {
         addVisit(Kind.ASSIGN_STMT, this::visitAssignStatement);
         addVisit(Kind.EXPR_STMT, this::visitExpressionStatement);
         addVisit(Kind.METHOD, this::visitMethod);
+        addVisit(Kind.LIST_ASSIGN_STMT,this::visitListAssignStatement);
     }
 
     private Void visitWhileStatement(JmmNode node, SymbolTable table) {
@@ -76,6 +80,28 @@ public class Statements extends AnalysisVisitor {
 
     private Void visitExpressionStatement(JmmNode node, SymbolTable table) {
         if(!node.getChildren(Kind.METHOD_EXPR).isEmpty()) node.getChild(0).put("node_type", "void");
+        return null;
+    }
+    private Void visitListAssignStatement(JmmNode node, SymbolTable table) {
+        var index_type = node.getChild(0).get("node_type");
+        var expr_type = node.getChild(1).get("node_type");
+        if(!index_type.equals("int")) addSemanticReport(node, String.format(
+                "Expected array index of type int, got %s instead",
+                index_type
+        ));
+        if( !isArray(node.get("node_type"))) addSemanticReport(node, String.format(
+                "Expected %s to be array, got %s instead",
+                node.get("name"),
+                node.get("node_type")
+        ));
+        Matcher matcher = array_pattern.matcher(node.get("node_type"));
+        matcher.find();
+        var var_type =matcher.group(1);
+        if( ! var_type.equals(expr_type)) addSemanticReport(node, String.format(
+                "Variable of type %s cannot be assign a value of type %s.",
+                var_type,
+                expr_type
+        ));
         return null;
     }
 

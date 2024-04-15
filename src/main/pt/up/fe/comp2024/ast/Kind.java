@@ -36,7 +36,8 @@ public enum Kind {
     INIT_ARRAY_EXPR,
     NEW_OBJ_EXPR,
     IF_STMT,
-    WHILE_STMT;
+    WHILE_STMT,
+    LIST_ASSIGN_STMT;
 
     private static final Set<Kind> STATEMENTS = Set.of(ASSIGN_STMT, RETURN_STMT);
     private static final Set<Kind> EXPRESSIONS = Set.of(BINARY_EXPR, INTEGER_LITERAL, VAR_REF_EXPR, LENGTH_ATTR_EXPR);
