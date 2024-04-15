@@ -34,6 +34,11 @@ public class JasminTest {
     }
 
     @Test
+    public void ollirToJasminImports() {
+        testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminImports.ollir");
+    }
+
+    @Test
     public void ollirToJasminArithmetics() {
         testOllirToJasmin("pt/up/fe/comp/cp2/jasmin/OllirToJasminArithmetics.ollir");
     }

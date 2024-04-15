@@ -188,13 +188,14 @@ public class JasminGenerator {
     }
 
     private String getType(Type type) {
-        return switch (type.getTypeOfElement()) {
+        ElementType elementType = type.getTypeOfElement();
+        return switch (elementType) {
             case INT32 -> "I";
             case BOOLEAN -> "Z";
             case ARRAYREF -> // TODO: get type of arrau; next checkpoint?
                     "[Ljava/lang/String" + ";";
-            // TODO: might not bet current method class?
-            case OBJECTREF, CLASS -> "L" + currentMethod.getClass().getName().toLowerCase() + ";";
+            case OBJECTREF -> "L" + ((ClassType) type).getName() + ";";
+            case CLASS -> "L" + currentMethod.getClass().getName().toLowerCase() + ";";
             case THIS -> "L" + currentMethod.getOllirClass().getClassName() + ";";
             case STRING -> "Ljava/lang/String;";
             case VOID -> "V";
@@ -263,8 +264,9 @@ public class JasminGenerator {
                             .collect(Collectors.joining()))
                     .append(")");
             code.append(getType(callInstruction.getReturnType())).append(NL);
-        } else {
-            throw new NotImplementedException(typeInstance.getClass());
+
+        } else if (typeInstance instanceof ArrayType arrayTypeInstance) {
+            throw new NotImplementedException(arrayTypeInstance);
         }
         return code.toString();
     }
