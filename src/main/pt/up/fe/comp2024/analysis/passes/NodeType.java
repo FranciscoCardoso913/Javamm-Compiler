@@ -19,6 +19,7 @@ public class NodeType extends AnalysisVisitor {
 
     @Override
     protected void buildVisitor() {
+        addVisit(Kind.VAR_DECL, this::visitVarDeclaration);
         addVisit(Kind.METHOD_EXPR, this::visitMethodExpr);
         addVisit(Kind.THIS, this::visitThis);
         addVisit(Kind.NEW_OBJ_EXPR, this::visitNewObjectExpression);
@@ -156,7 +157,7 @@ public class NodeType extends AnalysisVisitor {
                 return null;
             }
             if(table.getSuper() != null){
-             
+
                 node.put("node_type", "unknown");
                 return null;
             }
@@ -171,6 +172,12 @@ public class NodeType extends AnalysisVisitor {
 
         }
         node.put("node_type", "undefined");
+        return null;
+    }
+    private Void visitVarDeclaration(JmmNode node, SymbolTable table){
+        var type = node.getChild(0);
+        if( Boolean.parseBoolean(type.get("isEllipse"))) addSemanticReport(node, "Variables cannot be declared as ellipses");
+        if( type.get("name").equals("void")) addSemanticReport(node, "Variables cannot be declared as void");
         return null;
     }
 
