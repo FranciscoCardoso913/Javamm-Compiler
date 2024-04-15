@@ -52,11 +52,9 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
 
     private OllirExprResult visitInteger(JmmNode node, Void unused) {
-        System.out.println("Entered int");
         Type intType = new Type(TypeUtils.getIntTypeName(), false);
         String ollirIntType = OptUtils.toOllirType(intType);
         String code = node.get("value") + ollirIntType;
-        System.out.println("Exited int");
         return new OllirExprResult(code);
     }
 
@@ -71,8 +69,6 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
 
     private OllirExprResult visitBinExpr(JmmNode node, Void unused) {
-        System.out.println("Entered bin");
-
         var lhs = visit(node.getJmmChild(0));
         var rhs = visit(node.getJmmChild(1));
 
@@ -93,7 +89,6 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         computation.append(node.get("op")).append(OptUtils.toOllirType(node)).append(SPACE)
                 .append(rhs.getCode()).append(END_STMT);
 
-        System.out.println("Exited bin");
         return new OllirExprResult(code, computation);
     }
 
@@ -127,7 +122,6 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
     }
 
     private OllirExprResult buildGetField(JmmNode node) {
-        System.out.println("Entered getfield");
         StringBuilder code = new StringBuilder();
         StringBuilder computation = new StringBuilder();
         String varType = OptUtils.toOllirType(node);
@@ -137,7 +131,6 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         computation.append(code).append(SPACE).append(ASSIGN).append(varType).append(SPACE).append("getfield(this, ")
                 .append(node.get("name")).append(varType).append(")").append(varType).append(END_STMT);
 
-        System.out.println("Exited getfield");
         return new OllirExprResult(code.toString(), computation.toString());
     }
 
@@ -185,7 +178,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         String methodName = node.get("name");
         String returnType = OptUtils.toOllirType(node);
 
-        if (table.getReturnType(methodName) != null) {
+        if (table.getReturnType(methodName) != null && !table.getReturnType(methodName).getName().equals("void")) {
             String tmpVar = OptUtils.getTemp();
             code.append(tmpVar).append(returnType);
             computation.append(tmpVar).append(returnType).append(SPACE).append(ASSIGN)
@@ -237,8 +230,6 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
      * @return
      */
     private OllirExprResult defaultVisit(JmmNode node, Void unused) {
-        System.out.println(node);
-
         for (var child : node.getChildren()) {
             visit(child);
         }

@@ -53,7 +53,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
     private String visitAssignStmt(JmmNode node, Void unused) {
         // TODO: assignments with lhs equal to a class field need to use putfield(), implement here
-        System.out.println("Entered assign");
         var rhs = exprVisitor.visit(node.getJmmChild(0));
 
         StringBuilder code = new StringBuilder();
@@ -82,8 +81,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
             code.append(END_STMT);
         }
-
-        System.out.println("Exited assign");
         return code.toString();
     }
 
@@ -284,8 +281,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
      */
     private String defaultVisit(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
-
-        System.out.println(node);
 
         for (var child : node.getChildren()) {
             code.append(visit(child));
