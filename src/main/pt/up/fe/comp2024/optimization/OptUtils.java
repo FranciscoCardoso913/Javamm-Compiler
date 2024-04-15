@@ -1,18 +1,9 @@
 package pt.up.fe.comp2024.optimization;
 
-import org.specs.comp.ollir.Instruction;
-import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp2024.ast.Kind;
 import pt.up.fe.comp2024.ast.NodeUtils;
-import pt.up.fe.comp2024.ast.TypeUtils;
-import pt.up.fe.specs.util.exceptions.NotImplementedException;
-
-import java.util.List;
-import java.util.MissingFormatArgumentException;
-import java.util.Optional;
 
 import static pt.up.fe.comp2024.ast.Kind.*;
 
@@ -62,22 +53,25 @@ public class OptUtils {
         return type;
     }
 
-    public static String getOllirMethod(JmmNode node, SymbolTable table) {
+    public static String getOllirMethod(JmmNode node, SymbolTable table, String objName) {
         // TODO: Need to add "recursion" to get object name if it is temporary value
         // TODO: Visit the expr first, name is result.getCode(). Pass this value as a parameter or deal with this in visitor
         StringBuilder code = new StringBuilder();
+        boolean isStatic = NodeUtils.isImported(objName, table) || objName.equals(table.getClassName());
+        String funcType = isStatic ? STATIC_FUNC : VIRTUAL_FUNC;
 
+        code.append(funcType).append("(").append(objName);
+        /*
         if (node.isInstance(THIS)) {
             code.append(VIRTUAL_FUNC).append("(this");
         } else {
-            String objName = node.get("name");
             boolean isStatic = NodeUtils.isImported(objName, table) || objName.equals(table.getClassName());
             String funcType = isStatic ? STATIC_FUNC : VIRTUAL_FUNC;
 
             code.append(funcType).append("(").append(objName);
             if (funcType.equals(VIRTUAL_FUNC))
                 code.append(OptUtils.toOllirType(node));
-        }
+        }*/
 
         return code.toString();
     }

@@ -5,6 +5,7 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
+import pt.up.fe.comp2024.ast.NodeUtils;
 import pt.up.fe.comp2024.ast.TypeUtils;
 
 import java.util.List;
@@ -38,6 +39,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         addVisit(INTEGER_LITERAL, this::visitInteger);
         addVisit(METHOD_EXPR, this::visitMethodExpr);
         addVisit(NEW_OBJ_EXPR, this::visitNewObjExpr);
+        addVisit(THIS, this::visitThis);
 
         setDefaultVisit(this::defaultVisit);
     }
@@ -78,13 +80,14 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
 
     private OllirExprResult visitVarRef(JmmNode node, Void unused) {
-        // TODO: Change this whole method when the AST is annotated
         StringBuilder code = new StringBuilder();
         Optional<JmmNode> method = node.getAncestor(METHOD_DECL);
         Optional<JmmNode> returnStmt = node.getAncestor(RETURN_STMT);
 
         String id = node.get("name");
 
+        // TODO: Maybe annotate node to know if it param?
+        // TODO: This is extra as it only adds the $, which isn't mandatory
         if (method.isPresent() && returnStmt.isEmpty()) {
             String methodName = method.get().get("name");
             List<Symbol> params = table.getParameters(methodName);
@@ -98,27 +101,29 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
             }
         }
 
-        String ollirType = OptUtils.toOllirType(node);
-        code.append(id).append(ollirType);
+        code.append(id);
+
+        // TODO: Remove when tree is fully annotated, that is, imports are annotated with empty string
+        if (!NodeUtils.isImported(id, table))
+            code.append(OptUtils.toOllirType(node));
 
         return new OllirExprResult(code.toString());
     }
 
     private OllirExprResult visitMethodExpr(JmmNode node, Void unused) {
-        // TODO: Refactor this method
         StringBuilder code = new StringBuilder();
         StringBuilder computation = new StringBuilder();
-        String ollirMethod = OptUtils.getOllirMethod(node.getChild(0), table);
-        String methodName = node.get("name");
-        String returnType;
 
-        if (table.getReturnType(methodName) == null) {
-            // TODO: With the annotated tree the return type isn't simply void.
-            returnType = ".V";
-        }
-        else {
+        // visit lhs expr to get its ollir representation
+        var object = visit(node.getChild(0));
+        computation.append(object.getComputation());
+
+        String ollirMethod = OptUtils.getOllirMethod(node.getChild(0), table, object.getCode());
+        String methodName = node.get("name");
+        String returnType = OptUtils.toOllirType(node);
+
+        if (table.getReturnType(methodName) != null) {
             String tmpVar = OptUtils.getTemp();
-            returnType = OptUtils.toOllirType(table.getReturnType(methodName));
             code.append(tmpVar).append(returnType);
             computation.append(tmpVar).append(returnType).append(SPACE).append(ASSIGN)
                     .append(returnType).append(SPACE);
@@ -155,6 +160,10 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         code.append(nextTemp).append(exprType);
 
         return new OllirExprResult(code.toString(), computation.toString());
+    }
+
+    private OllirExprResult visitThis(JmmNode node, Void unused) {
+        return new OllirExprResult("this");
     }
 
     /**
