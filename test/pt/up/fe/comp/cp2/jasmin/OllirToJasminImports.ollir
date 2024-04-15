@@ -4,9 +4,7 @@ import java.lang.Integer;
 
 Example {
 
-    .construct Example().V {
-    invokespecial(this, "<init>").V;
-    }
+
 
     .method public static main(args.array.String).V {
     ret.V ;
@@ -26,5 +24,7 @@ Example {
         result.Integer :=.Integer tmp2.Integer;
         ret.V ;
     }
-
+    .construct Example().V {
+    invokespecial(this, "<init>").V;
+    }
 }
