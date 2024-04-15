@@ -71,11 +71,12 @@ public class Statements extends AnalysisVisitor {
                     returnValueType
             ));
         }
+
         return null;
     }
 
     private Void visitExpressionStatement(JmmNode node, SymbolTable table) {
-        if(!node.getChildren(Kind.METHOD_EXPR).isEmpty()) node.put("node_type", "void");
+        if(!node.getChildren(Kind.METHOD_EXPR).isEmpty()) node.getChild(0).put("node_type", "void");
         return null;
     }
 

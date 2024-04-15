@@ -11,6 +11,7 @@ import pt.up.fe.comp2024.ast.NodeUtils;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static pt.up.fe.comp2024.ast.NodeUtils.isImported;
 import static pt.up.fe.comp2024.ast.TypeUtils.getExprType;
 
 public class NodeType extends AnalysisVisitor {
@@ -145,7 +146,7 @@ public class NodeType extends AnalysisVisitor {
 
         for(var child: node.getChildren())
             visit(child, table);
-        if(table.getImports().contains(object.get("node_type")) || object.get("node_type").equals("unknown")){
+        if(isImported(object.get("node_type"),table) || object.get("node_type").equals("unknown")){
             node.put("node_type", "unknown");
             return null;
         }

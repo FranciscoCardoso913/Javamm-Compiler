@@ -129,4 +129,8 @@ public class TypeUtils {
         Matcher matcher = array_pattern.matcher(type);
         return (matcher.find() && matcher.group(2) != null);
     }
+    public static String  getType( Type a){
+        String isArray = a.isArray()?"_array":"";
+        return  a.getName() + isArray;
+    }
 }

@@ -21,7 +21,7 @@ public class JmmAnalysisImpl implements JmmAnalysis {
 
     public JmmAnalysisImpl() {
 
-        this.analysisPasses = List.of(new UndeclaredVariable(),new NodeType(), new Operations(),new Init(), new Array(), new Statements(), new Method());
+        this.analysisPasses = List.of(new UndeclaredVariable(),new NodeType(), new Operations(),new Init(), new Array(),  new Method(),new Statements());
 
     }
 

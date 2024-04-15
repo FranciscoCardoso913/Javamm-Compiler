@@ -5,14 +5,13 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2024.analysis.AnalysisVisitor;
 import pt.up.fe.comp2024.ast.Kind;
 
-
-import static pt.up.fe.comp2024.ast.TypeUtils.isArray;
-import static pt.up.fe.comp2024.ast.TypeUtils.isEllipse;
+import static pt.up.fe.comp2024.ast.TypeUtils.*;
 
 public class Method extends AnalysisVisitor {
     @Override
     protected void buildVisitor() {
         addVisit(Kind.METHOD_EXPR, this::visitMethodExpr);
+        addVisit(Kind.METHOD, this::visitMethod);
 
     }
 
@@ -34,7 +33,7 @@ public class Method extends AnalysisVisitor {
                  invoc_params_size --;
                  break;
              }
-             if(!method_params.get(method_param_idx).getType().getName().equals( node.getChild(invoc_param_idx).get("node_type"))){
+             if(! getType(method_params.get(method_param_idx).getType()).equals( node.getChild(invoc_param_idx).get("node_type"))){
                 addSemanticReport(node, String.format(
                         "Expected parameter %s to be type %s, got %s instead.",
                         method_params.get(method_param_idx).getName(),
@@ -58,6 +57,19 @@ public class Method extends AnalysisVisitor {
                     node.getChildren().size()-1
 
             ));
+        }
+        return null;
+    }
+
+    private Void visitMethod(JmmNode node, SymbolTable table){
+        int idx =1 ;
+        for (var param : node.getChildren(Kind.PARAM)){
+            var type = param.getChild(0);
+            if( type.get("name").equals("void"))
+                addSemanticReport(node, "Parameters cannot be of type void");
+            if (Boolean.parseBoolean(type.get("isEllipse")) && idx != node.getChildren(Kind.PARAM).size() )
+                addSemanticReport(node, "Ellipse should be the last parameter");
+            idx ++;
         }
         return null;
     }
