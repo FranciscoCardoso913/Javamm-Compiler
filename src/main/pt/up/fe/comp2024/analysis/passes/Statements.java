@@ -75,6 +75,15 @@ public class Statements extends AnalysisVisitor {
             ));
         }
 
+        if(node.getChildren(Kind.RETURN_STMT).size() > 1)
+            addSemanticReport(node, "Method should contain 1 return at maximum");
+        else if(node.getChildren(Kind.RETURN_STMT).size() ==1) {
+            var returnStmt = node.getChildren(Kind.RETURN_STMT).get(0);
+            System.out.println(returnStmt.getIndexOfSelf());
+            if( returnStmt.getIndexOfSelf() != node.getChildren().size() -1 )
+                addSemanticReport(node, "Return should be in the end of the Method");
+        }
+
         return null;
     }
 
@@ -102,6 +111,7 @@ public class Statements extends AnalysisVisitor {
                 var_type,
                 expr_type
         ));
+
         return null;
     }
 
