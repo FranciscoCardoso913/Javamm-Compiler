@@ -54,8 +54,6 @@ public class OptUtils {
     }
 
     public static String getOllirMethod(JmmNode node, SymbolTable table, String objName) {
-        // TODO: Need to add "recursion" to get object name if it is temporary value
-        // TODO: Visit the expr first, name is result.getCode(). Pass this value as a parameter or deal with this in visitor
         StringBuilder code = new StringBuilder();
         boolean isStatic = NodeUtils.isImported(objName, table) || objName.equals(table.getClassName());
         String funcType = isStatic ? STATIC_FUNC : VIRTUAL_FUNC;
