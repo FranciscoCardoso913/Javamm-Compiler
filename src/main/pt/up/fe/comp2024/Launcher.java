@@ -39,13 +39,11 @@ public class Launcher {
         JmmAnalysisImpl sema = new JmmAnalysisImpl();
         JmmSemanticsResult semanticsResult = sema.semanticAnalysis(parserResult);
         System.out.println(parserResult.getRootNode().toTree());
-        System.out.println("ola");
         TestUtils.noErrors(semanticsResult.getReports());
-        System.out.println("ola");
 
         //System.out.println(semanticsResult.getSymbolTable().getLocalVariables("main"));
 
-/*
+
         // Optimization stage
         JmmOptimizationImpl ollirGen = new JmmOptimizationImpl();
         OllirResult ollirResult = ollirGen.toOllir(semanticsResult);
