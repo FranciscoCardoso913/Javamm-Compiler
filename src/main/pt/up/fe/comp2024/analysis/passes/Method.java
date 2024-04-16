@@ -5,6 +5,8 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2024.analysis.AnalysisVisitor;
 import pt.up.fe.comp2024.ast.Kind;
 
+import java.util.ArrayList;
+
 import static pt.up.fe.comp2024.ast.TypeUtils.*;
 
 public class Method extends AnalysisVisitor {
@@ -69,6 +71,17 @@ public class Method extends AnalysisVisitor {
                 addSemanticReport(node, "Ellipse should be the last parameter");
             idx ++;
         }
+        var variables = new ArrayList<String>();
+        var params = new ArrayList<String>();
+        for (var varRef: node.getChildren(Kind.VAR_DECL)){
+            variables.add(varRef.get("name"));
+        }
+        for (var param: node.getChildren(Kind.PARAM)){
+            params.add(param.get("name"));
+        }
+        for (var variable: variables)
+            if( params.contains(variable))
+                addSemanticReport(node, "Redeclaration");
         return null;
     }
 
