@@ -8,6 +8,9 @@ import pt.up.fe.comp2024.analysis.AnalysisVisitor;
 import pt.up.fe.comp2024.ast.Kind;
 import pt.up.fe.comp2024.ast.NodeUtils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -180,7 +183,21 @@ public class NodeType extends AnalysisVisitor {
     }
     private Void visitVarDeclaration(JmmNode node, SymbolTable table){
         var type = node.getChild(0);
-        if( Boolean.parseBoolean(type.get("isEllipse"))) addSemanticReport(node, "Variables cannot be declared as ellipses");
+        List<String> validTypes = new ArrayList<>(Arrays.asList("int", "boolean", table.getClassName()));
+
+        List<String> imports = table.getImports();
+        if (imports != null) {
+            for (String imported_path : imports) {
+                String[] parts = imported_path.split("\\.");
+                String lastPart = parts[parts.length - 1];
+                validTypes.add(lastPart);
+            }
+        }
+
+        System.out.println(validTypes);
+
+        if(!validTypes.contains(type.get("name")))addSemanticReport(node, "Invalid type");
+        else if( Boolean.parseBoolean(type.get("isEllipse"))) addSemanticReport(node, "Variables cannot be declared as ellipses");
         else if( type.get("name").equals("void")) addSemanticReport(node, "Variables cannot be declared as void");
         else node.put("node_type", type.get("name") + (Boolean.parseBoolean(type.get("isArray"))?"_array":"") );
         return null;
