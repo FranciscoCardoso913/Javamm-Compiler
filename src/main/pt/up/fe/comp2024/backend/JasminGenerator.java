@@ -422,17 +422,26 @@ public class JasminGenerator {
     private String generateOperand(Operand operand) {
         var code = new StringBuilder();
         // get register
-        System.out.println(operand);
-        System.out.println(operand.getName());
-        System.out.println(currentMethod.getVarTable().get(operand.getName()));
-        System.out.println(operand.getName());
 
-        if ("this".equals(operand.getName())) return "aload 0" + NL;
-
-        var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
-        switch (currentMethod.getVarTable().get(operand.getName()).getVarType().getTypeOfElement()) {
-            case INT32, BOOLEAN -> code.append("iload ").append(reg).append(NL);
-            case OBJECTREF, CLASS, STRING -> code.append("aload ").append(reg).append(NL);
+        switch (operand.getType().getTypeOfElement()) {
+            case INT32, BOOLEAN -> {
+                var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
+                code.append("iload ").append(reg).append(NL);
+            }
+            case OBJECTREF, CLASS, STRING -> {
+                if ("this".equals(operand.getName())) {
+                    System.out.println();
+                    System.out.println(operand);
+                    System.out.println(operand.getType());
+                    System.out.println(operand.getType().getTypeOfElement());
+                    System.out.println("getname: " + operand.getName());
+                    System.out.println(currentMethod.getVarTable().get(operand.getName()));
+                    //System.out.println("vartype " + currentMethod.getVarTable().get(operand.getName()).getVarType().getTypeOfElement());
+                    return "aload 0" + NL;
+                }
+                var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
+                code.append("aload ").append(reg).append(NL);
+            }
             case THIS -> code.append("aload 0").append(NL);
         }
         return code.toString();
