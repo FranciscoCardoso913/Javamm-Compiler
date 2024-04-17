@@ -18,8 +18,6 @@ import static pt.up.fe.comp2024.ast.Kind.*;
  * Generates OLLIR code from JmmNodes that are expressions.
  */
 
-// TODO: Changed the visitor from PreorderJmmVisitor to AJmmVisitor, to not have problems with temp values
-// TODO: Try to reuse PreorderJmmVisitor for the next checkpoint
 public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult> {
 
     private static final String SPACE = " ";
@@ -237,11 +235,16 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
      * @return
      */
     private OllirExprResult defaultVisit(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        StringBuilder computation = new StringBuilder();
+
         for (var child : node.getChildren()) {
-            visit(child);
+            OllirExprResult res = visit(child);
+            code.append(res.getCode());
+            computation.append(res.getComputation());
         }
 
-        return OllirExprResult.EMPTY;
+        return new OllirExprResult(code.toString(), computation.toString());
     }
 
 }
