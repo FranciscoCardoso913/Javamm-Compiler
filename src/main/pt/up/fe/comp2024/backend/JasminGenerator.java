@@ -458,7 +458,7 @@ public class JasminGenerator {
         code.append(generators.apply(unaryOpInstruction.getOperand()));
 
         var op = switch (unaryOpInstruction.getOperation().getOpType()) {
-            case NOTB -> "ixor";
+            case NOTB -> "ifeq " + generateLabels(unaryOpInstruction);
             case NOT -> "ineg";
             default -> {
                 System.out.println("Not a single operation: " + unaryOpInstruction.getOperation());
@@ -468,6 +468,26 @@ public class JasminGenerator {
 
         code.append(op).append(NL);
         return code.toString();
+    }
+
+    private String generateLabels(Instruction instruction) {
+        String label = String.valueOf(currentMethod.getLabels().size());
+        String labelTrue = "LabelTrue" + label;
+        String labelEnd = "LabelEnd" + label;
+
+        System.out.println(currentMethod.getLabels());
+        currentMethod.addLabel(labelTrue, instruction);
+        currentMethod.addLabel(labelEnd, instruction);
+        System.out.println("added labels");
+        System.out.println(currentMethod.getLabels());
+
+        return " " + labelTrue + NL
+                + "iconst_0" + NL // false
+                + "goto " + labelEnd + NL
+                +  labelTrue + ": " + NL
+                + "iconst_1" + NL
+                + labelEnd + ":";
+
     }
 
     private String generateBinaryOp(BinaryOpInstruction binaryOp) {
@@ -502,25 +522,7 @@ public class JasminGenerator {
         };
 
         var labelCode = switch (binaryOp.getOperation().getOpType()){
-            case LTH, GTH, EQ, NEQ, LTE, GTE -> {
-
-                String label = String.valueOf(currentMethod.getLabels().size());
-                String labelTrue = "LabelTrue" + label;
-                String labelEnd = "LabelEnd" + label;
-
-                System.out.println(currentMethod.getLabels());
-                currentMethod.addLabel(labelTrue, binaryOp);
-                currentMethod.addLabel(labelEnd, binaryOp);
-                System.out.println("added labels");
-                System.out.println(currentMethod.getLabels());
-
-                yield " " + labelTrue + NL
-                        + "iconst_0" + NL // false
-                        + "goto " + labelEnd + NL
-                        +  labelTrue + ": " + NL
-                        + "iconst_1" + NL
-                        + labelEnd + ":";
-            }
+            case LTH, GTH, EQ, NEQ, LTE, GTE -> generateLabels(binaryOp);
             default -> "";
         };
 
