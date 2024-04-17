@@ -459,9 +459,7 @@ public class JasminGenerator {
 
         var op = switch (unaryOpInstruction.getOperation().getOpType()) {
             case NOTB -> "ifeq " + generateLabels(unaryOpInstruction);
-            case NOT -> "ineg";
             default -> {
-                System.out.println("Not a single operation: " + unaryOpInstruction.getOperation());
                 throw new NotImplementedException(unaryOpInstruction.getOperation().getOpType());
             }
         };
@@ -475,11 +473,11 @@ public class JasminGenerator {
         String labelTrue = "LabelTrue" + label;
         String labelEnd = "LabelEnd" + label;
 
-        System.out.println(currentMethod.getLabels());
+        //System.out.println(currentMethod.getLabels());
         currentMethod.addLabel(labelTrue, instruction);
         currentMethod.addLabel(labelEnd, instruction);
-        System.out.println("added labels");
-        System.out.println(currentMethod.getLabels());
+        //System.out.println("added labels");
+        //System.out.println(currentMethod.getLabels());
 
         return " " + labelTrue + NL
                 + "iconst_0" + NL // false
@@ -503,20 +501,9 @@ public class JasminGenerator {
             case SUB -> "isub";
             case MUL -> "imul";
             case DIV -> "idiv";
-            case SHR -> "ishr"; // signed shift right
-            case SHL -> "ishl"; // signed shift left
-            case SHRR -> "iushr"; // unsigned shift right, logical
-            case XOR -> "ixor";
-            case AND, ANDB -> "iand";
-            case OR, ORB -> "ior";
+            case ANDB-> "iand";
             case LTH -> "if_icmplt";
-            case GTH -> "if_icmpgt";
-            case EQ -> "if_icmpeq";
-            case NEQ -> "if_icmpne";
-            case LTE -> "if_icmple";
-            case GTE -> "if_icmpge";
             default -> {
-                System.out.println("Not a binary operation: " + binaryOp.getOperation().getOpType());
                 throw new NotImplementedException(binaryOp.getOperation().getOpType());
             }
         };

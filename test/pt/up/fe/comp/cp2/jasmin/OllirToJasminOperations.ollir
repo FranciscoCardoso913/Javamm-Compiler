@@ -1,22 +1,72 @@
 import io;
+Operations extends Object {
 
-Simple {
-    .method public negative(i.i32).bool {
-    tmp0.bool :=.bool i.i32 <.bool 0.i32;
-    ret.bool tmp0.bool;
-    }
 
-    .method public static main(args.array.String).V {
-        tmp2.Simple :=.Simple new(Simple).Simple;
-        invokespecial(tmp2.Simple, "<init>").V;
-        s.Simple :=.Simple tmp2.Simple;
-        tmp3.bool :=.bool invokevirtual(s.Simple, "negative", 5.i32).bool;
-        negRes.bool :=.bool tmp3.bool;
-        invokestatic(io, "println", negRes.bool).V;
-        ret.V;
-    }
+.method public add(a.i32, b.i32).i32 {
+tmp0.i32 :=.i32 a.i32 +.i32 b.i32;
+ret.i32 tmp0.i32;
+}
 
-    .construct Simple().V {
-    invokespecial(this, "<init>").V;
-    }
+.method public subtract(a.i32, b.i32).i32 {
+tmp1.i32 :=.i32 a.i32 -.i32 b.i32;
+ret.i32 tmp1.i32;
+}
+
+.method public multiply(a.i32, b.i32).i32 {
+tmp2.i32 :=.i32 a.i32 *.i32 b.i32;
+ret.i32 tmp2.i32;
+}
+
+.method public divide(a.i32, b.i32).i32 {
+tmp3.i32 :=.i32 a.i32 /.i32 b.i32;
+ret.i32 tmp3.i32;
+}
+
+.method public isLessThan(a.i32, b.i32).bool {
+tmp4.bool :=.bool a.i32 <.bool b.i32;
+ret.bool tmp4.bool;
+}
+
+.method public negate(value.bool).bool {
+tmp5.bool :=.bool !.bool value.bool;
+ret.bool tmp5.bool;
+}
+
+.method public and(a.bool, b.bool).bool {
+tmp6.bool :=.bool a.bool &&.bool b.bool;
+ret.bool tmp6.bool;
+}
+
+.method public static main(args.array.String).V {
+tmp7.Operations :=.Operations new(Operations).Operations;
+invokespecial(tmp7.Operations, "<init>").V;
+op.Operations :=.Operations tmp7.Operations;
+tmp8.i32 :=.i32 invokevirtual(op.Operations, "add", 5.i32, 3.i32).i32;
+invokestatic(io, "println", tmp8.i32).V;
+tmp10.i32 :=.i32 invokevirtual(op.Operations, "subtract", 5.i32, 3.i32).i32;
+invokestatic(io, "println", tmp10.i32).V;
+tmp12.i32 :=.i32 invokevirtual(op.Operations, "multiply", 5.i32, 3.i32).i32;
+invokestatic(io, "println", tmp12.i32).V;
+tmp14.i32 :=.i32 invokevirtual(op.Operations, "divide", 10.i32, 2.i32).i32;
+invokestatic(io, "println", tmp14.i32).V;
+tmp16.bool :=.bool invokevirtual(op.Operations, "isLessThan", 5.i32, 10.i32).bool;
+invokestatic(io, "println", tmp16.bool).V;
+tmp18.bool :=.bool invokevirtual(op.Operations, "negate", 1.bool).bool;
+invokestatic(io, "println", tmp18.bool).V;
+tmp20.bool :=.bool invokevirtual(op.Operations, "negate", 0.bool).bool;
+invokestatic(io, "println", tmp20.bool).V;
+tmp22.bool :=.bool invokevirtual(op.Operations, "and", 1.bool, 0.bool).bool;
+invokestatic(io, "println", tmp22.bool).V;
+tmp24.bool :=.bool invokevirtual(op.Operations, "and", 0.bool, 1.bool).bool;
+invokestatic(io, "println", tmp24.bool).V;
+tmp26.bool :=.bool invokevirtual(op.Operations, "and", 0.bool, 0.bool).bool;
+invokestatic(io, "println", tmp26.bool).V;
+tmp28.bool :=.bool invokevirtual(op.Operations, "and", 1.bool, 1.bool).bool;
+invokestatic(io, "println", tmp28.bool).V;
+ret.V ;
+}
+
+.construct Operations().V {
+invokespecial(this, "<init>").V;
+}
 }
