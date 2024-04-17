@@ -422,6 +422,13 @@ public class JasminGenerator {
     private String generateOperand(Operand operand) {
         var code = new StringBuilder();
         // get register
+        System.out.println(operand);
+        System.out.println(operand.getName());
+        System.out.println(currentMethod.getVarTable().get(operand.getName()));
+        System.out.println(operand.getName());
+
+        if ("this".equals(operand.getName())) return "aload 0" + NL;
+
         var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
         switch (currentMethod.getVarTable().get(operand.getName()).getVarType().getTypeOfElement()) {
             case INT32, BOOLEAN -> code.append("iload ").append(reg).append(NL);
@@ -504,6 +511,10 @@ public class JasminGenerator {
                 code.append("areturn").append(NL);
             }
             case VOID -> code.append("return").append(NL);
+//            case THIS -> {
+//                code.append("aload 0").append(NL);
+//                code.append("areturn").append(NL);
+//            }
         }
 
         return code.toString();

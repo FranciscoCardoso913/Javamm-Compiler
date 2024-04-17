@@ -32,7 +32,7 @@ public class Launcher {
         JmmParserResult parserResult = parser.parse(code, config);
         TestUtils.noErrors(parserResult.getReports());
         // Print AST
-        System.out.println(parserResult.getRootNode().toTree());
+        //System.out.println(parserResult.getRootNode().toTree());
 
 
         // Semantic Analysis stage
@@ -58,7 +58,7 @@ public class Launcher {
         TestUtils.noErrors(jasminResult.getReports());
 
         // Print Jasmin code
-        //System.out.println(jasminResult.getJasminCode());*/
+        System.out.println(jasminResult.getJasminCode());
     }
 
 }
