@@ -1,0 +1,38 @@
+import io;
+
+class MyClass {
+
+    public int printArr(int[] arr) {
+        io.println(arr[0]);
+        io.println(arr[1]);
+        io.println(arr[2]);
+        io.println(arr[3]);
+        io.println(arr[4]);
+
+        return 0;
+    }
+
+
+    public static void main(String[] args) {
+
+        int[] arr;
+        int i;
+        MyClass obj;
+
+        i = 0;
+
+        arr = new int[5];
+
+        while(i < arr.length) {
+            arr[i] = i + 1;
+            i = i + 1;
+        }
+
+        obj = new MyClass();
+        obj.printArr(arr);
+
+    }
+
+
+}
+

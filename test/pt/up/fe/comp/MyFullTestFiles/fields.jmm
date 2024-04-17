@@ -1,0 +1,32 @@
+import io;
+
+class Simple {
+
+    int field_1;
+
+    public static void main(String[] args) {
+
+        int val;
+        Simple s;
+
+        s = new Simple();
+        val = s.setI(5);
+
+        val = s.getI();
+
+        io.println(val);
+
+    }
+
+    public int setI(int newI) {
+        field_1 = newI;
+        return 0;
+    }
+
+    public int getI() {
+        return field_1;
+    }
+
+
+}
+

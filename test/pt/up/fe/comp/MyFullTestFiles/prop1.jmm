@@ -1,0 +1,16 @@
+import io;
+
+class GroundAssignSequence {
+
+    public static void main(String[] args) {
+        int a;
+        a = 3;
+
+        io.println(a); // 3
+
+        a = 2;
+
+        io.println(a); // 2
+
+    }
+}

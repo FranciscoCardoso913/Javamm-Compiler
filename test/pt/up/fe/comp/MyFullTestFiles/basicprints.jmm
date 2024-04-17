@@ -1,0 +1,34 @@
+import io;
+
+class MyClass {
+
+
+    public static void main(String[] args) {
+
+        int a;
+        int b;
+
+        int[] c;
+
+        a = 1;
+        b = 2;
+
+        io.println(a+b); // 3
+
+        c = new int[10];
+
+        c[3] = 5;
+        c[5] = 4;
+
+        io.println(c[3] * c[5]); // 20
+
+        io.println(1+2*3); // 7
+        io.println(1+2*3+5); // 12
+        io.println((8*b)/c[5]); // 4
+
+
+    }
+
+
+}
+

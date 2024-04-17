@@ -1,0 +1,21 @@
+import io;
+
+class Simple {
+
+    public static void main(String[] args) {
+
+        int i;
+
+        i = 0;
+
+        while(i < 10){
+
+           io.println(i);
+
+           i = i + 1;
+        }
+    }
+
+
+}
+

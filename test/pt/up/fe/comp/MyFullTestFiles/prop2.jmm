@@ -1,0 +1,35 @@
+import io;
+
+class NoInnerAssign {
+
+    public static void main(String[] args) {
+        int a;
+        int b;
+
+        a = 3;
+        b = 1;
+
+        if(0<1){
+           io.println(a); // 3
+        }else{
+           io.println(a); // 3
+        }
+
+        io.println(a); // 3
+        io.println(b); // 1
+
+
+        a = 2;
+
+        while(0<b){
+           io.println(a); // 2
+           b=b-1;
+        }
+
+        io.println(a); // 2
+
+
+
+
+    }
+}

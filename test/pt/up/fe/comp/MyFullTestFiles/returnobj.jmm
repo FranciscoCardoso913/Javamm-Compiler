@@ -1,0 +1,24 @@
+import io;
+import Foo;
+
+class MyClass {
+
+    public Foo getFoo(){
+        Foo foo;
+        foo = new Foo();
+        return foo;
+     }
+
+    public static void main(String[] args) {
+
+        Foo foo;
+        MyClass myClass;
+        myClass = new MyClass();
+
+        foo = foo.getFoo();
+
+    }
+
+
+}
+

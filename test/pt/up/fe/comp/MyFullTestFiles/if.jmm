@@ -1,0 +1,36 @@
+import io;
+
+class Simple {
+
+    public static void main(String[] args) {
+
+        int i;
+
+        int a;
+        int b;
+
+        a = 4;
+        b = 5;
+
+        if ( a < b ) {
+            i = 4;
+        }else{
+            i = 5;
+        }
+
+        io.println(i);
+
+        if ( b < a ) {
+            i = 8;
+        }else{
+            i = 9;
+        }
+      
+        io.println(i);
+
+       
+    }
+
+
+}
+

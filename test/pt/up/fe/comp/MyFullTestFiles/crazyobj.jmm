@@ -1,0 +1,32 @@
+import io;
+
+
+class Simple {
+
+    public Simple func(){
+
+        Simple s;
+         s = new Simple();
+
+        return s;
+    }
+
+    public int func2(int x) {
+
+        return x;
+
+    }
+
+    public static void main(String[] args) {
+
+        io.println(new Simple().func().func2(5));
+
+    }
+
+
+
+
+}
+
+
+

@@ -1,0 +1,53 @@
+import io;
+
+class MyClass {
+
+    public int[] multarr() {
+        int[] arrR;
+        int i;
+
+        i = 0;
+
+        arrR = new int[10];
+
+        while ( i < 10 ) {
+            arrR[i] = i;
+            i = i + 1;
+        }
+
+        i = 0;
+
+        while(i < 10) {
+            arrR[i] = arrR[i] * 2;
+            i = i + 1;
+        }
+
+        return arrR;
+    }
+
+
+    public static void main(String[] args) {
+
+        int[] arr;
+        int i;
+        MyClass obj;
+
+        i = 0;
+
+        obj = new MyClass();
+        arr = obj.multarr();
+
+        while ( i < 10 ) {
+            if( i < 5 ){
+                io.println(arr[i]*3);
+            }else{
+                io.println(arr[i]*2);
+            }
+            i = i + 1;
+        }
+
+    }
+
+
+}
+

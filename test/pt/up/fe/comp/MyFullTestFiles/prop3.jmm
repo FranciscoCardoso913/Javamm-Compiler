@@ -1,0 +1,39 @@
+import io;
+
+class AssignInnerScope {
+
+    public static void main(String[] args) {
+        int a;
+        a = 3;
+
+        io.println(a); // 3
+
+        if(0<1){
+           a = 5;
+           io.println(a); // 5
+        }else{
+           io.println(a); // 3
+        }
+
+        io.println(a); // ???
+
+        a = 2;
+
+        io.println(a); // 2
+
+        while(0<1){
+            io.println(a); // 2
+
+            a = 8;
+
+            io.println(a); // 8
+        }
+
+        io.println(a); // ???
+
+        a = 7;
+
+        io.println(a); // 7
+
+    }
+}
