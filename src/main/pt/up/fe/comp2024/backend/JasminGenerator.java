@@ -489,7 +489,7 @@ public class JasminGenerator {
             case XOR -> "ixor";
             case AND, ANDB -> "iand";
             case OR, ORB -> "ior";
-            case LTH -> "if_icmplt"; // TODO: fix it
+            case LTH -> "if_icmplt";
             case GTH -> "if_icmpgt";
             case EQ -> "if_icmpeq";
             case NEQ -> "if_icmpne";
@@ -501,7 +501,30 @@ public class JasminGenerator {
             }
         };
 
-        code.append(op).append(NL);
+        var labelCode = switch (binaryOp.getOperation().getOpType()){
+            case LTH, GTH, EQ, NEQ, LTE, GTE -> {
+
+                String label = String.valueOf(currentMethod.getLabels().size());
+                String labelTrue = "LabelTrue" + label;
+                String labelEnd = "LabelEnd" + label;
+
+                System.out.println(currentMethod.getLabels());
+                currentMethod.addLabel(labelTrue, binaryOp);
+                currentMethod.addLabel(labelEnd, binaryOp);
+                System.out.println("added labels");
+                System.out.println(currentMethod.getLabels());
+
+                yield " " + labelTrue + NL
+                        + "iconst_0" + NL // false
+                        + "goto " + labelEnd + NL
+                        +  labelTrue + ": " + NL
+                        + "iconst_1" + NL
+                        + labelEnd + ":";
+            }
+            default -> "";
+        };
+
+        code.append(op).append(labelCode).append(NL);
 
         return code.toString();
     }

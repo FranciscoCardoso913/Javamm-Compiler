@@ -1,29 +1,22 @@
-Test {
+import io;
 
-	.method public static main(args.array.String).V {
-		ret.V;
-	}
-
-	.method public addTwoNumbers(a.i32, b.i32).i32 {
-        result.i32 :=.i32 a.i32 +.i32 b.i32;
-        ret.i32 result.i32;
-    }
-	.construct Test().V {
-		invokespecial(this, "<init>").V;
-	}
-    .method public subtractTwoNumbers(a.i32, b.i32).i32 {
-        result.i32 :=.i32 a.i32 -.i32 b.i32;
-        ret.i32 result.i32;
+Simple {
+    .method public negative(i.i32).bool {
+    tmp0.bool :=.bool i.i32 <.bool 0.i32;
+    ret.bool tmp0.bool;
     }
 
-    .method public multiplyTwoNumbers(a.i32, b.i32).i32 {
-        result.i32 :=.i32 a.i32 *.i32 b.i32;
-        ret.i32 result.i32;
+    .method public static main(args.array.String).V {
+        tmp2.Simple :=.Simple new(Simple).Simple;
+        invokespecial(tmp2.Simple, "<init>").V;
+        s.Simple :=.Simple tmp2.Simple;
+        tmp3.bool :=.bool invokevirtual(s.Simple, "negative", 5.i32).bool;
+        negRes.bool :=.bool tmp3.bool;
+        invokestatic(io, "println", negRes.bool).V;
+        ret.V;
     }
 
-    .method public divideTwoNumbers(a.i32, b.i32).i32 {
-        result.i32 :=.i32 a.i32 /.i32 b.i32;
-        ret.i32 result.i32;
+    .construct Simple().V {
+    invokespecial(this, "<init>").V;
     }
-
 }
