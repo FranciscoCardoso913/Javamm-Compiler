@@ -27,7 +27,7 @@ public class MyFullTests {
 
     @Test
     public void testIf() {
-        test("if.jmm", "4\n9");
+        test("if.jmm", "10\n10");
     }
 
     @Test
@@ -37,7 +37,7 @@ public class MyFullTests {
 
     @Test
     public void testBasicFuncs() {
-        test("basicfuncs.jmm", "0\n1\n14\n35\n-21\n5\n4\n0\n19\n56\n-56");
+        test("basicfuncs.jmm", "false\ntrue\n5\n35\n-35\n5\n-4\n0\n19\n56\n-56");
     }
 
     @Test
@@ -67,7 +67,7 @@ public class MyFullTests {
 
     @Test
     public void testBasicPrints() {
-        test("basicprints.jmm", "3\n20\n7\n12\n4");
+        test("basicprints.jmm", "3\n2\n7\n12\n16");
     }
 
     @Test

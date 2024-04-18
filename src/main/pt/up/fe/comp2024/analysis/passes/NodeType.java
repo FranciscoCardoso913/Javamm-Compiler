@@ -183,7 +183,7 @@ public class NodeType extends AnalysisVisitor {
     }
     private Void visitVarDeclaration(JmmNode node, SymbolTable table){
         var type = node.getChild(0);
-        List<String> validTypes = new ArrayList<>(Arrays.asList("int", "boolean", table.getClassName()));
+        List<String> validTypes = new ArrayList<>(Arrays.asList("int", "boolean", "String", table.getClassName()));
 
         List<String> imports = table.getImports();
         if (imports != null) {

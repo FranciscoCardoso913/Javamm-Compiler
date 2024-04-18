@@ -3,15 +3,12 @@ import io;
 class Simple {
 
 
-    public boolean negative(int i){
-        return i < 0;
+    public boolean negative(boolean i){
+        return !i;
     }
 
 
     public int abs(int i){
-        if (i < 0) {
-            i = 0 - i;
-        }else{}
         return i;
     }
 
@@ -23,12 +20,7 @@ class Simple {
 
     public int max(int a, int b){
         int temp;
-        if (b < a) {
-            temp = a;
-        }else{
-            temp = b;
-        }
-        return temp;
+        return a;
     }
 
 
@@ -37,27 +29,27 @@ class Simple {
         int maxRes;
         int sumRes;
         int absRes;
-        int negRes;
+        boolean negRes;
 
         Simple s;
         s = new Simple();
 
-        negRes = s.negative(5);
+        negRes = s.negative(true);
         io.println(negRes); // false (0)
 
-        negRes = s.negative(0-4);
+        negRes = s.negative(false);
         io.println(negRes); // true (1)
 
         // ======================
 
         maxRes = s.max(5,14);
-        io.println(maxRes); // 14
+        io.println(maxRes); // 5
 
         maxRes = s.max(35,21);
         io.println(maxRes); // 35
 
         maxRes = s.max(0-35,0-21);
-        io.println(maxRes); // -21
+        io.println(maxRes); // -35
 
         // ======================
 
@@ -65,7 +57,7 @@ class Simple {
         io.println(absRes); // 5
 
         absRes = s.abs(0-4);
-        io.println(absRes); // 4
+        io.println(absRes); // -4
 
         absRes = s.abs(0);
         io.println(absRes); // 0

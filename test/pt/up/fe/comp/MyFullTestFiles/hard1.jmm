@@ -1,11 +1,11 @@
 import io;
+import Foo;
 
 class Simple {
 
     int field_1;
     Foo mc;
     Simple s2;
-    int[] ll;
 
     public int add(int a, int b){
         int c;
