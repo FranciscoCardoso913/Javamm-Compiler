@@ -87,7 +87,14 @@ public class Statements extends AnalysisVisitor {
     }
 
     private Void visitExpressionStatement(JmmNode node, SymbolTable table) {
-        if(!node.getChildren(Kind.METHOD_EXPR).isEmpty()) node.getChild(0).put("node_type", "void");
+        if (!node.getChildren(Kind.METHOD_EXPR).isEmpty()) {
+            JmmNode method = node.getChild(0);
+            String methodName = method.get("name");
+            if (table.getMethods().contains(methodName))
+                node.getChild(0).put("node_type", table.getReturnType(methodName).getName());
+            else
+                node.getChild(0).put("node_type", "void");
+        }
         return null;
     }
     private Void visitListAssignStatement(JmmNode node, SymbolTable table) {

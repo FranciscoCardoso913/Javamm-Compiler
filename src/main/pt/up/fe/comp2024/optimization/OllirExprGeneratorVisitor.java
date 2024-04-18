@@ -185,7 +185,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         String methodName = node.get("name");
         String returnType = OptUtils.toOllirType(node);
 
-        if (!returnType.equals(".V")) {
+        if (!returnType.equals(".V") && !node.getParent().isInstance(EXPR_STMT)) {
             String tmpVar = OptUtils.getTemp();
             code.append(tmpVar).append(returnType);
             computation.append(tmpVar).append(returnType).append(SPACE).append(ASSIGN)
