@@ -1,6 +1,7 @@
 import io;
+import A;
 
-class Operations {
+class Operations extends A {
 
     // Negation
     public boolean negate(boolean value) {

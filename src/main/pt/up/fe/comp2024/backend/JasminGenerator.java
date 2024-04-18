@@ -97,8 +97,14 @@ public class JasminGenerator {
         code.append(".class public ").append(className).append(NL).append(NL);
 
         code.append(".super ");
-        if (classUnit.getSuperClass() != null)
-            code.append(classUnit.getSuperClass()).append(NL);
+        if (classUnit.getSuperClass() != null) {
+            if (classPathMap.containsKey(classUnit.getSuperClass()))
+                code.append(classPathMap.get(classUnit.getSuperClass())).append(NL);
+            else if (classUnit.getSuperClass().equals("Object"))
+                code.append("java/lang/Object").append(NL);
+            else
+                code.append(classUnit.getSuperClass()).append(NL);
+        }
         else
             code.append("java/lang/Object").append(NL); //
 
@@ -113,8 +119,14 @@ public class JasminGenerator {
                     invokespecial""");
         defaultConstructor.append((" "));
 
-        if (classUnit.getSuperClass() != null)
-            defaultConstructor.append(classUnit.getSuperClass());
+        if (classUnit.getSuperClass() != null) {
+            if (classPathMap.containsKey(classUnit.getSuperClass()))
+                defaultConstructor.append(classPathMap.get(classUnit.getSuperClass()));
+            else if (classUnit.getSuperClass().equals("Object"))
+                defaultConstructor.append("java/lang/Object");
+            else
+                defaultConstructor.append(classUnit.getSuperClass());
+        }
         else
             defaultConstructor.append("java/lang/Object");
 
@@ -125,6 +137,7 @@ public class JasminGenerator {
                 """);
 
         code.append(defaultConstructor);
+
 
         // generate code for all other methods
         for (var method : ollirResult.getOllirClass().getMethods()) {
