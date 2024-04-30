@@ -97,7 +97,6 @@ methodDecl locals[boolean isPublic=false, boolean isStatic = false, boolean isMa
         LPAREN (param (COMMA param)*)? RPAREN
         LCURLY
         varDecl* stmt*
-        (RETURN expr SEMI)?
         RCURLY # Method
     ;
 

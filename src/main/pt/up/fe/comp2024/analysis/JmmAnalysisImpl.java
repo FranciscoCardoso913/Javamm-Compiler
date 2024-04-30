@@ -21,7 +21,7 @@ public class JmmAnalysisImpl implements JmmAnalysis {
 
     public JmmAnalysisImpl() {
 
-        this.analysisPasses = List.of(new UndeclaredVariable(),new NodeType(), new Operations(),new Init(), new Array(),  new Method(),new Statements());
+        this.analysisPasses = List.of(new UndeclaredVariable(),new NodeType(), new Duplicates(), new Operations(),new Init(), new Array(),  new Method(),new Statements());
 
     }
 
@@ -44,7 +44,11 @@ public class JmmAnalysisImpl implements JmmAnalysis {
         for (var analysisPass : analysisPasses) {
             try {
                 var passReports = analysisPass.analyze(rootNode, table);
+
                 reports.addAll(passReports);
+                for (Report report : reports) {
+                    if(report.getType() == ReportType.ERROR) return new JmmSemanticsResult(parserResult, table, reports);
+                }
             } catch (Exception e) {
                 reports.add(Report.newError(Stage.SEMANTIC,
                         -1,
@@ -55,7 +59,6 @@ public class JmmAnalysisImpl implements JmmAnalysis {
             }
 
         }
-
         return new JmmSemanticsResult(parserResult, table, reports);
     }
 }

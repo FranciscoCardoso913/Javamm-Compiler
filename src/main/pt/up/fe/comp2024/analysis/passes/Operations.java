@@ -8,6 +8,9 @@ import pt.up.fe.comp2024.analysis.AnalysisVisitor;
 import pt.up.fe.comp2024.ast.Kind;
 import pt.up.fe.comp2024.ast.NodeUtils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,7 +28,8 @@ public class Operations extends AnalysisVisitor {
         String op_type = getExprOperands(node, table).getName();
         var left = node.getChild(0);
         var right = node.getChild(1);
-        if(left.get("node_type").equals(right.get("node_type")) && left.get("node_type").equals(op_type))
+        List<String> validTypes = new ArrayList<>(Arrays.asList(op_type, "unknown"));
+        if(validTypes.contains(left.get("node_type")) && validTypes.contains(right.get("node_type")))
             return null;
 
         String message = String.format(

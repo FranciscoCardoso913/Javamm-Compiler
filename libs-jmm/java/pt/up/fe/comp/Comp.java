@@ -6,4 +6,8 @@ public class Comp {
         return "class Comp";
     }
 
+    public static int fooInt() {
+        return 3000;
+    }    
+
 }

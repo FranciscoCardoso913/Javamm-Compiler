@@ -6,4 +6,7 @@ public class B {
         return "class B";
     }
 
+    public static int fooInt() {
+        return 2000;
+    }
 }

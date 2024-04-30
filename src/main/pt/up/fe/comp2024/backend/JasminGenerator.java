@@ -9,7 +9,9 @@ import pt.up.fe.specs.util.exceptions.NotImplementedException;
 import pt.up.fe.specs.util.utilities.StringLines;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -23,6 +25,8 @@ public class JasminGenerator {
     private static final String TAB = "   ";
 
     private final OllirResult ollirResult;
+    private final Map<String, String> classPathMap;
+    private boolean shouldPop = true;
 
     List<Report> reports;
 
@@ -38,6 +42,19 @@ public class JasminGenerator {
         reports = new ArrayList<>();
         code = null;
         currentMethod = null;
+
+        classPathMap = new HashMap<>();
+        for (String importEntry : ollirResult.getOllirClass().getImports()) {
+            String[] parts = importEntry.split("\\.");
+            String simpleName = parts[parts.length - 1];
+            classPathMap.put(simpleName, importEntry.replace('.', '/'));
+        }
+
+        // print all contents of classPathMap
+        for (Map.Entry<String, String> entry : classPathMap.entrySet()) {
+            System.out.println(entry.getKey() + " -> " + entry.getValue());
+        }
+
 
         this.generators = new FunctionClassMap<>();
         generators.put(ClassUnit.class, this::generateClassUnit);
@@ -80,8 +97,14 @@ public class JasminGenerator {
         code.append(".class public ").append(className).append(NL).append(NL);
 
         code.append(".super ");
-        if (classUnit.getSuperClass() != null)
-            code.append(classUnit.getSuperClass()).append(NL);
+        if (classUnit.getSuperClass() != null) {
+            if (classPathMap.containsKey(classUnit.getSuperClass()))
+                code.append(classPathMap.get(classUnit.getSuperClass())).append(NL);
+            else if (classUnit.getSuperClass().equals("Object"))
+                code.append("java/lang/Object").append(NL);
+            else
+                code.append(classUnit.getSuperClass()).append(NL);
+        }
         else
             code.append("java/lang/Object").append(NL); //
 
@@ -96,8 +119,14 @@ public class JasminGenerator {
                     invokespecial""");
         defaultConstructor.append((" "));
 
-        if (classUnit.getSuperClass() != null)
-            defaultConstructor.append(classUnit.getSuperClass());
+        if (classUnit.getSuperClass() != null) {
+            if (classPathMap.containsKey(classUnit.getSuperClass()))
+                defaultConstructor.append(classPathMap.get(classUnit.getSuperClass()));
+            else if (classUnit.getSuperClass().equals("Object"))
+                defaultConstructor.append("java/lang/Object");
+            else
+                defaultConstructor.append(classUnit.getSuperClass());
+        }
         else
             defaultConstructor.append("java/lang/Object");
 
@@ -108,6 +137,7 @@ public class JasminGenerator {
                 """);
 
         code.append(defaultConstructor);
+
 
         // generate code for all other methods
         for (var method : ollirResult.getOllirClass().getMethods()) {
@@ -188,14 +218,18 @@ public class JasminGenerator {
     }
 
     private String getType(Type type) {
+
         ElementType elementType = type.getTypeOfElement();
         return switch (elementType) {
             case INT32 -> "I";
             case BOOLEAN -> "Z";
-            case ARRAYREF -> // TODO: get type of arrau; next checkpoint?
+            case ARRAYREF -> // TODO: get type of array; next checkpoint?
                     "[Ljava/lang/String" + ";";
-            // TODO: might not bet current method class?
-            case OBJECTREF -> "L" + ((ClassType) type).getName() + ";";
+            case OBJECTREF -> {
+                String className = ((ClassType) type).getName();
+                String fullPath = classPathMap.getOrDefault(className, className);
+                yield "L" + fullPath + ";";
+            }
             case CLASS -> "L" + currentMethod.getClass().getName().toLowerCase() + ";";
             case THIS -> "L" + currentMethod.getOllirClass().getClassName() + ";";
             case STRING -> "Ljava/lang/String;";
@@ -228,12 +262,14 @@ public class JasminGenerator {
         };
     }
 
+
     private String generateNew(CallInstruction callInstruction) {
         StringBuilder code = new StringBuilder();
         Type typeInstance = callInstruction.getCaller().getType();
         if (typeInstance instanceof ClassType classTypeInstance) {
-            String name = classTypeInstance.getName();
-            code.append("new ").append(name).append(NL);
+            String className = classPathMap.getOrDefault(classTypeInstance.getName(), classTypeInstance.getName());
+            code.append("new ").append(className).append(NL);
+            shouldPop = false;
         } else {
             throw new NotImplementedException(typeInstance.getClass());
         }
@@ -247,7 +283,7 @@ public class JasminGenerator {
         StringBuilder code = new StringBuilder();
         Type typeInstance = callInstruction.getCaller().getType();
         if (typeInstance instanceof ClassType classTypeInstance) {
-            String name = classTypeInstance.getName();
+            String className = classPathMap.getOrDefault(classTypeInstance.getName(), classTypeInstance.getName());
             String methodName = getMethodName(callInstruction);
 
             code.append(generators.apply(callInstruction.getOperands().get(0)));
@@ -256,16 +292,21 @@ public class JasminGenerator {
                 code.append(generators.apply(arg));
             }
 
+            String returnType = getType(callInstruction.getReturnType());
+
             code.append("invokevirtual ")
-                    .append(name).append("/")
+                    .append(className).append("/")
                     .append(methodName)
                     .append("(")
                     .append(callInstruction.getArguments().stream()
                             .map(arg -> getType(arg.getType()))
                             .collect(Collectors.joining()))
                     .append(")");
-            code.append(getType(callInstruction.getReturnType())).append(NL);
+            code.append(returnType).append(NL);
 
+            if (shouldPop && !callInstruction.getReturnType().getTypeOfElement().equals(ElementType.VOID)) {
+                code.append("pop").append(NL);
+            }
         } else if (typeInstance instanceof ArrayType arrayTypeInstance) {
             throw new NotImplementedException(arrayTypeInstance);
         }
@@ -275,6 +316,9 @@ public class JasminGenerator {
     private String generateInvokeStatic(CallInstruction callInstruction) {
         StringBuilder code = new StringBuilder();
         if (callInstruction.getCaller() instanceof Operand operand) {
+
+            String className = classPathMap.getOrDefault(operand.getName(), operand.getName());
+
             String methodName = getMethodName(callInstruction);
 
             for (Element arg : callInstruction.getArguments()) {
@@ -282,7 +326,7 @@ public class JasminGenerator {
             }
 
             code.append("invokestatic ")
-                    .append(operand.getName()).append("/")
+                    .append(className).append("/")
                     .append(methodName)
                     .append("(")
                     .append(callInstruction.getArguments().stream()
@@ -290,6 +334,9 @@ public class JasminGenerator {
                             .collect(Collectors.joining()))
                     .append(")");
             code.append(getType(callInstruction.getReturnType())).append(NL);
+            if (shouldPop && !callInstruction.getReturnType().getTypeOfElement().equals(ElementType.VOID)) {
+                code.append("pop").append(NL);
+            }
         } else {
             throw new NotImplementedException(callInstruction.getCaller().getClass());
         }
@@ -300,21 +347,27 @@ public class JasminGenerator {
         StringBuilder code = new StringBuilder();
         Type typeInstance = callInstruction.getCaller().getType();
         if (typeInstance instanceof ClassType classTypeInstance) {
-            String name = classTypeInstance.getName();
+            String className = classPathMap.getOrDefault(classTypeInstance.getName(), classTypeInstance.getName());
             String methodName = getMethodName(callInstruction);
             code.append(generators.apply(callInstruction.getOperands().get(0)));
 
             for (Element arg : callInstruction.getArguments()) {
                 code.append(generators.apply(arg));
             }
+
+            String returnType = getType(callInstruction.getReturnType());
             code.append("invokespecial ")
-                    .append(name).append("/")
+                    .append(className).append("/")
                     .append(methodName).append("(")
                     .append(callInstruction.getArguments().stream()
                             .map(arg -> getType(arg.getType()))
                             .collect(Collectors.joining()))
                     .append(")")
-                    .append(getType(callInstruction.getReturnType())).append(NL);
+                    .append(returnType).append(NL);
+            if (shouldPop && !callInstruction.getReturnType().getTypeOfElement().equals(ElementType.VOID)) {
+                code.append("pop").append(NL);
+                shouldPop = true;
+            }
         } else {
             throw new NotImplementedException(typeInstance.getClass());
         }
@@ -340,8 +393,12 @@ public class JasminGenerator {
     private String generateAssign(AssignInstruction assign) {
         var code = new StringBuilder();
 
+        // if RHS is an invoke, we don't want to pop the result
+        shouldPop = false;
         // generate code for loading what's on the right
         code.append(generators.apply(assign.getRhs()));
+
+        shouldPop = true;
 
         // store value in the stack in destination
         var lhs = assign.getDest();
@@ -352,15 +409,21 @@ public class JasminGenerator {
         }
 
         // get register
-        var name = currentMethod.getVarTable().get(operand.getName());
-        var reg = name.getVirtualReg();
+        String operandName = operand.getName();
+        code.append(generateStore(operandName));
 
-        switch (name.getVarType().getTypeOfElement()) {
+        return code.toString();
+    }
+
+    private String generateStore(String name) {
+        var code = new StringBuilder();
+        var regName = currentMethod.getVarTable().get(name);
+        var reg = regName.getVirtualReg();
+
+        switch (regName.getVarType().getTypeOfElement()) {
             case INT32, BOOLEAN -> code.append("istore ").append(reg).append(NL);
-            case OBJECTREF -> code.append("astore ").append(reg).append(NL);
-            default -> throw new NotImplementedException(name.getVarType().getTypeOfElement());
+            case OBJECTREF, STRING, CLASS -> code.append("astore ").append(reg).append(NL);
         }
-
         return code.toString();
     }
 
@@ -386,7 +449,6 @@ public class JasminGenerator {
                 code.append("aload ").append(reg).append(NL);
             }
             case THIS -> code.append("aload 0").append(NL);
-            default -> throw new NotImplementedException(currentMethod.getVarTable().get(operand.getName()).getVarType().getTypeOfElement());
         }
         return code.toString();
     }
@@ -402,16 +464,34 @@ public class JasminGenerator {
         code.append(generators.apply(unaryOpInstruction.getOperand()));
 
         var op = switch (unaryOpInstruction.getOperation().getOpType()) {
-            case NOTB -> "ixor";
-            case NOT -> "ineg";
+            case NOTB -> "ifeq " + generateLabels(unaryOpInstruction);
             default -> {
-                System.out.println("Not a single operation: " + unaryOpInstruction.getOperation());
                 throw new NotImplementedException(unaryOpInstruction.getOperation().getOpType());
             }
         };
 
         code.append(op).append(NL);
         return code.toString();
+    }
+
+    private String generateLabels(Instruction instruction) {
+        String label = String.valueOf(currentMethod.getLabels().size());
+        String labelTrue = "LabelTrue" + label;
+        String labelEnd = "LabelEnd" + label;
+
+        //System.out.println(currentMethod.getLabels());
+        currentMethod.addLabel(labelTrue, instruction);
+        currentMethod.addLabel(labelEnd, instruction);
+        //System.out.println("added labels");
+        //System.out.println(currentMethod.getLabels());
+
+        return " " + labelTrue + NL
+                + "iconst_0" + NL // false
+                + "goto " + labelEnd + NL
+                +  labelTrue + ": " + NL
+                + "iconst_1" + NL
+                + labelEnd + ":";
+
     }
 
     private String generateBinaryOp(BinaryOpInstruction binaryOp) {
@@ -422,31 +502,24 @@ public class JasminGenerator {
         code.append(generators.apply(binaryOp.getRightOperand()));
 
         // apply operation
-
         var op = switch (binaryOp.getOperation().getOpType()) {
             case ADD -> "iadd";
             case SUB -> "isub";
             case MUL -> "imul";
             case DIV -> "idiv";
-            case SHR -> "ishr"; // signed shift right
-            case SHL -> "ishl"; // signed shift left
-            case SHRR -> "iushr"; // unsigned shift right, logical
-            case XOR -> "ixor";
-            case AND, ANDB -> "iand";
-            case OR, ORB -> "ior";
-            case LTH -> "if_icmplt"; // TODO: fix it
-            case GTH -> "if_icmpgt";
-            case EQ -> "if_icmpeq";
-            case NEQ -> "if_icmpne";
-            case LTE -> "if_icmple";
-            case GTE -> "if_icmpge";
+            case ANDB-> "iand";
+            case LTH -> "if_icmplt";
             default -> {
-                System.out.println("Not a binary operation: " + binaryOp.getOperation().getOpType());
                 throw new NotImplementedException(binaryOp.getOperation().getOpType());
             }
         };
 
-        code.append(op).append(NL);
+        var labelCode = switch (binaryOp.getOperation().getOpType()){
+            case LTH, GTH, EQ, NEQ, LTE, GTE -> generateLabels(binaryOp);
+            default -> "";
+        };
+
+        code.append(op).append(labelCode).append(NL);
 
         return code.toString();
     }
@@ -460,8 +533,15 @@ public class JasminGenerator {
                 code.append(generators.apply(returnInst.getOperand()));
                 code.append("ireturn").append(NL);
             }
+            case OBJECTREF, STRING, CLASS -> {
+                code.append(generators.apply(returnInst.getOperand()));
+                code.append("areturn").append(NL);
+            }
             case VOID -> code.append("return").append(NL);
-            default -> throw new NotImplementedException(type);
+//            case THIS -> {
+//                code.append("aload 0").append(NL);
+//                code.append("areturn").append(NL);
+//            }
         }
 
         return code.toString();

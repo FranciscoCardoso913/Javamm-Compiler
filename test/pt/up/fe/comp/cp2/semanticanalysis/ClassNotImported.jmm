@@ -5,6 +5,8 @@ class ClassNotImported {
     }
 
     public int foo() {
-        return A.bar();
+        int a;
+        a = A.bar();
+        return a;
     }
 }

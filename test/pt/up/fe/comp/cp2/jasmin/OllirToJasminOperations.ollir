@@ -1,31 +1,15 @@
-Test {
+import A;
+import io;
 
-	.construct Test().V {
-		invokespecial(this, "<init>").V;
-	}
+Operations extends Object {
 
-	.method public static main(args.array.String).V {
-		ret.V;
-	}
-
-	.method public addTwoNumbers(a.i32, b.i32).i32 {
-        result.i32 :=.i32 a.i32 +.i32 b.i32;
-        ret.i32 result.i32;
+    .construct Operations().V {
+        invokespecial(this, "<init>").V;
     }
 
-    .method public subtractTwoNumbers(a.i32, b.i32).i32 {
-        result.i32 :=.i32 a.i32 -.i32 b.i32;
-        ret.i32 result.i32;
+    .method public static main(args.array.String).V {
+        ret.V ;
     }
 
-    .method public multiplyTwoNumbers(a.i32, b.i32).i32 {
-        result.i32 :=.i32 a.i32 *.i32 b.i32;
-        ret.i32 result.i32;
-    }
-
-    .method public divideTwoNumbers(a.i32, b.i32).i32 {
-        result.i32 :=.i32 a.i32 /.i32 b.i32;
-        ret.i32 result.i32;
-    }
 
 }

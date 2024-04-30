@@ -1,33 +1,17 @@
-class Test {
+import io;
+import A;
 
-    public Test() {
+class Operations extends A {
+
+    // Negation
+    public boolean negate(boolean value) {
+        return !value;
     }
 
     public static void main(String[] args) {
-    }
+        Operations op;
+        op = new Operations();
+        io.println(op.negate(true)); // false
 
-    public static int addTwoNumbers(int a, int b) {
-        return a + b;
-    }
-
-    public static int subtractTwoNumbers(int a, int b) {
-        return a - b;
-    }
-
-    public static int multiplyTwoNumbers(int a, int b) {
-        return a * b;
-    }
-
-    public static int divideTwoNumbers(int a, int b) {
-        return a / b;
-    }
-
-    public static boolean isLessThan(int a, int b) {
-        return a < b;
-    }
-
-    public static boolean isGreaterThan(int a, int b) {
-        return a > b;
     }
 }
-

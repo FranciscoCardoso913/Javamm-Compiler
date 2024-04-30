@@ -2,9 +2,7 @@ import io;
 
 Test {
 
-	.construct Test().V {
-		invokespecial(this, "<init>").V;
-	}
+
 
 	.method public static main(args.array.String).V {
 		test.Test :=.Test new(Test).Test;
@@ -12,5 +10,7 @@ Test {
 
 		ret.V;
 	}
-
+	.construct Test().V {
+		invokespecial(this, "<init>").V;
+	}
 }

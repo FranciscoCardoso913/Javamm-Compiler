@@ -5,6 +5,8 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -120,10 +122,14 @@ public class TypeUtils {
      * @return true if sourceType can be assigned to destinationType
      */
     public static boolean areTypesAssignable(String sourceType, String destinationType, SymbolTable table) {
+        ArrayList<String> atomicTypes = new ArrayList<>(Arrays.asList("int", "int_array", "boolean", "boolean_array"));
         return sourceType.equals(destinationType)
                 || sourceType.equals("unknown")
                 || (sourceType.equals(table.getClassName()) && destinationType.equals(table.getSuper()))
-                || table.getImports().contains(sourceType);
+                || (
+                        table.getImports().contains(sourceType) &&
+                        !atomicTypes.contains(destinationType)
+        );
     }
 
     public static boolean isEllipse (String type){

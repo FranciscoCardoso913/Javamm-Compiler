@@ -5,7 +5,6 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
 import pt.up.fe.comp2024.ast.NodeUtils;
 import pt.up.fe.comp2024.ast.TypeUtils;
 
@@ -19,8 +18,6 @@ import static pt.up.fe.comp2024.ast.Kind.*;
  * Generates OLLIR code from JmmNodes that are expressions.
  */
 
-// TODO: Changed the visitor from PreorderJmmVisitor to AJmmVisitor, to not have problems with temp values
-// TODO: Try to reuse PreorderJmmVisitor for the next checkpoint
 public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult> {
 
     private static final String SPACE = " ";
@@ -188,7 +185,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         String methodName = node.get("name");
         String returnType = OptUtils.toOllirType(node);
 
-        if (!returnType.equals(".V")) {
+        if (!returnType.equals(".V") && !node.getParent().isInstance(EXPR_STMT)) {
             String tmpVar = OptUtils.getTemp();
             code.append(tmpVar).append(returnType);
             computation.append(tmpVar).append(returnType).append(SPACE).append(ASSIGN)
@@ -227,7 +224,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
     }
 
     private OllirExprResult visitThis(JmmNode node, Void unused) {
-        return new OllirExprResult("this");
+        return new OllirExprResult("this." + node.get("node_type"));
     }
 
     /**
@@ -238,11 +235,16 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
      * @return
      */
     private OllirExprResult defaultVisit(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        StringBuilder computation = new StringBuilder();
+
         for (var child : node.getChildren()) {
-            visit(child);
+            OllirExprResult res = visit(child);
+            code.append(res.getCode());
+            computation.append(res.getComputation());
         }
 
-        return OllirExprResult.EMPTY;
+        return new OllirExprResult(code.toString(), computation.toString());
     }
 
 }
