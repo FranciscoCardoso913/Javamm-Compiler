@@ -372,10 +372,19 @@ public class JasminGenerator {
     private String generateOperand(Operand operand) {
         var code = new StringBuilder();
         // get register
-        var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
-        switch (currentMethod.getVarTable().get(operand.getName()).getVarType().getTypeOfElement()) {
-            case INT32, BOOLEAN -> code.append("iload ").append(reg).append(NL);
-            case OBJECTREF -> code.append("aload ").append(reg).append(NL);
+        switch (operand.getType().getTypeOfElement()) {
+            case INT32, BOOLEAN -> {
+                var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
+                code.append("iload ").append(reg).append(NL);
+            }
+            case OBJECTREF, CLASS, STRING -> {
+                if ("this".equals(operand.getName())) {
+                    return "aload 0" + NL;
+                }
+                System.out.println(operand.getName());
+                var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
+                code.append("aload ").append(reg).append(NL);
+            }
             case THIS -> code.append("aload 0").append(NL);
             default -> throw new NotImplementedException(currentMethod.getVarTable().get(operand.getName()).getVarType().getTypeOfElement());
         }
