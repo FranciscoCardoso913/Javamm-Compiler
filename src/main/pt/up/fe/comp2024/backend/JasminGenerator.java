@@ -50,12 +50,6 @@ public class JasminGenerator {
             classPathMap.put(simpleName, importEntry.replace('.', '/'));
         }
 
-        // print all contents of classPathMap
-        for (Map.Entry<String, String> entry : classPathMap.entrySet()) {
-            System.out.println(entry.getKey() + " -> " + entry.getValue());
-        }
-
-
         this.generators = new FunctionClassMap<>();
         generators.put(ClassUnit.class, this::generateClassUnit);
         generators.put(Field.class, this::generateField);
@@ -218,13 +212,15 @@ public class JasminGenerator {
     }
 
     private String getType(Type type) {
-
         ElementType elementType = type.getTypeOfElement();
         return switch (elementType) {
             case INT32 -> "I";
             case BOOLEAN -> "Z";
-            case ARRAYREF -> // TODO: get type of array; next checkpoint?
-                    "[Ljava/lang/String" + ";";
+            case ARRAYREF -> {
+                // cast to ArrayType
+                ArrayType arrayType = (ArrayType) type;
+                yield "[" + getType(arrayType.getElementType());
+            }
             case OBJECTREF -> {
                 String className = ((ClassType) type).getName();
                 String fullPath = classPathMap.getOrDefault(className, className);
@@ -270,6 +266,19 @@ public class JasminGenerator {
             String className = classPathMap.getOrDefault(classTypeInstance.getName(), classTypeInstance.getName());
             code.append("new ").append(className).append(NL);
             shouldPop = false;
+        } else if (typeInstance instanceof ArrayType arrayTypeInstance){
+            code.append("newarray ");
+            // TODO: certainly there is a better way to do this
+
+            switch (callInstruction.getOperands().get(1).getType().getTypeOfElement()) {
+                case INT32 -> code.append("int");
+                case BOOLEAN -> code.append("boolean");
+                case OBJECTREF -> code.append("java/lang/Object");
+                case STRING -> code.append("java/lang/String");
+                case CLASS -> code.append("java/lang/Object"); // TODO: expand
+                default -> throw new NotImplementedException(arrayTypeInstance.getTypeOfElement());
+            }
+            code.append(NL);
         } else {
             throw new NotImplementedException(typeInstance.getClass());
         }
@@ -465,11 +474,8 @@ public class JasminGenerator {
 
         var op = switch (unaryOpInstruction.getOperation().getOpType()) {
             case NOTB -> "ifeq " + generateLabels(unaryOpInstruction);
-            default -> {
-                throw new NotImplementedException(unaryOpInstruction.getOperation().getOpType());
-            }
+            default -> throw new NotImplementedException(unaryOpInstruction.getOperation().getOpType());
         };
-
         code.append(op).append(NL);
         return code.toString();
     }
@@ -479,11 +485,8 @@ public class JasminGenerator {
         String labelTrue = "LabelTrue" + label;
         String labelEnd = "LabelEnd" + label;
 
-        //System.out.println(currentMethod.getLabels());
         currentMethod.addLabel(labelTrue, instruction);
         currentMethod.addLabel(labelEnd, instruction);
-        //System.out.println("added labels");
-        //System.out.println(currentMethod.getLabels());
 
         return " " + labelTrue + NL
                 + "iconst_0" + NL // false
@@ -509,9 +512,7 @@ public class JasminGenerator {
             case DIV -> "idiv";
             case ANDB-> "iand";
             case LTH -> "if_icmplt";
-            default -> {
-                throw new NotImplementedException(binaryOp.getOperation().getOpType());
-            }
+            default -> throw new NotImplementedException(binaryOp.getOperation().getOpType());
         };
 
         var labelCode = switch (binaryOp.getOperation().getOpType()){
