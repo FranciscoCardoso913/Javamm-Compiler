@@ -145,7 +145,7 @@ public class JasminGenerator {
 
             code.append(generators.apply(method));
         }
-
+        System.out.println(code);
         return code.toString();
     }
 
@@ -261,16 +261,14 @@ public class JasminGenerator {
 
     private String generateNew(CallInstruction callInstruction) {
         StringBuilder code = new StringBuilder();
-        Type typeInstance = callInstruction.getCaller().getType();
+        Type typeInstance = callInstruction.getReturnType();
         if (typeInstance instanceof ClassType classTypeInstance) {
             String className = classPathMap.getOrDefault(classTypeInstance.getName(), classTypeInstance.getName());
             code.append("new ").append(className).append(NL);
             shouldPop = false;
         } else if (typeInstance instanceof ArrayType arrayTypeInstance){
             code.append("newarray ");
-            // TODO: certainly there is a better way to do this
-
-            switch (callInstruction.getOperands().get(1).getType().getTypeOfElement()) {
+            switch (arrayTypeInstance.getElementType().getTypeOfElement()) {
                 case INT32 -> code.append("int");
                 case BOOLEAN -> code.append("boolean");
                 case OBJECTREF -> code.append("java/lang/Object");
