@@ -5,6 +5,7 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp2024.ast.NodeUtils;
 
 import java.util.List;
@@ -19,6 +20,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private static final String SPACE = " ";
     private static final String ASSIGN = ":=";
     private final String END_STMT = ";\n";
+    private final String END_LABEL = ":\n";
     private final String NL = "\n";
     private final String L_BRACKET = " {\n";
     private final String R_BRACKET = "}\n";
@@ -43,6 +45,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(RETURN_STMT, this::visitReturn);
         addVisit(ASSIGN_STMT, this::visitAssignStmt);
         addVisit(EXPR_STMT, this::visitExprStmt);
+        addVisit(IF_STMT, this::visitIfStmt);
 
         setDefaultVisit(this::defaultVisit);
     }
@@ -259,6 +262,33 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private String visitExprStmt(JmmNode node, Void unused) {
         var res = exprVisitor.visit(node.getChild(0));
         return res.getComputation();
+    }
+
+    private String visitIfStmt(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        int ifIdx = OptUtils.getNextIfNum();
+        final String IFBODY_LABEL = "ifBody_" + ifIdx;
+        final String ENDIF_LABEL = "endif_" + ifIdx;
+
+
+        OllirExprResult bExpr = exprVisitor.visit(node.getChild(0));
+
+        // Visit boolean expression
+        code.append(bExpr.getComputation());
+        code.append("if (").append(bExpr.getCode()).append(") goto ").append(IFBODY_LABEL).append(END_STMT);
+
+        // Visit else body
+        code.append(visit(node.getChild(2)));
+        code.append("goto ").append(ENDIF_LABEL).append(END_STMT);
+
+        code.append(IFBODY_LABEL).append(END_LABEL);
+
+        // Visit if body
+        code.append(visit(node.getChild(1)));
+
+        code.append(ENDIF_LABEL).append(END_LABEL);
+
+        return code.toString();
     }
 
     /**

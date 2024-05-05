@@ -177,7 +177,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         var object = visit(node.getChild(0));
         computation.append(object.getComputation());
 
-        String ollirMethod = OptUtils.getOllirMethod(node.getChild(0), table, object.getCode());
+        String ollirMethod = OptUtils.getOllirMethod(table, object.getCode());
         String methodName = node.get("name");
         String returnType = OptUtils.toOllirType(node);
 
