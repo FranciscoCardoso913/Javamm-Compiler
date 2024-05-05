@@ -77,7 +77,7 @@ public class TypeUtils {
         };
     }
 
-    // TODO: Remove this after having the annotated tree
+    // TODO: Double check if this isn't used
     private static Type getVarExprType(JmmNode varRefExpr, SymbolTable table) {
         if (varRefExpr.getAncestor(METHOD_DECL).isEmpty())
             return null;

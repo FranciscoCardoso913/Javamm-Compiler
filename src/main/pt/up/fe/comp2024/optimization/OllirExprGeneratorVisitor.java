@@ -58,10 +58,10 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
     private OllirExprResult visitBoolean(JmmNode node, Void unused) {
         Type boolType = new Type(TypeUtils.getBoolTypeName(), false);
-        String ollirIntType = OptUtils.toOllirType(boolType);
+        String ollirBoolType = OptUtils.toOllirType(boolType);
         String ollirValue = node.get("value").equals("true") ? "1" : "0";
 
-        String code = ollirValue + ollirIntType;
+        String code = ollirValue + ollirBoolType;
         return new OllirExprResult(code);
     }
 
@@ -97,9 +97,8 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
         OllirExprResult exprResult = visit(exprNode);
 
-        String nextTmp = OptUtils.getTemp();
         String exprType = OptUtils.toOllirType(exprNode);
-        code.append(nextTmp).append(exprType);
+        code.append(OptUtils.getTemp()).append(exprType);
         computation.append(exprResult.getComputation());
         computation.append(code).append(SPACE).append(ASSIGN).append(exprType).append(SPACE)
                 .append("!").append(exprType).append(SPACE).append(exprResult.getCode()).append(END_STMT);
@@ -113,7 +112,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
         String id = node.get("name");
 
-        if (method.isPresent() && NodeUtils.isFieldRef(id, table, method.get().get("name")))
+        if (NodeUtils.isFieldRef(id, table, method.get().get("name")))
             return buildGetField(node);
 
         return buildCommonField(node);
@@ -124,8 +123,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         StringBuilder computation = new StringBuilder();
         String varType = OptUtils.toOllirType(node);
 
-        String test = OptUtils.getTemp();
-        code.append(test).append(varType);
+        code.append(OptUtils.getTemp()).append(varType);
         computation.append(code).append(SPACE).append(ASSIGN).append(varType).append(SPACE).append("getfield(this, ")
                 .append(node.get("name")).append(varType).append(")").append(varType).append(END_STMT);
 
@@ -140,15 +138,14 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
         String id = node.get("name");
 
-        // TODO: Maybe annotate node to know if it param?
-        // TODO: This is extra as it only adds the $, which isn't mandatory
-        if (method.isPresent() && returnStmt.isEmpty()) {
+        // TODO: Maybe annotate node to know if it is a parameter?
+        // This is extra as it only adds the $ before the use of paramaters, which isn't mandatory
+        if (returnStmt.isEmpty()) {
             String methodName = method.get().get("name");
             List<Symbol> params = table.getParameters(methodName);
 
             for (int i = 1; i <= params.size(); i++) {
                 if (params.get(i - 1).getName().equals(id)) {
-                    // TODO: Check if '$' makes the tests be wrong or have problems with jasmin
                     code.append("$").append(i).append(".");
                     break;
                 }
@@ -157,7 +154,6 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
         code.append(id);
 
-        // TODO: Remove when tree is fully annotated, that is, imports are annotated with empty string
         if (!NodeUtils.isImported(id, table))
             code.append(OptUtils.toOllirType(node));
 
@@ -188,7 +184,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         if (!returnType.equals(".V") && !node.getParent().isInstance(EXPR_STMT)) {
             String tmpVar = OptUtils.getTemp();
             code.append(tmpVar).append(returnType);
-            computation.append(tmpVar).append(returnType).append(SPACE).append(ASSIGN)
+            computation.append(code).append(SPACE).append(ASSIGN)
                     .append(returnType).append(SPACE);
         }
 
