@@ -6,9 +6,9 @@ BasicMethods extends Other {
     }
 
     .method public func4().array.i32 {
-temp0.i32 :=.i32 1.i32;
-k.array.i32 :=.array.i32 new(array, temp0.i32).array.i32;
-ret.array.i32 k.array.i32;
+        temp0.i32 :=.i32 1.i32;
+        k.array.i32 :=.array.i32 new(array, temp0.i32).array.i32;
+        ret.array.i32 k.array.i32;
     }
 
 }
