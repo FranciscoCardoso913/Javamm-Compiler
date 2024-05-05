@@ -10,6 +10,7 @@ import static pt.up.fe.comp2024.ast.Kind.*;
 public class OptUtils {
     private static int tempNumber = -1;
     private static int ifNumber = -1;
+    private static int whileNumber = -1;
 
     private final static String VIRTUAL_FUNC = "invokevirtual";
     private final static String STATIC_FUNC = "invokestatic";
@@ -33,6 +34,11 @@ public class OptUtils {
     public static int getNextIfNum() {
         ifNumber++;
         return ifNumber;
+    }
+
+    public static int getNextWhileNum() {
+        whileNumber++;
+        return whileNumber;
     }
 
     public static String toOllirType(JmmNode node) {
