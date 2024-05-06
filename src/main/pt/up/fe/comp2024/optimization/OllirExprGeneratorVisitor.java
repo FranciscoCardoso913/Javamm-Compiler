@@ -1,5 +1,6 @@
 package pt.up.fe.comp2024.optimization;
 
+import org.specs.comp.ollir.Ollir;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
@@ -44,6 +45,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(METHOD_EXPR, this::visitMethodExpr);
         addVisit(NEW_OBJ_EXPR, this::visitNewObjExpr);
         addVisit(THIS, this::visitThis);
+        addVisit(LENGTH_ATTR_EXPR, this::visitLengthAttrExpr);
 
         setDefaultVisit(this::defaultVisit);
     }
@@ -221,6 +223,20 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
     private OllirExprResult visitThis(JmmNode node, Void unused) {
         return new OllirExprResult("this." + node.get("node_type"));
+    }
+
+    private OllirExprResult visitLengthAttrExpr(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        StringBuilder computation = new StringBuilder();
+        OllirExprResult exprRes = visit(node.getChild(0));
+        String intTypeOllir = OptUtils.toOllirType(new Type("int", false));
+
+        code.append(OptUtils.getTemp()).append(intTypeOllir);
+        computation.append(exprRes.getComputation());
+        computation.append(code).append(SPACE).append(ASSIGN).append(intTypeOllir).append(SPACE).append("arraylength(")
+                .append(exprRes.getCode()).append(")").append(intTypeOllir).append(END_STMT);
+
+        return new OllirExprResult(code.toString(), computation.toString());
     }
 
     /**
