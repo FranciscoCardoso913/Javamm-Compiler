@@ -1,8 +1,8 @@
 import io;
 
-Arithmetic_less{
+IfElseInMain{
 
-   .construct Arithmetic_less().V {
+   .construct IfElseInMain().V {
        invokespecial(this, "<init>").V;
    }
 
@@ -13,12 +13,11 @@ Arithmetic_less{
       true_0:
       tmp0.bool:=.bool 1.bool;
       end_0:
-      a.bool :=.bool tmp0.bool;
-      if(a.bool) goto if_0;
-      invokestatic(io, "print", 0.i32).V;
+      if(tmp0.bool) goto if_0;
+      invokestatic(io, "println", 20.i32).V;
       goto endif_0;
       if_0:
-      invokestatic(io, "print", 1.i32).V;
+      invokestatic(io, "println", 10.i32).V;
       endif_0:
       ret.V ;
    }

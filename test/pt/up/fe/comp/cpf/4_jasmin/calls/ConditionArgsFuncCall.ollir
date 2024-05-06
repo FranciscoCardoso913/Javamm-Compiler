@@ -1,29 +1,50 @@
 import ioPlus;
-ConditionArgsFuncCall {
 
-    .construct ConditionArgsFuncCall().V {
-        invokespecial(this, "<init>").V;
-    }
+ConditionArgsFuncCall{
 
-    .method public func(a.bool, b.bool, c.bool, d.bool).i32 {
-invokestatic(ioPlus, "printResult", 10.i32).V;
-ret.i32 1.i32;
-    }
-    .method public static main(args.array.String).V {
-d.ConditionArgsFuncCall :=.ConditionArgsFuncCall new(ConditionArgsFuncCall).ConditionArgsFuncCall;
-invokespecial(d.ConditionArgsFuncCall,"<init>").V;
-a.i32 :=.i32 10.i32;
-b.i32 :=.i32 5.i32;
-i.bool :=.bool 1.bool;
-j.bool :=.bool 0.bool;
-temp0.bool :=.bool a.i32 <.bool b.i32;
-temp1.bool :=.bool i.bool &&.bool j.bool;
-temp4.bool :=.bool a.i32 <.bool b.i32;
-temp3.bool :=.bool temp4.bool &&.bool i.bool;
-temp5.bool :=.bool !.bool i.bool;
-a.i32 :=.i32 invokevirtual(d.ConditionArgsFuncCall, "func", temp0.bool, temp1.bool, temp3.bool, temp5.bool).i32;
+   .construct ConditionArgsFuncCall().V {
+       invokespecial(this, "<init>").V;
+   }
 
-ret.V;
-    }
+   .method public func(a.bool, b.bool, c.bool, d.bool).i32 {
+      invokestatic(ioPlus, "printResult", 10.i32).V;
+      ret.i32 1.i32;
+   }
 
+   .method public static main(args.array.String).V {
+      tmp0.ConditionArgsFuncCall :=.ConditionArgsFuncCall new(ConditionArgsFuncCall).ConditionArgsFuncCall;
+      invokespecial(tmp0.ConditionArgsFuncCall, "<init>").V;
+      d.ConditionArgsFuncCall :=.ConditionArgsFuncCall tmp0.ConditionArgsFuncCall;
+      a.i32 :=.i32 10.i32;
+      b.i32 :=.i32 5.i32;
+      i.bool :=.bool 1.bool;
+      j.bool :=.bool 0.bool;
+      if(a.i32 <.bool b.i32) goto true_0;
+      tmp1.bool:=.bool 0.bool;
+      goto end_0;
+      true_0:
+      tmp1.bool:=.bool 1.bool;
+      end_0:
+      if(i.bool) goto true_1;
+      tmp2.bool :=.bool 0.bool;
+      goto end_1;
+      true_1:
+      tmp2.bool :=.bool j.bool;
+      end_1:
+      if(a.i32 <.bool b.i32) goto true_3;
+      tmp4.bool:=.bool 0.bool;
+      goto end_3;
+      true_3:
+      tmp4.bool:=.bool 1.bool;
+      end_3:
+      if(tmp4.bool) goto true_2;
+      tmp3.bool :=.bool 0.bool;
+      goto end_2;
+      true_2:
+      tmp3.bool :=.bool i.bool;
+      end_2:
+      tmp5.bool :=.bool !.bool i.bool;
+      a.i32 :=.i32 invokevirtual(d.ConditionArgsFuncCall, "func", tmp1.bool, tmp2.bool, tmp3.bool, tmp5.bool).i32;
+      ret.V ;
+   }
 }

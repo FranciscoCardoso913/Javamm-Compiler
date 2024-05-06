@@ -30,26 +30,7 @@ import static org.junit.Assert.assertTrue;
 
 public class Cpf4_Jasmin {
 
-    //  private static boolean USE_OLLIR_EXPERIMENTAL = false;
-/*
-    public static void enableOllirInputs() {
-        USE_OLLIR_EXPERIMENTAL = true;
-    }
-
-    public static boolean useOllirInputs() {
-        return USE_OLLIR_EXPERIMENTAL;
-    }
-*/
     static JasminResult getJasminResult(String filename) {
-        /*
-        if (USE_OLLIR_EXPERIMENTAL) {
-            filename = SpecsIo.removeExtension(filename) + ".ollir";
-            return TestUtils.backend(new OllirResult(SpecsIo.getResource("pt/up/fe/comp/cpf/4_jasmin/" + filename),
-                    Collections.emptyMap()));
-        }
-
-        return TestUtils.backend(SpecsIo.getResource("pt/up/fe/comp/cpf/4_jasmin/" + filename));
-*/
 
         var resource = "pt/up/fe/comp/cpf/4_jasmin/" + filename;
 
@@ -134,12 +115,17 @@ public class Cpf4_Jasmin {
 
     @Test
     public void section2_Arithmetic_Simple_and() {
-        CpUtils.runJasmin(getJasminResult("arithmetic/Arithmetic_and.ollir"), "0");
+        CpUtils.runJasmin(getJasminResult("arithmetic/Arithmetic_and.ollir"), "1");
     }
 
     @Test
     public void section2_Arithmetic_Simple_less() {
         CpUtils.runJasmin(getJasminResult("arithmetic/Arithmetic_less.ollir"), "1");
+    }
+
+    @Test
+    public void section2_Arithmetic_Simple_not() {
+        CpUtils.runJasmin(getJasminResult("arithmetic/Arithmetic_not.ollir"), "false");
     }
 
 
@@ -153,6 +139,11 @@ public class Cpf4_Jasmin {
     @Test
     public void section3_ControlFlow_Inverted() {
         CpUtils.runJasmin(getJasminResult("control_flow/SimpleControlFlow.ollir"), "Result: 3");
+    }
+
+    @Test
+    public void section3_ControlFlow_If_Else_In_Main() {
+        CpUtils.runJasmin(getJasminResult("control_flow/IfElseInMain.ollir"), "10");
     }
 
     /*checks OLLIR code that uses >= for an inverted condition */
@@ -192,7 +183,7 @@ public class Cpf4_Jasmin {
     /*checks if an array is correctly initialized*/
     @Test
     public void section5_Arrays_Init_Array() {
-        CpUtils.runJasmin(getJasminResult("arrays/ArrayInit.ollir"), "Result: 5");
+        CpUtils.runJasmin(getJasminResult("arrays/ArrayNew.ollir"), "Result: 5");
 
     }
 
@@ -235,6 +226,21 @@ public class Cpf4_Jasmin {
 
         int aloadIndex = CpUtils.getBytecodeIndex("aload", methodCode);
         assertTrue("Expected aload index to be greater than 1, is " + aloadIndex + ":\n" + methodCode, aloadIndex > 1);
+    }
+
+    @Test
+    public void section5_Arrays_Array_Initialization() {
+        CpUtils.runJasmin(getJasminResult("arrays/ArrayInitialization.ollir"), "3");
+    }
+
+    @Test
+    public void section5_Arrays_ArrayVarArgs() {
+        CpUtils.runJasmin(getJasminResult("arrays/ArrayVarArgs.ollir"), "1\n4");
+    }
+
+    @Test
+    public void section5_Arrays_VarargsAndArrayInit() {
+        CpUtils.runJasmin(getJasminResult("arrays/VarargsAndArrayInit.ollir"), "8");
     }
 
     /*checks if the .limits locals is not a const 99 value */
