@@ -573,6 +573,7 @@ public class JasminGenerator {
             case DIV -> "idiv";
             case ANDB-> "iand";
             case LTH -> "if_icmplt";
+            case GTE -> "if_icmpge";
             default ->{
                 System.out.println("Operation not implemented: " + binaryOp.getOperation().getOpType());
                 throw new NotImplementedException(binaryOp.getOperation().getOpType());
