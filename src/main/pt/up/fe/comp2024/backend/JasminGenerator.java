@@ -63,8 +63,7 @@ public class JasminGenerator {
         generators.put(PutFieldInstruction.class, this::generatePutField);
         generators.put(GetFieldInstruction.class, this::generateGetField);
         generators.put(CallInstruction.class, this::generateCall);
-        generators.put(SingleOpCondInstruction.class, this::generateSingleOpCond);
-        generators.put(OpCondInstruction.class, this::generateOpCond);
+        generators.put(CondBranchInstruction.class, this::generateCondBranch);
         generators.put(GotoInstruction.class, this::generateGoto);
     }
 
@@ -215,7 +214,13 @@ public class JasminGenerator {
 
         code.append(TAB).append(".limit stack ").append(maxStack).append(NL);
         // TODO: start with params.size() and increase?
-        code.append(TAB).append(".limit locals ").append(method.getVarTable().size()).append(NL);
+
+        int locals = method.getVarTable().size();
+
+        if (!method.getVarTable().containsKey("this"))
+            locals++;
+
+        code.append(TAB).append(".limit locals ").append(locals).append(NL);
 
         code.append(instructionsCode);
 
@@ -499,7 +504,6 @@ public class JasminGenerator {
                 if ("this".equals(operand.getName())) {
                     return "aload 0" + NL;
                 }
-                System.out.println(operand.getName());
                 var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
                 code.append("aload ").append(reg).append(NL);
             }
@@ -528,14 +532,9 @@ public class JasminGenerator {
         return code.toString();
     }
 
-    private String generateSingleOpCond(SingleOpCondInstruction singleOpCondInstruction) {
-        return generators.apply(singleOpCondInstruction.getCondition()) +
-                "ifne " + singleOpCondInstruction.getLabel() + NL;
-    }
-
-    private String generateOpCond(OpCondInstruction opCondInstruction) {
-        return generators.apply(opCondInstruction.getCondition()) +
-                "ifne " + opCondInstruction.getLabel() + NL; // "if not equals zero" means true
+    private String generateCondBranch(CondBranchInstruction condBranchInstruction) {
+        return generators.apply(condBranchInstruction.getCondition()) +
+                "ifne " + condBranchInstruction.getLabel() + NL;
     }
 
     private String generateGoto(GotoInstruction gotoInstruction) {
