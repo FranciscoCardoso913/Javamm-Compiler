@@ -72,4 +72,8 @@ public class OptUtils {
 
         return code.toString();
     }
+
+    public static String removeOllirType(String ollirVar) {
+        return ollirVar.split("\\.")[0];
+    }
 }
