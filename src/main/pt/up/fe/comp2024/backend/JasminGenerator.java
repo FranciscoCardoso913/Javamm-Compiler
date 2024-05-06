@@ -64,6 +64,7 @@ public class JasminGenerator {
         generators.put(GetFieldInstruction.class, this::generateGetField);
         generators.put(CallInstruction.class, this::generateCall);
         generators.put(SingleOpCondInstruction.class, this::generateSingleOpCond);
+        generators.put(OpCondInstruction.class, this::generateOpCond);
         generators.put(GotoInstruction.class, this::generateGoto);
     }
 
@@ -528,9 +529,13 @@ public class JasminGenerator {
     }
 
     private String generateSingleOpCond(SingleOpCondInstruction singleOpCondInstruction) {
-
         return generators.apply(singleOpCondInstruction.getCondition()) +
                 "ifne " + singleOpCondInstruction.getLabel() + NL;
+    }
+
+    private String generateOpCond(OpCondInstruction opCondInstruction) {
+        return generators.apply(opCondInstruction.getCondition()) +
+                "ifne " + opCondInstruction.getLabel() + NL; // "if not equals zero" means true
     }
 
     private String generateGoto(GotoInstruction gotoInstruction) {
@@ -551,7 +556,6 @@ public class JasminGenerator {
                 +  labelTrue + ": " + NL
                 + "iconst_1" + NL
                 + labelEnd + ":";
-
     }
 
     private String generateBinaryOp(BinaryOpInstruction binaryOp) {
