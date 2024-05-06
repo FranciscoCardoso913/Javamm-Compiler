@@ -63,6 +63,8 @@ public class JasminGenerator {
         generators.put(PutFieldInstruction.class, this::generatePutField);
         generators.put(GetFieldInstruction.class, this::generateGetField);
         generators.put(CallInstruction.class, this::generateCall);
+        generators.put(SingleOpCondInstruction.class, this::generateSingleOpCond);
+        generators.put(GotoInstruction.class, this::generateGoto);
     }
 
     public List<Report> getReports() {
@@ -199,6 +201,11 @@ public class JasminGenerator {
         StringBuilder instructionsCode = new StringBuilder();
 
         for (var inst : method.getInstructions()) {
+
+            for (Map.Entry<String, Instruction> label : currentMethod.getLabels().entrySet())
+                if (label.getValue().equals(inst))
+                    instructionsCode.append(label.getKey()).append(":").append(NL);
+
             var instCode = StringLines.getLines(generators.apply(inst)).stream()
                     .collect(Collectors.joining(NL + TAB, TAB, NL));
 
@@ -520,6 +527,16 @@ public class JasminGenerator {
         return code.toString();
     }
 
+    private String generateSingleOpCond(SingleOpCondInstruction singleOpCondInstruction) {
+
+        return generators.apply(singleOpCondInstruction.getCondition()) +
+                "ifne " + singleOpCondInstruction.getLabel() + NL;
+    }
+
+    private String generateGoto(GotoInstruction gotoInstruction) {
+        return "goto " + gotoInstruction.getLabel() + NL;
+    }
+
     private String generateLabels(Instruction instruction) {
         String label = String.valueOf(currentMethod.getLabels().size());
         String labelTrue = "LabelTrue" + label;
@@ -552,7 +569,10 @@ public class JasminGenerator {
             case DIV -> "idiv";
             case ANDB-> "iand";
             case LTH -> "if_icmplt";
-            default -> throw new NotImplementedException(binaryOp.getOperation().getOpType());
+            default ->{
+                System.out.println("Operation not implemented: " + binaryOp.getOperation().getOpType());
+                throw new NotImplementedException(binaryOp.getOperation().getOpType());
+            }
         };
 
         currentStack--; // pop two values and push result

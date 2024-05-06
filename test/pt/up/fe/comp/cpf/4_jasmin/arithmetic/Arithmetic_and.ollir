@@ -6,16 +6,16 @@ Arithmetic_and {
     }
 
     .method public static main(args.array.String).V {
-a.bool :=.bool 1.bool &&.bool 0.bool;
+        a.bool :=.bool 1.bool &&.bool 0.bool;
 
-if (a.bool) goto ifbody_0;
-    invokestatic(io, "print", 0.i32).V;
-goto endif_0;
-ifbody_0:
-    invokestatic(io, "print", 1.i32).V;
-endif_0:
+        if (a.bool) goto ifbody_0;
+            invokestatic(io, "print", 0.i32).V;
+        goto endif_0;
+        ifbody_0:
+            invokestatic(io, "print", 1.i32).V;
+        endif_0:
 
-ret.V;
+        ret.V;
     }
 
 }
