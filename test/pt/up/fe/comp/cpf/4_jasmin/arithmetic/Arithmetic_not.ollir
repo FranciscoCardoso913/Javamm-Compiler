@@ -1,0 +1,15 @@
+import io;
+
+Arithmetic_not{
+
+   .construct Arithmetic_not().V {
+       invokespecial(this, "<init>").V;
+   }
+
+   .method public static main(args.array.String).V {
+      tmp0.bool :=.bool !.bool 1.bool;
+      a.bool :=.bool tmp0.bool;
+      invokestatic(io, "println", a.bool).V;
+      ret.V ;
+   }
+}

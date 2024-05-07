@@ -5,10 +5,7 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp2024.ast.Kind;
 import pt.up.fe.comp2024.ast.NodeUtils;
-import pt.up.fe.comp2024.ast.TypeUtils;
-import pt.up.fe.comp2024.optimization.OptUtils;
 
 import java.util.List;
 
@@ -60,9 +57,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(rhs.getComputation());
 
         // code to compute self
-        // statement has type of lhs
-        // TODO: Change this when this node gets annotated
-        String typeString = OptUtils.toOllirType(TypeUtils.getExprType(node, table));
+        String typeString = OptUtils.toOllirType(node);
 
         // TODO: Refactor into two different functions
         if (NodeUtils.isFieldRef(node.get("name"), table, node.getAncestor(METHOD_DECL).get().get("name"))) {
@@ -122,8 +117,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
 
     private String visitMethodDecl(JmmNode node, Void unused) {
-        // TODO: Need to change code to support constructors (add invokespecial at the end of the method)
-
         StringBuilder code = new StringBuilder(".method ");
 
         boolean isPublic = NodeUtils.getBooleanAttribute(node, "isPublic", "false");
@@ -257,11 +250,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private String visitVarDecl(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
 
-        // TODO: Change when tree is fully annotated
-
-        JmmNode typeNode = node.getChild(0);
-        Type type = new Type(typeNode.get("name"), NodeUtils.getBooleanAttribute(typeNode, "isArray", "false"));
-        String varField = OptUtils.toOllirType(type);
+        String varField = OptUtils.toOllirType(node);
         code.append(".field public ").append(node.get("name")).append(varField).append(END_STMT);
 
         return code.toString();

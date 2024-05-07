@@ -1,0 +1,14 @@
+import io;
+class IfElseInMain {
+
+
+    public static void main(String[] args){
+
+        if(10 < 20){
+          io.println(10);
+        } else {
+          io.println(20);
+        }
+    }
+
+}
