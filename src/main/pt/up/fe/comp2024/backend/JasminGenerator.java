@@ -24,6 +24,7 @@ public class JasminGenerator {
     private final OllirResult ollirResult;
     private final Map<String, String> classPathMap;
     private boolean shouldPop = true;
+    private boolean acessing;
 
     List<Report> reports;
 
@@ -34,6 +35,7 @@ public class JasminGenerator {
     int currentStack;
 
     private final FunctionClassMap<TreeNode, String> generators;
+
 
     public JasminGenerator(OllirResult ollirResult) {
         this.ollirResult = ollirResult;
@@ -476,14 +478,6 @@ public class JasminGenerator {
     private String generateAssign(AssignInstruction assign) {
         var code = new StringBuilder();
 
-        // if RHS is an invoke, we don't want to pop the result
-        shouldPop = false;
-        // generate code for loading what's on the right
-        code.append(generators.apply(assign.getRhs()));
-
-        shouldPop = true;
-
-        // store value in the stack in destination
         var lhs = assign.getDest();
 
         if (!(lhs instanceof Operand operand)) {
@@ -491,16 +485,38 @@ public class JasminGenerator {
             throw new NotImplementedException(lhs.getClass());
         }
 
-        // get register
-        String operandName = operand.getName();
-        code.append(generateStore(operandName));
+        if (operand instanceof ArrayOperand arrayOperand) {
+            // load array reference and index
+            acessing = false;
+            code.append(generators.apply(arrayOperand));
+            acessing = true;
+        }
+
+        // if RHS is an invoke, we don't want to pop the result
+        shouldPop = false;
+
+        // generate code for loading what's on the right
+        code.append(generators.apply(assign.getRhs()));
+
+        shouldPop = true; // shouldPop is true by default, only set to false when needed (e.g. rhs of an assign)
+
+        code.append(generateStore(operand));
 
         return code.toString();
     }
 
-    private String generateStore(String name) {
+    private String generateStore(Operand operand) {
         var code = new StringBuilder();
-        var regName = currentMethod.getVarTable().get(name);
+
+        if (operand instanceof ArrayOperand) {
+            code.append("iastore").append(NL);
+            updateStack(-3);
+            return code.toString();
+        }
+
+        // get register
+        String operandName = operand.getName();
+        var regName = currentMethod.getVarTable().get(operandName);
         var reg = regName.getVirtualReg();
 
         switch (regName.getVarType().getTypeOfElement()) {
@@ -521,6 +537,25 @@ public class JasminGenerator {
 
     private String generateOperand(Operand operand) {
         var code = new StringBuilder();
+
+        if (operand instanceof ArrayOperand arrayOperand) {
+            // load array reference
+            var reg = currentMethod.getVarTable().get(arrayOperand.getName()).getVirtualReg();
+            code.append("aload ").append(reg).append(NL);
+
+            updateStack(1);
+
+            // load index
+            code.append(generators.apply(arrayOperand.getIndexOperands().get(0)));
+
+            if (acessing) {
+                code.append("iaload").append(NL);
+                updateStack(-1);
+            }
+
+            return code.toString();
+        }
+
         // get register
         switch (operand.getType().getTypeOfElement()) {
             case INT32, BOOLEAN -> {
