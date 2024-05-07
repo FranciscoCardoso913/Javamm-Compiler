@@ -24,7 +24,7 @@ public class JasminGenerator {
     private final OllirResult ollirResult;
     private final Map<String, String> classPathMap;
     private boolean shouldPop = true;
-    private boolean acessing;
+    private boolean acessing = true;
 
     List<Report> reports;
 
