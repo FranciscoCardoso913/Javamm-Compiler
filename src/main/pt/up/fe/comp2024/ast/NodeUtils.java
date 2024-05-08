@@ -29,6 +29,7 @@ public class NodeUtils {
         for (int i = 0; i < table.getLocalVariables(currentMethod).size(); i++) {
             var variable = table.getLocalVariables(currentMethod).get(i);
             if (variable.getName().equals(varRefName)) {
+                // TODO: Extract this block to a different function?
                 String isArray = variable.getType().isArray() ? "_array" : "";
                 String isEllipse = variable.getType().getObject("isEllipse", Boolean.class)?"_ellipse":"";
                 return variable.getType().getName() + isArray + isEllipse;

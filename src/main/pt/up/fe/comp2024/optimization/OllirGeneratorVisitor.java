@@ -47,6 +47,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(EXPR_STMT, this::visitExprStmt);
         addVisit(IF_STMT, this::visitIfStmt);
         addVisit(WHILE_STMT, this::visitWhileStmt);
+        addVisit(LIST_ASSIGN_STMT, this::visitListAssignStmt);
 
         setDefaultVisit(this::defaultVisit);
     }
@@ -312,6 +313,24 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(visit(node.getChild(1)));
         code.append("goto ").append(WHILE_COND_LABEL).append(END_STMT);
         code.append(WHILE_END_LABEL).append(END_LABEL);
+
+        return code.toString();
+    }
+
+    private String visitListAssignStmt(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        // TODO: Stop using split when AST is properly annotated
+        String nodeType = node.get("node_type").split("_")[0];
+        String ollirType = OptUtils.toOllirType(new Type(nodeType, false));
+
+        OllirExprResult idxRes = exprVisitor.visit(node.getChild(0));
+        OllirExprResult exprRes = exprVisitor.visit(node.getChild(1));
+
+        code.append(idxRes.getComputation());
+        code.append(exprRes.getComputation());
+
+        code.append(node.get("name")).append("[").append(idxRes.getCode()).append("]").append(ollirType).append(SPACE);
+        code.append(ASSIGN).append(ollirType).append(SPACE).append(exprRes.getCode()).append(END_STMT);
 
         return code.toString();
     }

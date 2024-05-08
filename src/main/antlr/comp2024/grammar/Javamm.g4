@@ -111,7 +111,7 @@ stmt
     | WHILE LPAREN expr RPAREN stmt # WhileStmt
     | expr SEMI # ExprStmt
     | name = ID EQUALS expr SEMI # AssignStmt
-    | name = ID LSQUARE expr RSQUARE EQUALS  expr SEMI # ListAssignStmt
+    | name = ID LSQUARE expr RSQUARE EQUALS expr SEMI # ListAssignStmt
     | RETURN expr SEMI # ReturnStmt
     ;
 
