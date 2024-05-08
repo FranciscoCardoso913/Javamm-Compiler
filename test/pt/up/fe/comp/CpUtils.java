@@ -301,7 +301,7 @@ public class CpUtils {
      * @param c
      * @param method
      */
-    public static <T> List<T> assertInstExists(Class<T> c, Method method, OllirResult ollir) {
+    public static <T extends Instruction> List<T> assertInstExists(Class<T> c, Method method, OllirResult ollir) {
         var inst = getInstructions(c, method);
         //System.out.println("INSTS:\n" + inst);
         assertTrue("Could not find a " + c.getName() + " in method " + method.getMethodName(), !inst.isEmpty(),
@@ -310,7 +310,7 @@ public class CpUtils {
         return inst;
     }
 
-    public static <T> List<T> getInstructions(Class<T> c, Method method) {
+    public static <T extends Instruction> List<T> getInstructions(Class<T> c, Method method) {
 
         return method.getInstructions().stream()
                 // Unfold instruction inside AssignInstrucion
@@ -444,7 +444,7 @@ public class CpUtils {
     /**
      * Verifies if the given code matches (contains) the given regex
      *
-     * @param code
+     * @param result
      * @param regex
      */
     public static void matches(JasminResult result, String regex) {

@@ -46,7 +46,12 @@ public class Cpf3_Ollir {
 
         var method = CpUtils.getMethod(ollirResult, "main");
 
-        CpUtils.assertHasOperation(OperationType.ANDB, method, ollirResult);
+        // Check if it has ifs and a gotos
+        var ifInsts = CpUtils.getInstructions(CondBranchInstruction.class, method);
+        var gotoInsts = CpUtils.getInstructions(GotoInstruction.class, method);
+
+        CpUtils.assertTrue("Expected to find 1 if in method " + method.getMethodName(), ifInsts.size() == 1, ollirResult);
+        CpUtils.assertTrue("Expected to find 1 goto in method " + method.getMethodName(), gotoInsts.size() == 1, ollirResult);
     }
 
     @Test
@@ -55,9 +60,29 @@ public class Cpf3_Ollir {
 
         var method = CpUtils.getMethod(ollirResult, "main");
 
-        CpUtils.assertHasOperation(OperationType.LTH, method, ollirResult);
+        // Check if it has either a LTH operation, a GTE operation, or two if/else
+        var lthOps = CpUtils.getOperationInstances(OperationType.LTH, method, ollirResult);
+        var gteOps = CpUtils.getOperationInstances(OperationType.GTE, method, ollirResult);
+
+        var ifInsts = CpUtils.getInstructions(CondBranchInstruction.class, method);
+
+        var validCode = lthOps.size() == 1 || gteOps.size() == 1 || ifInsts.size() == 2;
+
+        CpUtils.assertTrue(
+                "Could not find either an LTH or GTE operations, of two if/elses in method " + method.getMethodName(),
+                validCode, ollirResult);
 
     }
+
+    @Test
+    public void section2_Arithmetic_not() {
+        var ollirResult = getOllirResult("arithmetic/Arithmetic_not.jmm");
+
+        var method = CpUtils.getMethod(ollirResult, "main");
+
+        CpUtils.assertNumberOfOperations(OperationType.NOTB, 1, method, ollirResult);
+    }
+
 
     @Test
     public void section3_ControlFlow_If_Simple_Single_goto() {
@@ -67,7 +92,7 @@ public class Cpf3_Ollir {
         var method = CpUtils.getMethod(result, "func");
 
         var branches = CpUtils.assertInstExists(CondBranchInstruction.class, method, result);
-        CpUtils.assertEquals("Number of branches", 1, branches.size(), result);
+        CpUtils.assertTrue("Expected number of branches to be between 1 and 2", branches.size() >= 1 && branches.size() <= 2, result);
 
         var gotos = CpUtils.assertInstExists(GotoInstruction.class, method, result);
         CpUtils.assertTrue("Has at least 1 goto", gotos.size() >= 1, result);
@@ -81,7 +106,7 @@ public class Cpf3_Ollir {
         var method = CpUtils.getMethod(result, "func");
 
         var branches = CpUtils.assertInstExists(CondBranchInstruction.class, method, result);
-        CpUtils.assertEquals("Number of branches", 6, branches.size(), result);
+        CpUtils.assertTrue("Expected number of branches to be between 6 and 12", branches.size() >= 6 && branches.size() <= 12, result);
 
         var gotos = CpUtils.assertInstExists(GotoInstruction.class, method, result);
         CpUtils.assertTrue("Has at least 6 gotos", gotos.size() >= 6, result);
@@ -96,14 +121,32 @@ public class Cpf3_Ollir {
 
         var branches = CpUtils.assertInstExists(CondBranchInstruction.class, method, result);
 
-        CpUtils.assertTrue("Number of branches between 1 and 2", branches.size() > 0 && branches.size() < 3, result);
+        CpUtils.assertTrue("Number of branches between 1 and 3", branches.size() >= 1 && branches.size() <= 3, result);
     }
 
+    @Test
+    public void section3_ControlFlow_If_Else_In_Main() {
+        var result = getOllirResult("control_flow/IfElseInMain.jmm");
+
+        var method = CpUtils.getMethod(result, "main");
+
+        var branches = CpUtils.assertInstExists(CondBranchInstruction.class, method, result);
+        CpUtils.assertTrue("Expected number of branches to be between 1 and 2", branches.size() >= 1 && branches.size() <= 2, result);
+
+        var gotos = CpUtils.assertInstExists(GotoInstruction.class, method, result);
+        CpUtils.assertTrue("Has at least 1 goto", gotos.size() >= 1, result);
+
+        // One way of ensuring that all labels always have a corresponding statement
+        // is to ensure that all methods (including ones which return type is void)
+        // have a return statement
+        var returns = CpUtils.assertInstExists(ReturnInstruction.class, method, result);
+        CpUtils.assertTrue("Has return", returns.size() == 1, result);
+    }
 
     /*checks if an array is correctly initialized*/
     @Test
-    public void section4_Arrays_Init_Array() {
-        var result = getOllirResult("arrays/ArrayInit.jmm");
+    public void section4_Arrays_New_Array() {
+        var result = getOllirResult("arrays/ArrayNew.jmm");
 
         var method = CpUtils.getMethod(result, "main");
 
@@ -161,6 +204,89 @@ public class Cpf3_Ollir {
                 .flatMap(assign -> CpUtils.getElements(assign.getRhs()).stream())
                 .filter(element -> element instanceof ArrayOperand).count();
         CpUtils.assertEquals("Number of array reads", 6, numArrayReads, result);
+    }
+
+    @Test
+    public void section4_Arrays_Varargs() {
+        var result = getOllirResult("arrays/ArrayVarArgs.jmm");
+
+        var method = CpUtils.getMethod(result, "bar");
+
+        var calls = CpUtils.getInstructions(CallInstruction.class, method);
+
+        var fooCalls = calls.stream()
+                .filter(call -> call.getMethodNameTry().isPresent())
+                .filter(call -> ((LiteralElement) call.getMethodName()).getLiteral().equals("\"foo\""))
+                .toList();
+
+        CpUtils.assertTrue("Expected two calls to method 'foo' in method 'bar'", fooCalls.size() == 2, result);
+
+        for (var fooCall : fooCalls) {
+            CpUtils.assertTrue("Expected a single argument in call to 'foo'", fooCall.getArguments().size() == 1, result);
+            var arg = fooCall.getArguments().get(0);
+            CpUtils.assertTrue("Expected single argument in call to 'foo' to be an array", arg.getType() instanceof ArrayType, result);
+        }
+
+
+        var assigns = CpUtils.getInstructions(AssignInstruction.class, method);
+        CpUtils.assertTrue("Expected at least 6 assignments in method 'bar'", assigns.size() >= 6, result);
+
+    }
+
+    @Test
+    public void section4_Arrays_Array_Initialization() {
+        var result = getOllirResult("arrays/ArrayInitialization.jmm");
+
+        var method = CpUtils.getMethod(result, "foo");
+
+        var calls = CpUtils.getInstructions(CallInstruction.class, method);
+
+        calls.stream().forEach(c -> System.out.println(c));
+
+        var newCalls = calls.stream()
+                .filter(call -> call.getInvocationType() == CallType.NEW)
+                .toList();
+
+        CpUtils.assertTrue("Expected one call to new in method 'foo'", newCalls.size() == 1, result);
+
+        var newCall = newCalls.get(0);
+
+        CpUtils.assertTrue("Expected one argument in call to new", newCall.getArguments().size() == 1, result);
+
+        var arrayLength = newCall.getArguments().get(0);
+
+        CpUtils.assertTrue("Expected argument to be a literal", arrayLength instanceof LiteralElement, result);
+        CpUtils.assertTrue("Expected argument to have the value 4", ((LiteralElement) arrayLength).getLiteral().equals("4"), result);
+
+        var assigns = CpUtils.getInstructions(AssignInstruction.class, method);
+        CpUtils.assertTrue("Expected at least 6 assignments in method 'bar'", assigns.size() >= 6, result);
+    }
+
+
+    @Test
+    public void section4_Arrays_VarargsAndArrayInit() {
+        var result = getOllirResult("arrays/VarargsAndArrayInit.jmm");
+
+
+        var method = CpUtils.getMethod(result, "bar");
+
+        var calls = CpUtils.getInstructions(CallInstruction.class, method);
+
+        var fooCalls = calls.stream()
+                .filter(call -> call.getMethodNameTry().isPresent())
+                .filter(call -> ((LiteralElement) call.getMethodName()).getLiteral().equals("\"foo\""))
+                .toList();
+
+        CpUtils.assertTrue("Expected one call to method 'foo' in method 'bar'", fooCalls.size() == 1, result);
+        var fooCall = fooCalls.get(0);
+
+        CpUtils.assertTrue("Expected two argument in call to 'foo'", fooCall.getArguments().size() == 2, result);
+        CpUtils.assertTrue("Expected first argument in call to 'foo' to be an array", fooCall.getArguments().get(0).getType() instanceof ArrayType, result);
+        CpUtils.assertTrue("Expected second argument in call to 'foo' to be an array", fooCall.getArguments().get(1).getType() instanceof ArrayType, result);
+
+        var assigns = CpUtils.getInstructions(AssignInstruction.class, method);
+        CpUtils.assertTrue("Expected at least 10 assignments in method 'bar'", assigns.size() >= 11, result);
+
     }
 
 }

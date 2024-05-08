@@ -1,21 +1,28 @@
 import io;
-Arithmetic_and {
 
-    .construct Arithmetic_and().V {
-        invokespecial(this, "<init>").V;
-    }
+Arithmetic_and{
 
-    .method public static main(args.array.String).V {
-a.bool :=.bool 1.bool &&.bool 0.bool;
+   .construct Arithmetic_and().V {
+       invokespecial(this, "<init>").V;
+   }
 
-if (a.bool) goto ifbody_0;
-    invokestatic(io, "print", 0.i32).V;
-goto endif_0;
-ifbody_0:
-    invokestatic(io, "print", 1.i32).V;
-endif_0:
+   .method public static main(args.array.String).V {
+      tmp0.Arithmetic_and :=.Arithmetic_and new(Arithmetic_and).Arithmetic_and;
+      invokespecial(tmp0.Arithmetic_and, "<init>").V;
+      c.Arithmetic_and :=.Arithmetic_and tmp0.Arithmetic_and;
+      if(1.bool) goto true_0;
+      tmp1.bool :=.bool 0.bool;
+      goto end_0;
+      true_0:
+      tmp2.bool :=.bool invokevirtual(c.Arithmetic_and, "p", 1.i32).bool;
+      tmp1.bool :=.bool tmp2.bool;
+      end_0:
+      a.bool :=.bool tmp1.bool;
+      ret.V ;
+   }
 
-ret.V;
-    }
-
+   .method p(value.i32).bool {
+      invokestatic(io, "print", value.i32).V;
+      ret.bool 1.bool;
+   }
 }
