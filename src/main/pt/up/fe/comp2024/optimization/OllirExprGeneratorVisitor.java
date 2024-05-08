@@ -19,13 +19,12 @@ import static pt.up.fe.comp2024.ast.Kind.*;
  * Generates OLLIR code from JmmNodes that are expressions.
  */
 
-// TODO: Implement short-circuit operations in Ollir
-
 public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult> {
 
     private static final String SPACE = " ";
     private static final String ASSIGN = ":=";
     private static final String END_STMT = ";\n";
+    private final String END_LABEL = ":\n";
     private static final String NEW = "new";
     private static final String L_BRACKET = "(";
     private static final String R_BRACKET = ")";
@@ -49,6 +48,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(THIS, this::visitThis);
         addVisit(LENGTH_ATTR_EXPR, this::visitLengthAttrExpr);
         addVisit(ARRAY_EXPR, this::visitArrayExpr);
+        addVisit(NEW_ARRAY_EXPR, this::visitNewArrayExpr);
 
         setDefaultVisit(this::defaultVisit);
     }
@@ -72,8 +72,14 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
 
     private OllirExprResult visitBinExpr(JmmNode node, Void unused) {
-        var lhs = visit(node.getJmmChild(0));
-        var rhs = visit(node.getJmmChild(1));
+        if (node.get("op").equals("&&"))
+            return visitShortCircuitAnd(node);
+        return visitRegularBinExpr(node);
+    }
+
+    private OllirExprResult visitRegularBinExpr(JmmNode node) {
+        OllirExprResult lhs = visit(node.getJmmChild(0));
+        OllirExprResult rhs = visit(node.getJmmChild(1));
 
         StringBuilder computation = new StringBuilder();
 
@@ -91,6 +97,36 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
         computation.append(node.get("op")).append(OptUtils.toOllirType(node)).append(SPACE)
                 .append(rhs.getCode()).append(END_STMT);
+
+        return new OllirExprResult(code, computation);
+    }
+
+    private OllirExprResult visitShortCircuitAnd (JmmNode node) {
+        int andIdx = OptUtils.getNextAndNumber();
+        final String AND_RHS_LABEL = "AND_RHS_" + andIdx;
+        final String AND_END_LABEL = "AND_END_" + andIdx;
+        final String AND_TRUE_LABEL = "AND_TRUE_" + andIdx;
+        final String AND_FALSE_LABEL = "AND_FALSE_" + andIdx;
+
+        OllirExprResult lhs = visit(node.getJmmChild(0));
+        OllirExprResult rhs = visit(node.getJmmChild(1));
+        String resOllirType = OptUtils.toOllirType(node);
+        String code = OptUtils.getTemp() + resOllirType;
+
+        StringBuilder computation = new StringBuilder();
+
+        computation.append(lhs.getComputation());
+
+        // short-circuit LHS evaluation
+        computation.append("if (").append(lhs.getCode()).append(") goto ").append(AND_RHS_LABEL).append(END_STMT);
+        computation.append(code).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append("0.bool").append(END_STMT);
+        computation.append("goto ").append(AND_END_LABEL).append(END_STMT);
+
+        // short-citcuit RHS evaluation
+        computation.append(AND_RHS_LABEL).append(END_LABEL);
+        computation.append(rhs.getComputation());
+        computation.append(code).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(rhs.getCode()).append(END_STMT);
+        computation.append(AND_END_LABEL).append(END_LABEL);
 
         return new OllirExprResult(code, computation);
     }
@@ -257,6 +293,21 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         computation.append(OptUtils.removeOllirType(arrayExpr.getCode())).append("[").append(arrayIdx.getCode()).append("]").append(ollirType)
                 .append(END_STMT);
 
+
+        return new OllirExprResult(code.toString(), computation.toString());
+    }
+
+    // TODO: Merge this function with visitNewObjExpr?
+    private OllirExprResult visitNewArrayExpr(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        StringBuilder computation = new StringBuilder();
+        String ollirType = OptUtils.toOllirType(node);
+
+        OllirExprResult exprRes = visit(node.getChild(0));
+        code.append(OptUtils.getTemp()).append(ollirType);
+        computation.append(exprRes.getComputation());
+        computation.append(code).append(SPACE).append(ASSIGN).append(ollirType).append(SPACE);
+        computation.append("new(array, ").append(exprRes.getCode()).append(")").append(ollirType).append(END_STMT);
 
         return new OllirExprResult(code.toString(), computation.toString());
     }

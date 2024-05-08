@@ -11,6 +11,7 @@ public class OptUtils {
     private static int tempNumber = -1;
     private static int ifNumber = -1;
     private static int whileNumber = -1;
+    private static int andNumber = -1;
 
     private final static String VIRTUAL_FUNC = "invokevirtual";
     private final static String STATIC_FUNC = "invokestatic";
@@ -39,6 +40,11 @@ public class OptUtils {
     public static int getNextWhileNum() {
         whileNumber++;
         return whileNumber;
+    }
+
+    public static int getNextAndNumber() {
+        andNumber++;
+        return andNumber;
     }
 
     public static String toOllirType(JmmNode node) {
