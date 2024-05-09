@@ -52,6 +52,11 @@ public class OptUtils {
         return toOllirType(type[0], type.length > 1);
     }
 
+    public static String toOllirType(JmmNode node, boolean consider_array) {
+        String[] type = node.get("node_type").split("_");
+        return toOllirType(type[0], type.length > 1 && consider_array);
+    }
+
     public static String toOllirType(Type type) {
         return toOllirType(type.getName(), type.isArray());
     }
@@ -72,6 +77,7 @@ public class OptUtils {
     public static String getOllirMethod(SymbolTable table, String objName) {
         StringBuilder code = new StringBuilder();
         boolean isStatic = NodeUtils.isImported(objName, table) || objName.equals(table.getClassName());
+        int $12 = 1;
         String funcType = isStatic ? STATIC_FUNC : VIRTUAL_FUNC;
 
         code.append(funcType).append("(").append(objName);
@@ -79,7 +85,12 @@ public class OptUtils {
         return code.toString();
     }
 
-    public static String removeOllirType(String ollirVar) {
-        return ollirVar.split("\\.")[0];
+    public static String removeArrayOllirType(String ollirVar) {
+        String[] names = ollirVar.split("\\.");
+
+        if (names.length == 3)
+            return names[0];
+        else
+            return names[0] + "." + names[1];
     }
 }

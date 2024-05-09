@@ -49,6 +49,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(LENGTH_ATTR_EXPR, this::visitLengthAttrExpr);
         addVisit(ARRAY_EXPR, this::visitArrayExpr);
         addVisit(NEW_ARRAY_EXPR, this::visitNewArrayExpr);
+        addVisit(INIT_ARRAY_EXPR, this::visitInitArrayExpr);
 
         setDefaultVisit(this::defaultVisit);
     }
@@ -290,7 +291,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         code.append(nextTmp).append(ollirType);
         computation.append(arrayExpr.getComputation()).append(arrayIdx.getComputation());
         computation.append(code).append(SPACE).append(ASSIGN).append(ollirType).append(SPACE);
-        computation.append(OptUtils.removeOllirType(arrayExpr.getCode())).append("[").append(arrayIdx.getCode()).append("]").append(ollirType)
+        computation.append(OptUtils.removeArrayOllirType(arrayExpr.getCode())).append("[").append(arrayIdx.getCode()).append("]").append(ollirType)
                 .append(END_STMT);
 
 
@@ -308,6 +309,31 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         computation.append(exprRes.getComputation());
         computation.append(code).append(SPACE).append(ASSIGN).append(ollirType).append(SPACE);
         computation.append("new(array, ").append(exprRes.getCode()).append(")").append(ollirType).append(END_STMT);
+
+        return new OllirExprResult(code.toString(), computation.toString());
+    }
+
+    private OllirExprResult visitInitArrayExpr(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        StringBuilder computation = new StringBuilder();
+        String nextTmp = OptUtils.getTemp();
+        String ollirType = OptUtils.toOllirType(node);
+        String arrayOllirType = OptUtils.toOllirType(node, false);
+        List<JmmNode> arrExprs = node.getChildren();
+
+        code.append(nextTmp).append(ollirType);
+
+        // Create new array in temporary variable
+        computation.append(code).append(SPACE).append(ASSIGN).append(ollirType).append(SPACE);
+        computation.append("new(array, ").append(arrExprs.size()).append(".i32)").append(ollirType).append(END_STMT);
+
+        // Store elements of array initializer in the array that was created
+        for (int i = 0; i < arrExprs.size(); i++) {
+            OllirExprResult exprRes = visit(arrExprs.get(i));
+            computation.append(exprRes.getComputation());
+            computation.append(nextTmp).append("[").append(i).append(".i32]").append(arrayOllirType).append(SPACE).append(ASSIGN)
+                    .append(arrayOllirType).append(SPACE).append(exprRes.getCode()).append(END_STMT);
+        }
 
         return new OllirExprResult(code.toString(), computation.toString());
     }
