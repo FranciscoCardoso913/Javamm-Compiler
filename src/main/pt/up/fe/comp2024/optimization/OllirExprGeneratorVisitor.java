@@ -1,6 +1,5 @@
 package pt.up.fe.comp2024.optimization;
 
-import org.specs.comp.ollir.Ollir;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
@@ -18,6 +17,8 @@ import static pt.up.fe.comp2024.ast.Kind.*;
 /**
  * Generates OLLIR code from JmmNodes that are expressions.
  */
+
+// TODO: Refactor visitMethodExpr and creation of ollir arrays
 
 public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult> {
 
@@ -106,8 +107,6 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         int andIdx = OptUtils.getNextAndNumber();
         final String AND_RHS_LABEL = "AND_RHS_" + andIdx;
         final String AND_END_LABEL = "AND_END_" + andIdx;
-        final String AND_TRUE_LABEL = "AND_TRUE_" + andIdx;
-        final String AND_FALSE_LABEL = "AND_FALSE_" + andIdx;
 
         OllirExprResult lhs = visit(node.getJmmChild(0));
         OllirExprResult rhs = visit(node.getJmmChild(1));
@@ -206,6 +205,18 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         StringBuilder code = new StringBuilder();
         StringBuilder computation = new StringBuilder();
         List<String> tmpVars = new ArrayList<>();
+        int nParams = -1;
+        int nArguments = node.getChildren().size() - 1;
+        boolean isLastParamEllipsis = false;
+        String ellipsisArrayTmp = "";
+
+        // visit lhs expr to get its ollir representation
+        var object = visit(node.getChild(0));
+        computation.append(object.getComputation());
+
+        String ollirMethod = OptUtils.getOllirMethod(table, object.getCode());
+        String methodName = node.get("name");
+        String returnType = OptUtils.toOllirType(node);
 
         // Visit params as they are expressions as well
         for (int i = 1; i < node.getChildren().size(); i++) {
@@ -215,13 +226,26 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
             tmpVars.add(res.getCode());
         }
 
-        // visit lhs expr to get its ollir representation
-        var object = visit(node.getChild(0));
-        computation.append(object.getComputation());
+        if (!NodeUtils.isImported(object.getCode(), table) && !table.getParameters(methodName).isEmpty()) {
+            List<Symbol> methodParams = table.getParameters(methodName);
+            nParams = methodParams.size();
+            Symbol lastParam = methodParams.get(nParams - 1);
+            isLastParamEllipsis = lastParam.getType().getObject("isEllipse", Boolean.class);
 
-        String ollirMethod = OptUtils.getOllirMethod(table, object.getCode());
-        String methodName = node.get("name");
-        String returnType = OptUtils.toOllirType(node);
+            if (isLastParamEllipsis && (tmpVars.isEmpty() || !OptUtils.isOllirArray(tmpVars.get(nArguments - 1)))) {
+                int newListSize = nArguments - nParams + 1;
+                OllirExprResult newList = generateOllirArray(OptUtils.toOllirType(lastParam.getType()), newListSize);
+                ellipsisArrayTmp = newList.getCode();
+                String arrayOllirType = OptUtils.getOllirBaseType(ellipsisArrayTmp);
+                computation.append(newList.getComputation());
+
+                for (int i = 0; i < newListSize; i++) {
+                    computation.append(ellipsisArrayTmp).append("[").append(i).append(".i32]").append(arrayOllirType)
+                            .append(SPACE).append(ASSIGN).append(arrayOllirType).append(SPACE)
+                            .append(tmpVars.get(i + nParams - 1)).append(END_STMT);
+                }
+            }
+        }
 
         if (!returnType.equals(".V") && !node.getParent().isInstance(EXPR_STMT)) {
             String tmpVar = OptUtils.getTemp();
@@ -234,12 +258,19 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
         computation.append(", ").append("\"").append(methodName).append("\"");
 
-        for (String tmpVar: tmpVars) {
-            computation.append(", ").append(tmpVar);
+        if (isLastParamEllipsis) {
+            for (int i = 0; i < nParams - 1; i++) {
+                computation.append(", ").append(tmpVars.get(i));
+            }
+            computation.append(", ").append(ellipsisArrayTmp);
+        }
+        else {
+            for (String tmpVar : tmpVars) {
+                computation.append(", ").append(tmpVar);
+            }
         }
 
         computation.append(")").append(returnType).append(END_STMT);
-
 
         return new OllirExprResult(code.toString(), computation.toString());
     }
@@ -291,7 +322,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         code.append(nextTmp).append(ollirType);
         computation.append(arrayExpr.getComputation()).append(arrayIdx.getComputation());
         computation.append(code).append(SPACE).append(ASSIGN).append(ollirType).append(SPACE);
-        computation.append(OptUtils.removeArrayOllirType(arrayExpr.getCode())).append("[").append(arrayIdx.getCode()).append("]").append(ollirType)
+        computation.append(OptUtils.removeOllirType(arrayExpr.getCode())).append("[").append(arrayIdx.getCode()).append("]").append(ollirType)
                 .append(END_STMT);
 
 
@@ -334,6 +365,17 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
             computation.append(nextTmp).append("[").append(i).append(".i32]").append(arrayOllirType).append(SPACE).append(ASSIGN)
                     .append(arrayOllirType).append(SPACE).append(exprRes.getCode()).append(END_STMT);
         }
+
+        return new OllirExprResult(code.toString(), computation.toString());
+    }
+
+    private OllirExprResult generateOllirArray(String ollirType, int elems) {
+        StringBuilder code = new StringBuilder();
+        StringBuilder computation = new StringBuilder();
+
+        code.append(OptUtils.getTemp()).append(ollirType);
+        computation.append(code).append(SPACE).append(ASSIGN).append(ollirType).append(SPACE);
+        computation.append("new(array, ").append(elems).append(".i32)").append(ollirType).append(END_STMT);
 
         return new OllirExprResult(code.toString(), computation.toString());
     }

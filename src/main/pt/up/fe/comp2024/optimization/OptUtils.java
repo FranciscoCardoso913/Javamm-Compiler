@@ -58,7 +58,12 @@ public class OptUtils {
     }
 
     public static String toOllirType(Type type) {
-        return toOllirType(type.getName(), type.isArray());
+        boolean isEllispe = false;
+
+        if (type.getAttributes().contains("isEllipse"))
+            isEllispe = type.getObject("isEllipse", Boolean.class);
+
+        return toOllirType(type.getName(), type.isArray() || isEllispe);
     }
 
     private static String toOllirType(String typeName, boolean isArray) {
@@ -77,7 +82,6 @@ public class OptUtils {
     public static String getOllirMethod(SymbolTable table, String objName) {
         StringBuilder code = new StringBuilder();
         boolean isStatic = NodeUtils.isImported(objName, table) || objName.equals(table.getClassName());
-        int $12 = 1;
         String funcType = isStatic ? STATIC_FUNC : VIRTUAL_FUNC;
 
         code.append(funcType).append("(").append(objName);
@@ -85,12 +89,24 @@ public class OptUtils {
         return code.toString();
     }
 
-    public static String removeArrayOllirType(String ollirVar) {
-        String[] names = ollirVar.split("\\.");
+    public static String removeOllirType(String ollirVar) {
+        String[] parts = ollirVar.split("\\.");
 
-        if (names.length == 3)
-            return names[0];
+        if (parts.length == 3)
+            return parts[0];
         else
-            return names[0] + "." + names[1];
+            return parts[0] + "." + parts[1];
+    }
+
+    public static boolean isOllirArray(String ollirVar) {
+        String[] parts = ollirVar.split("\\.");
+
+        return parts[parts.length - 2].equals("array");
+    }
+
+    public static String getOllirBaseType(String ollirVar) {
+        String[] parts = ollirVar.split("\\.");
+
+        return "." + parts[parts.length - 1];
     }
 }

@@ -59,6 +59,7 @@ public class NodeUtils {
 
     }
 
+    // TODO: Maybe move this to symbolTable?
     public static boolean isImported(String name, SymbolTable table){
         for (var imported_path : table.getImports()) {
             String[] parts = imported_path.split("\\.");
