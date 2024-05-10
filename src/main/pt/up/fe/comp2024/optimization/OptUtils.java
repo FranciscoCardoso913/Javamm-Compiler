@@ -9,10 +9,12 @@ import static pt.up.fe.comp2024.ast.Kind.*;
 
 public class OptUtils {
     private static int tempNumber = -1;
+    private static int ifNumber = -1;
+    private static int whileNumber = -1;
+    private static int andNumber = -1;
 
     private final static String VIRTUAL_FUNC = "invokevirtual";
     private final static String STATIC_FUNC = "invokestatic";
-    private final static String SPECIAL_FUNC = "invokespecial";
 
     public static String getTemp() {
 
@@ -30,13 +32,38 @@ public class OptUtils {
         return tempNumber;
     }
 
+    public static int getNextIfNum() {
+        ifNumber++;
+        return ifNumber;
+    }
+
+    public static int getNextWhileNum() {
+        whileNumber++;
+        return whileNumber;
+    }
+
+    public static int getNextAndNumber() {
+        andNumber++;
+        return andNumber;
+    }
+
     public static String toOllirType(JmmNode node) {
         String[] type = node.get("node_type").split("_");
         return toOllirType(type[0], type.length > 1);
     }
 
+    public static String toOllirType(JmmNode node, boolean consider_array) {
+        String[] type = node.get("node_type").split("_");
+        return toOllirType(type[0], type.length > 1 && consider_array);
+    }
+
     public static String toOllirType(Type type) {
-        return toOllirType(type.getName(), type.isArray());
+        boolean isEllispe = false;
+
+        if (type.getAttributes().contains("isEllipse"))
+            isEllispe = type.getObject("isEllipse", Boolean.class);
+
+        return toOllirType(type.getName(), type.isArray() || isEllispe);
     }
 
     private static String toOllirType(String typeName, boolean isArray) {
@@ -52,24 +79,34 @@ public class OptUtils {
         return type;
     }
 
-    public static String getOllirMethod(JmmNode node, SymbolTable table, String objName) {
+    public static String getOllirMethod(SymbolTable table, String objName) {
         StringBuilder code = new StringBuilder();
         boolean isStatic = NodeUtils.isImported(objName, table) || objName.equals(table.getClassName());
         String funcType = isStatic ? STATIC_FUNC : VIRTUAL_FUNC;
 
         code.append(funcType).append("(").append(objName);
-        /*
-        if (node.isInstance(THIS)) {
-            code.append(VIRTUAL_FUNC).append("(this");
-        } else {
-            boolean isStatic = NodeUtils.isImported(objName, table) || objName.equals(table.getClassName());
-            String funcType = isStatic ? STATIC_FUNC : VIRTUAL_FUNC;
-
-            code.append(funcType).append("(").append(objName);
-            if (funcType.equals(VIRTUAL_FUNC))
-                code.append(OptUtils.toOllirType(node));
-        }*/
 
         return code.toString();
+    }
+
+    public static String removeOllirType(String ollirVar) {
+        String[] parts = ollirVar.split("\\.");
+
+        if (parts.length < 3 || (parts.length == 3 && isOllirArray(ollirVar)))
+            return parts[0];
+        else
+            return parts[0] + "." + parts[1];
+    }
+
+    public static boolean isOllirArray(String ollirVar) {
+        String[] parts = ollirVar.split("\\.");
+
+        return parts[parts.length - 2].equals("array");
+    }
+
+    public static String getOllirBaseType(String ollirVar) {
+        String[] parts = ollirVar.split("\\.");
+
+        return parts[parts.length - 1];
     }
 }
