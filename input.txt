@@ -1,9 +1,0 @@
-import M;
-class Test {
-int foo(int param) {
-M a;
-a = M.foo();
-a.bar(param);
-return 0;
-}
-}
