@@ -92,7 +92,7 @@ public class OptUtils {
     public static String removeOllirType(String ollirVar) {
         String[] parts = ollirVar.split("\\.");
 
-        if (parts.length == 3)
+        if (parts.length < 3 || (parts.length == 3 && isOllirArray(ollirVar)))
             return parts[0];
         else
             return parts[0] + "." + parts[1];
@@ -107,6 +107,6 @@ public class OptUtils {
     public static String getOllirBaseType(String ollirVar) {
         String[] parts = ollirVar.split("\\.");
 
-        return "." + parts[parts.length - 1];
+        return parts[parts.length - 1];
     }
 }

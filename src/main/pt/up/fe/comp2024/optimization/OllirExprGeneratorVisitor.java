@@ -205,6 +205,19 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         StringBuilder code = new StringBuilder();
         StringBuilder computation = new StringBuilder();
         List<String> tmpVars = new ArrayList<>();
+        int nParams = -1;
+        int nArguments = node.getChildren().size() - 1;
+        boolean isLastParamEllipsis = false;
+        String ellipsisArrayTmp = "";
+
+        // visit lhs expr to get its ollir representation
+        var object = visit(node.getChild(0));
+        computation.append(object.getComputation());
+
+        String ollirMethod = OptUtils.getOllirMethod(table, object.getCode());
+        String methodName = node.get("name");
+        String returnType = OptUtils.toOllirType(node);
+
 
         // Visit params as they are expressions as well
         for (int i = 1; i < node.getChildren().size(); i++) {
@@ -214,13 +227,26 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
             tmpVars.add(res.getCode());
         }
 
-        // visit lhs expr to get its ollir representation
-        var object = visit(node.getChild(0));
-        computation.append(object.getComputation());
+        if (!NodeUtils.isImported(object.getCode(), table) && !NodeUtils.isImported(OptUtils.getOllirBaseType(object.getCode()), table) && !NodeUtils.isImported(OptUtils.getOllirBaseType(object.getCode()), table) && !table.getParameters(methodName).isEmpty()) {
+            List<Symbol> methodParams = table.getParameters(methodName);
+            nParams = methodParams.size();
+            Symbol lastParam = methodParams.get(nParams - 1);
+            isLastParamEllipsis = lastParam.getType().getObject("isEllipse", Boolean.class);
 
-        String ollirMethod = OptUtils.getOllirMethod(table, object.getCode());
-        String methodName = node.get("name");
-        String returnType = OptUtils.toOllirType(node);
+            if (isLastParamEllipsis && (tmpVars.isEmpty() || !(OptUtils.isOllirArray(tmpVars.get(nArguments - 1)) && nArguments == nParams) )) {
+                int newListSize = nArguments - nParams + 1;
+                OllirExprResult newList = generateOllirArray(OptUtils.toOllirType(lastParam.getType()), newListSize);
+                ellipsisArrayTmp = newList.getCode();
+                String arrayOllirType = "." + OptUtils.getOllirBaseType(ellipsisArrayTmp);
+                computation.append(newList.getComputation());
+
+                for (int i = 0; i < newListSize; i++) {
+                    computation.append(ellipsisArrayTmp).append("[").append(i).append(".i32]").append(arrayOllirType)
+                            .append(SPACE).append(ASSIGN).append(arrayOllirType).append(SPACE)
+                            .append(tmpVars.get(i + nParams - 1)).append(END_STMT);
+                }
+            }
+        }
 
         if (!returnType.equals(".V") && !node.getParent().isInstance(EXPR_STMT)) {
             String tmpVar = OptUtils.getTemp();
@@ -233,8 +259,16 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
         computation.append(", ").append("\"").append(methodName).append("\"");
 
-        for (String tmpVar : tmpVars) {
-            computation.append(", ").append(tmpVar);
+        if (isLastParamEllipsis) {
+            for (int i = 0; i < nParams - 1; i++) {
+                computation.append(", ").append(tmpVars.get(i));
+            }
+            computation.append(", ").append(ellipsisArrayTmp);
+        }
+        else {
+            for (String tmpVar : tmpVars) {
+                computation.append(", ").append(tmpVar);
+            }
         }
 
         computation.append(")").append(returnType).append(END_STMT);
