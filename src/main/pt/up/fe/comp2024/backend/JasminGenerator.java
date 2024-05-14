@@ -215,7 +215,6 @@ public class JasminGenerator {
         }
 
         code.append(TAB).append(".limit stack ").append(maxStack).append(NL);
-        // TODO: start with params.size() and increase?
 
         int locals = method.getVarTable().size();
 
@@ -485,6 +484,30 @@ public class JasminGenerator {
             throw new NotImplementedException(lhs.getClass());
         }
 
+        // Check for increment/decrement pattern]
+        // i = i' + c
+        if (assign.getRhs() instanceof BinaryOpInstruction rhs) { // rhs -> i' + c
+            if (rhs.getLeftOperand() instanceof Operand leftOp) { // leftOp -> i'
+                if (leftOp.getName().equals(operand.getName())) { // i' == i
+
+                    if ((rhs.getOperation().getOpType() == OperationType.ADD || rhs.getOperation().getOpType() == OperationType.SUB)
+                            && rhs.getRightOperand() instanceof LiteralElement literal) {
+
+                        String literalValue = literal.getLiteral(); // literal -> c
+                        int varIndex = currentMethod.getVarTable().get(leftOp.getName()).getVirtualReg();
+
+                        code.append("iinc ").append(varIndex).append(" ");
+
+                        if (rhs.getOperation().getOpType() == OperationType.SUB) code.append("-");
+
+                        code.append(literalValue).append(NL);
+
+                        return code.toString();
+                    }
+                }
+            }
+        }
+
         if (operand instanceof ArrayOperand arrayOperand) {
             // load array reference and index
             acessing = false;
@@ -498,7 +521,8 @@ public class JasminGenerator {
         // generate code for loading what's on the right
         code.append(generators.apply(assign.getRhs()));
 
-        shouldPop = true; // shouldPop is true by default, only set to false when needed (e.g. rhs of an assign)
+        // shouldPop is true by default, only set to false when needed (e.g. rhs of an assign)
+        shouldPop = true;
 
         code.append(generateStore(operand));
 
@@ -520,8 +544,8 @@ public class JasminGenerator {
         var reg = regName.getVirtualReg();
 
         switch (regName.getVarType().getTypeOfElement()) {
-            case INT32, BOOLEAN -> code.append("istore ").append(reg).append(NL);
-            case OBJECTREF, STRING, CLASS, ARRAYREF -> code.append("astore ").append(reg).append(NL);
+            case INT32, BOOLEAN -> code.append(generateIStoreInstruction(reg)).append(NL);
+            case OBJECTREF, STRING, CLASS, ARRAYREF -> code.append(generateAStoreInstruction(reg)).append(NL);
         }
         updateStack(-1);
 
@@ -529,10 +553,25 @@ public class JasminGenerator {
     }
 
     private String generateLiteral(LiteralElement literal) {
+        var code = new StringBuilder();
+
+        String literalValue = literal.getLiteral();
+        int value = Integer.parseInt(literalValue);
+
+
+        if (value >= -1 && value <= 5) {
+            code.append("iconst_").append(value).append(NL);
+        } else if (value >= -128 && value <= 127) {
+            code.append("bipush ").append(value).append(NL);
+        } else if (value >= -32768 && value <= 32767) {
+            code.append("sipush ").append(value).append(NL);
+        } else {
+            code.append("ldc ").append(value).append(NL);
+        }
+
         updateStack(1);
 
-        // TODO: iconst here?
-        return "ldc " + literal.getLiteral() + NL;
+        return code.toString();
     }
 
     private String generateOperand(Operand operand) {
@@ -541,7 +580,7 @@ public class JasminGenerator {
         if (operand instanceof ArrayOperand arrayOperand) {
             // load array reference
             var reg = currentMethod.getVarTable().get(arrayOperand.getName()).getVirtualReg();
-            code.append("aload ").append(reg).append(NL);
+            code.append(generateALoadInstruction(reg)).append(NL);
 
             updateStack(1);
 
@@ -560,14 +599,14 @@ public class JasminGenerator {
         switch (operand.getType().getTypeOfElement()) {
             case INT32, BOOLEAN -> {
                 var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
-                code.append("iload ").append(reg).append(NL);
+                code.append(generateILoadInstruction(reg)).append(NL);
             }
             case OBJECTREF, CLASS, STRING, ARRAYREF -> {
                 if ("this".equals(operand.getName())) {
                     return "aload 0" + NL;
                 }
                 var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
-                code.append("aload ").append(reg).append(NL);
+                code.append(generateALoadInstruction(reg)).append(NL);
             }
             case THIS -> code.append("aload 0").append(NL);
         }
@@ -575,6 +614,46 @@ public class JasminGenerator {
         updateStack(1);
 
         return code.toString();
+    }
+
+    private String generateILoadInstruction(int index) {
+        return switch (index) {
+            case 0 -> "iload_0";
+            case 1 -> "iload_1";
+            case 2 -> "iload_2";
+            case 3 -> "iload_3";
+            default -> "iload " + index;
+        };
+    }
+
+    private String generateIStoreInstruction(int index) {
+        return switch (index) {
+            case 0 -> "istore_0";
+            case 1 -> "istore_1";
+            case 2 -> "istore_2";
+            case 3 -> "istore_3";
+            default -> "istore " + index;
+        };
+    }
+
+    private String generateALoadInstruction(int index) {
+        return switch (index) {
+            case 0 -> "aload_0";
+            case 1 -> "aload_1";
+            case 2 -> "aload_2";
+            case 3 -> "aload_3";
+            default -> "aload " + index;
+        };
+    }
+
+    private String generateAStoreInstruction(int index) {
+        return switch (index) {
+            case 0 -> "astore_0";
+            case 1 -> "astore_1";
+            case 2 -> "astore_2";
+            case 3 -> "astore_3";
+            default -> "astore " + index;
+        };
     }
 
     private String generateSingleOp(SingleOpInstruction singleOp) {

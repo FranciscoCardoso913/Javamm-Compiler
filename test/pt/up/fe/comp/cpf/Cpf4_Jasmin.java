@@ -118,6 +118,13 @@ public class Cpf4_Jasmin {
         CpUtils.runJasmin(getJasminResult("arithmetic/Arithmetic_and.ollir"), "1");
     }
 
+    // testing iinc
+    @Test
+    public void iinc() {
+        JasminResult jasminResult = getJasminResult("InstSelection_iinc.ollir");
+        CpUtils.matches(jasminResult, "iinc\\s+\\w+\\s-10");
+    }
+
     @Test
     public void section2_Arithmetic_Simple_less() {
         CpUtils.runJasmin(getJasminResult("arithmetic/Arithmetic_less.ollir"), "1");
