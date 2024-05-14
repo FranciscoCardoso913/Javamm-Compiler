@@ -700,24 +700,52 @@ public class JasminGenerator {
     private String generateBinaryOp(BinaryOpInstruction binaryOp) {
         var code = new StringBuilder();
 
-        // load values on the left and on the right
+        // load values on the left
         code.append(generators.apply(binaryOp.getLeftOperand()));
-        code.append(generators.apply(binaryOp.getRightOperand()));
 
-        // apply operation
-        var op = switch (binaryOp.getOperation().getOpType()) {
-            case ADD -> "iadd";
-            case SUB -> "isub";
-            case MUL -> "imul";
-            case DIV -> "idiv";
-            case ANDB-> "iand";
-            case LTH -> "if_icmplt";
-            case GTE -> "if_icmpge";
-            default ->{
-                System.out.println("Operation not implemented: " + binaryOp.getOperation().getOpType());
-                throw new NotImplementedException(binaryOp.getOperation().getOpType());
+        boolean comparingWithZero = false;
+        switch (binaryOp.getOperation().getOpType()) {
+            case LTH, GTH, EQ, NEQ, LTE, GTE -> {
+                if (binaryOp.getRightOperand() instanceof LiteralElement literal)
+                    if (literal.getLiteral().equals("0"))
+                        comparingWithZero = true;
             }
-        };
+        }
+
+        String op;
+        if (comparingWithZero){
+            op = switch (binaryOp.getOperation().getOpType()) {
+                case LTH -> "iflt";
+                case GTH -> "ifgt";
+                case EQ -> "ifeq";
+                case NEQ -> "ifne";
+                case LTE -> "ifle";
+                case GTE -> "ifge";
+                default -> {
+                    System.out.println("Operation not implemented: " + binaryOp.getOperation().getOpType());
+                    throw new NotImplementedException(binaryOp.getOperation().getOpType());
+                }
+            };
+        } else {
+
+            // load values on the right
+            code.append(generators.apply(binaryOp.getRightOperand()));
+
+            // apply operation
+            op = switch (binaryOp.getOperation().getOpType()) {
+                case ADD -> "iadd";
+                case SUB -> "isub";
+                case MUL -> "imul";
+                case DIV -> "idiv";
+                case ANDB-> "iand";
+                case LTH -> "if_icmplt";
+                case GTE -> "if_icmpge";
+                default ->{
+                    System.out.println("Operation not implemented: " + binaryOp.getOperation().getOpType());
+                    throw new NotImplementedException(binaryOp.getOperation().getOpType());
+                }
+            };
+        }
 
         updateStack(-1); // pop two values and push result
 
