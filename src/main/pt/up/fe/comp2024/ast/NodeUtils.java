@@ -107,7 +107,7 @@ public class NodeUtils {
     }
 
     public static JmmNode createBooleanLiteral(String value){
-        JmmNode node = new JmmNodeImpl("BooleanLiteral");
+        JmmNode node = new JmmNodeImpl("BoolLiteral");
         node.put("node_type", "boolean");
         node.put("value", value);
         return node;

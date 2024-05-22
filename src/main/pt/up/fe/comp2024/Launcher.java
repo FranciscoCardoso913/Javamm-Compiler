@@ -45,7 +45,7 @@ public class Launcher {
         System.out.println(parserResult.getRootNode().toTree());
         TestUtils.noErrors(semanticsResult.getReports());
         System.out.println("ola");
-        new ASTOptimizationAnalysis().optimize(semanticsResult.getRootNode());
+
 
         //System.out.println(semanticsResult.getSymbolTable().getLocalVariables("main"));
         System.out.println(parserResult.getRootNode().toTree());

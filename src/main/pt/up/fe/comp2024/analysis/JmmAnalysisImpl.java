@@ -1,5 +1,6 @@
 package pt.up.fe.comp2024.analysis;
 
+import ast_optimization.ASTOptimizationAnalysis;
 import pt.up.fe.comp.jmm.analysis.JmmAnalysis;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
@@ -59,6 +60,7 @@ public class JmmAnalysisImpl implements JmmAnalysis {
             }
 
         }
+        if(parserResult.getConfig().get("optimize") !=null && parserResult.getConfig().get("optimize").equals("true"))new ASTOptimizationAnalysis().optimize(parserResult.getRootNode());
         return new JmmSemanticsResult(parserResult, table, reports);
     }
 }
