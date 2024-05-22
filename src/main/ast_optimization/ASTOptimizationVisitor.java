@@ -9,6 +9,7 @@ import pt.up.fe.comp2024.ast.NodeUtils;
 import pt.up.fe.comp2024.ast.TypeUtils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class ASTOptimizationVisitor extends PreorderJmmVisitor<SymbolTable, Void> {
     public Boolean opt = false;
@@ -18,12 +19,31 @@ public class ASTOptimizationVisitor extends PreorderJmmVisitor<SymbolTable, Void
     @Override
     protected void buildVisitor() {
         //addVisit(Kind.PROGRAM, this::visitProgram);
+        addVisit(Kind.WHILE_STMT, this::visitWhileStm);
         addVisit(Kind.ASSIGN_STMT, this::constantPropagation);
         addVisit(Kind.BINARY_EXPR, this::constantFolding);
         addVisit(Kind.VAR_REF_EXPR, this::replaceVar);
         setDefaultVisit(this::defaultVisit);
     }
 
+    public Void visitWhileStm(JmmNode node, SymbolTable table){
+        var exp = node.getChild(0);
+        var varInExp = new HashSet<String>();
+        var varUsed = new HashSet<String>();
+        if( exp.getKind().equals(Kind.VAR_REF_EXPR.toString()))
+            varInExp.add(exp.get("name"));
+        else
+            exp.getDescendants(Kind.VAR_REF_EXPR).forEach((el)-> varInExp.add(el.get("name")));
+
+        node.getChild(1).getDescendants(Kind.VAR_REF_EXPR).forEach(
+                (el)-> {
+                    if(varInExp.contains(el.get("name")))
+                        varUsed.add(el.get("name"));
+                }
+                );
+        this.consts.removeIf((el) -> varUsed.contains(el.a));
+        return null;
+    }
 
     public Void constantPropagation(JmmNode node, SymbolTable table) {
         var literals = new ArrayList<>();
@@ -71,7 +91,6 @@ public class ASTOptimizationVisitor extends PreorderJmmVisitor<SymbolTable, Void
             }
             if(contain) {
                 this.opt = true;
-                System.out.println("fsjhdg");
                 node.replace(NodeUtils.createLiteral(el.b));
                 break;
             }
