@@ -3,6 +3,7 @@ package pt.up.fe.comp2024.ast;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
 
 public class NodeUtils {
 
@@ -87,5 +88,26 @@ public class NodeUtils {
         }
 
         return false;
+    }
+
+    public static JmmNode createLiteral(String value){
+        return switch (value){
+            case "true", "false" -> createBooleanLiteral(value);
+            default -> createIntegerLiteral(value);
+        };
+    }
+
+    public static JmmNode createIntegerLiteral(String value){
+        JmmNode node = new JmmNodeImpl("IntegerLiteral");
+        node.put("node_type", "int");
+        node.put("value", value);
+        return node;
+    }
+
+    public static JmmNode createBooleanLiteral(String value){
+        JmmNode node = new JmmNodeImpl("BooleanLiteral");
+        node.put("node_type", "boolean");
+        node.put("value", value);
+        return node;
     }
 }
