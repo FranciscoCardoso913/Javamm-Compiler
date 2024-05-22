@@ -5,10 +5,8 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp2024.ast.Kind;
+import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp2024.ast.NodeUtils;
-import pt.up.fe.comp2024.ast.TypeUtils;
-import pt.up.fe.comp2024.optimization.OptUtils;
 
 import java.util.List;
 
@@ -22,6 +20,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private static final String SPACE = " ";
     private static final String ASSIGN = ":=";
     private final String END_STMT = ";\n";
+    private final String END_LABEL = ":\n";
     private final String NL = "\n";
     private final String L_BRACKET = " {\n";
     private final String R_BRACKET = "}\n";
@@ -46,6 +45,9 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(RETURN_STMT, this::visitReturn);
         addVisit(ASSIGN_STMT, this::visitAssignStmt);
         addVisit(EXPR_STMT, this::visitExprStmt);
+        addVisit(IF_STMT, this::visitIfStmt);
+        addVisit(WHILE_STMT, this::visitWhileStmt);
+        addVisit(LIST_ASSIGN_STMT, this::visitListAssignStmt);
 
         setDefaultVisit(this::defaultVisit);
     }
@@ -60,9 +62,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(rhs.getComputation());
 
         // code to compute self
-        // statement has type of lhs
-        // TODO: Change this when this node gets annotated
-        String typeString = OptUtils.toOllirType(TypeUtils.getExprType(node, table));
+        String typeString = OptUtils.toOllirType(node);
 
         // TODO: Refactor into two different functions
         if (NodeUtils.isFieldRef(node.get("name"), table, node.getAncestor(METHOD_DECL).get().get("name"))) {
@@ -122,8 +122,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
 
     private String visitMethodDecl(JmmNode node, Void unused) {
-        // TODO: Need to change code to support constructors (add invokespecial at the end of the method)
-
         StringBuilder code = new StringBuilder(".method ");
 
         boolean isPublic = NodeUtils.getBooleanAttribute(node, "isPublic", "false");
@@ -257,11 +255,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private String visitVarDecl(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
 
-        // TODO: Change when tree is fully annotated
-
-        JmmNode typeNode = node.getChild(0);
-        Type type = new Type(typeNode.get("name"), NodeUtils.getBooleanAttribute(typeNode, "isArray", "false"));
-        String varField = OptUtils.toOllirType(type);
+        String varField = OptUtils.toOllirType(node);
         code.append(".field public ").append(node.get("name")).append(varField).append(END_STMT);
 
         return code.toString();
@@ -270,6 +264,75 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private String visitExprStmt(JmmNode node, Void unused) {
         var res = exprVisitor.visit(node.getChild(0));
         return res.getComputation();
+    }
+
+    private String visitIfStmt(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        int ifIdx = OptUtils.getNextIfNum();
+        final String IFBODY_LABEL = "ifBody_" + ifIdx;
+        final String ENDIF_LABEL = "endif_" + ifIdx;
+
+
+        OllirExprResult bExpr = exprVisitor.visit(node.getChild(0));
+
+        // Visit boolean expression
+        code.append(bExpr.getComputation());
+        code.append("if (").append(bExpr.getCode()).append(") goto ").append(IFBODY_LABEL).append(END_STMT);
+
+        // Visit else body
+        code.append(visit(node.getChild(2)));
+        code.append("goto ").append(ENDIF_LABEL).append(END_STMT);
+
+        code.append(IFBODY_LABEL).append(END_LABEL);
+
+        // Visit if body
+        code.append(visit(node.getChild(1)));
+
+        code.append(ENDIF_LABEL).append(END_LABEL);
+
+        return code.toString();
+    }
+
+    private String visitWhileStmt(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        int whileIdx = OptUtils.getNextWhileNum();
+        final String WHILE_COND_LABEL = "whileCond_" + whileIdx;
+        final String WHILE_BODY_LABEL = "whileBody_" + whileIdx;
+        final String WHILE_END_LABEL = "whileEnd_" + whileIdx;
+
+        code.append(WHILE_COND_LABEL).append(END_LABEL);
+
+        // While condition
+        OllirExprResult bExpr = exprVisitor.visit(node.getChild(0));
+        code.append(bExpr.getComputation());
+        code.append("if (").append(bExpr.getCode()).append(") goto ").append(WHILE_BODY_LABEL).append(END_STMT);
+        code.append("goto ").append(WHILE_END_LABEL).append(END_STMT);
+
+        // While body
+        code.append(WHILE_BODY_LABEL).append(END_LABEL);
+        code.append(visit(node.getChild(1)));
+        code.append("goto ").append(WHILE_COND_LABEL).append(END_STMT);
+        code.append(WHILE_END_LABEL).append(END_LABEL);
+
+        return code.toString();
+    }
+
+    private String visitListAssignStmt(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        // TODO: Stop using split when AST is properly annotated
+        String nodeType = node.get("node_type").split("_")[0];
+        String ollirType = OptUtils.toOllirType(new Type(nodeType, false));
+
+        OllirExprResult idxRes = exprVisitor.visit(node.getChild(0));
+        OllirExprResult exprRes = exprVisitor.visit(node.getChild(1));
+
+        code.append(idxRes.getComputation());
+        code.append(exprRes.getComputation());
+
+        code.append(node.get("name")).append("[").append(idxRes.getCode()).append("]").append(ollirType).append(SPACE);
+        code.append(ASSIGN).append(ollirType).append(SPACE).append(exprRes.getCode()).append(END_STMT);
+
+        return code.toString();
     }
 
     /**

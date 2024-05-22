@@ -1,0 +1,17 @@
+import io;
+
+class Arithmetic_and {
+	public static void main(String[] args) {
+		boolean a;
+		Arithmetic_and c;
+
+		c = new Arithmetic_and();
+
+		a = true && c.p(1);
+	}
+
+	boolean p(int value) {
+   	    io.print(value);
+   	    return true;
+   	}
+}

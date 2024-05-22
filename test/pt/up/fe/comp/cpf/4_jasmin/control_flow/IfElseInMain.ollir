@@ -1,0 +1,24 @@
+import io;
+
+IfElseInMain{
+
+   .construct IfElseInMain().V {
+       invokespecial(this, "<init>").V;
+   }
+
+   .method public static main(args.array.String).V {
+      if(10.i32 <.bool 20.i32) goto true_0;
+      tmp0.bool:=.bool 0.bool;
+      goto end_0;
+      true_0:
+      tmp0.bool:=.bool 1.bool;
+      end_0:
+      if(tmp0.bool) goto if_0;
+      invokestatic(io, "println", 20.i32).V;
+      goto endif_0;
+      if_0:
+      invokestatic(io, "println", 10.i32).V;
+      endif_0:
+      ret.V ;
+   }
+}
