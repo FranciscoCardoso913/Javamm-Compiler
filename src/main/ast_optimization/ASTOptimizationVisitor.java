@@ -30,10 +30,11 @@ public class ASTOptimizationVisitor extends PreorderJmmVisitor<SymbolTable, Void
         literals.add(Kind.BOOL_LITERAL.toString());
         literals.add(Kind.INTEGER_LITERAL.toString());
         var exp = node.getChild(0);
+        visit(exp);
         if(literals.contains(exp.getKind())){
             consts.add(new Pair<>(node.get("name"), exp.get("value")));
         }else{
-            //consts.removeIf((pair) -> pair.a.equals(node.get("name")));
+            consts.removeIf((pair) -> pair.a.equals(node.get("name")));
         }
 
         return null;
