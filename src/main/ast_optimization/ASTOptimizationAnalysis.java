@@ -17,6 +17,7 @@ public class ASTOptimizationAnalysis {
         SymbolTable table = tableBuilder.build(rootNode);
         do {
             this.optimizationVisitor.opt= false;
+            this.optimizationVisitor.consts.clear();
             this.optimizationVisitor.optimize(rootNode, table);
         }while (this.optimizationVisitor.opt);
     }
