@@ -319,7 +319,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private String visitListAssignStmt(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
         // TODO: Stop using split when AST is properly annotated
-        String nodeType = node.get("node_type").split("_")[0];
+        String nodeType = node.get("node_type").split("\n")[0];
         String ollirType = OptUtils.toOllirType(new Type(nodeType, false));
 
         OllirExprResult idxRes = exprVisitor.visit(node.getChild(0));

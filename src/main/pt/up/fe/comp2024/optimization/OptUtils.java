@@ -53,7 +53,7 @@ public class OptUtils {
     public static String toOllirType(JmmNode node) {
         String type = node.get("node_type");
         boolean isArray = TypeUtils.isArray(type) || TypeUtils.isEllipse(type);
-        List<String> separatedType = List.of(node.get("node_type").split("_"));
+        List<String> separatedType = List.of(node.get("node_type").split("\n"));
         int lastIdx = isArray ? separatedType.size() - 1 : separatedType.size();
         return toOllirType(String.join("_", separatedType.subList(0, lastIdx)), isArray);
     }
@@ -61,7 +61,7 @@ public class OptUtils {
     public static String toOllirType(JmmNode node, boolean consider_array) {
         String type = node.get("node_type");
         boolean isArray = TypeUtils.isArray(type) || TypeUtils.isEllipse(type);
-        List<String> separatedType = List.of(node.get("node_type").split("_"));
+        List<String> separatedType = List.of(node.get("node_type").split("\n"));
         int lastIdx = isArray && consider_array ? separatedType.size() - 2 : separatedType.size() - 1;
         return toOllirType(String.join("_", separatedType.subList(0, lastIdx)), isArray && consider_array);
     }
