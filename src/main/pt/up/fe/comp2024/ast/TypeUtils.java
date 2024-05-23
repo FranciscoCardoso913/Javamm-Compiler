@@ -144,4 +144,37 @@ public class TypeUtils {
         String isArray = a.isArray()?"_array":"";
         return  a.getName() + isArray;
     }
+
+    public static JmmNode calc(String left, String right, String op){
+        return switch (op) {
+            case "+", "*","-", "/" -> NodeUtils.createIntegerLiteral( calcInt(left,right,op));
+            case "&&", "!" -> NodeUtils.createBooleanLiteral( calcBool(left, right, op));
+            case "<" -> NodeUtils.createBooleanLiteral( calcInt(left, right, op));
+            default -> throw new IllegalStateException("Unexpected value: " + op);
+        };
+    }
+
+    private static String calcInt(String left, String right, String op){
+        int leftInt = Integer.parseInt(left);
+        int rightInt = Integer.parseInt(right);
+        return switch (op) {
+            case "+"-> String.valueOf(leftInt + rightInt);
+            case "*"-> String.valueOf(leftInt * rightInt);
+            case "-" ->String.valueOf(leftInt - rightInt) ;
+            case  "/" ->String.valueOf(leftInt / rightInt);
+            case "<" -> String.valueOf(leftInt < rightInt);
+            default -> throw new IllegalStateException("Unexpected value: " + op);
+        };
+    }
+
+    private static String calcBool(String left, String right, String op){
+        boolean leftBool = Boolean.parseBoolean(left);
+        boolean rightBool = Boolean.parseBoolean(right);
+        boolean res= switch (op) {
+            case "&&"-> leftBool && rightBool;
+            case "!" -> !leftBool;
+            default -> throw new IllegalStateException("Unexpected value: " + op);
+        };
+        return String.valueOf(res);
+    }
 }

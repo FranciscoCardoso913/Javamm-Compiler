@@ -1,7 +1,10 @@
 package pt.up.fe.comp2024;
 
+import ast_optimization.ASTOptimizationAnalysis;
+import ast_optimization.ASTOptimizationVisitor;
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
+import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
 import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
@@ -38,11 +41,14 @@ public class Launcher {
         // Semantic Analysis stage
         JmmAnalysisImpl sema = new JmmAnalysisImpl();
         JmmSemanticsResult semanticsResult = sema.semanticAnalysis(parserResult);
-        //System.out.println(parserResult.getRootNode().toTree());
+        //parserResult.getRootNode().add(new JmmNodeImpl("IntegerLiteral"));
+        System.out.println(parserResult.getRootNode().toTree());
         TestUtils.noErrors(semanticsResult.getReports());
+        System.out.println("ola");
+
 
         //System.out.println(semanticsResult.getSymbolTable().getLocalVariables("main"));
-
+        System.out.println(parserResult.getRootNode().toTree());
 
         // Optimization stage
         JmmOptimizationImpl ollirGen = new JmmOptimizationImpl();
