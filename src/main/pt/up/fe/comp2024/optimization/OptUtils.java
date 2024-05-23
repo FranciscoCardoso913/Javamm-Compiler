@@ -4,6 +4,9 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2024.ast.NodeUtils;
+import pt.up.fe.comp2024.ast.TypeUtils;
+
+import java.util.List;
 
 import static pt.up.fe.comp2024.ast.Kind.*;
 
@@ -48,13 +51,19 @@ public class OptUtils {
     }
 
     public static String toOllirType(JmmNode node) {
-        String[] type = node.get("node_type").split("_");
-        return toOllirType(type[0], type.length > 1);
+        String type = node.get("node_type");
+        boolean isArray = TypeUtils.isArray(node) || TypeUtils.isEllipse(node);
+        List<String> separatedType = List.of(node.get("node_type").split("_"));
+        int lastIdx = isArray ? separatedType.size() - 1 : separatedType.size();
+        return toOllirType(String.join("_", separatedType.subList(0, lastIdx)), isArray);
     }
 
     public static String toOllirType(JmmNode node, boolean consider_array) {
-        String[] type = node.get("node_type").split("_");
-        return toOllirType(type[0], type.length > 1 && consider_array);
+        String type = node.get("node_type");
+        boolean isArray = TypeUtils.isArray(node) || TypeUtils.isEllipse(node);
+        List<String> separatedType = List.of(node.get("node_type").split("_"));
+        int lastIdx = isArray && consider_array ? separatedType.size() - 2 : separatedType.size() - 1;
+        return toOllirType(String.join("_", separatedType.subList(0, lastIdx)), isArray && consider_array);
     }
 
     public static String toOllirType(Type type) {
