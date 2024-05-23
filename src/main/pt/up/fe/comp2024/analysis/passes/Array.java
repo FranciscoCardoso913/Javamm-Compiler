@@ -20,8 +20,7 @@ public class Array extends AnalysisVisitor {
 
     private Void visitLengthAttributeExpression(JmmNode node, SymbolTable table) {
         var variable = node.getChild(0);
-        Matcher matcher = array_pattern.matcher(variable.get("node_type"));
-        if (!(matcher.find() && matcher.group(2) != null)) {
+        if (!variable.hasAttribute("isArray")) {
            addSemanticReport(node, String.format(
                    "Length attribute requires array, got %s instead",
                    variable.get("node_type")

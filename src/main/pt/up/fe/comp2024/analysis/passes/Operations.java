@@ -29,13 +29,13 @@ public class Operations extends AnalysisVisitor {
         var left = node.getChild(0);
         var right = node.getChild(1);
         List<String> validTypes = new ArrayList<>(Arrays.asList(op_type, "unknown"));
-        if(validTypes.contains(left.get("node_type")) && validTypes.contains(right.get("node_type")))
+        if(validTypes.contains(left.get("node_type")) && validTypes.contains(right.get("node_type")) && !left.hasAttribute("isArray") && !right.hasAttribute("isArray") )
             return null;
 
         String message = String.format(
                 "Expected both operands of type %s, got %s and %s instead",
                 op_type,
-                left.get("node_type"),
+                left.get("node_type") ,
                 right.get("node_type")
         );
         addSemanticReport(node, message);

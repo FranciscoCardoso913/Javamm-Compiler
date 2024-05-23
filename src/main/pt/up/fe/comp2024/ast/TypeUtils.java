@@ -14,7 +14,6 @@ import static pt.up.fe.comp2024.ast.Kind.METHOD_DECL;
 import static pt.up.fe.comp2024.ast.Kind.THIS;
 
 public class TypeUtils {
-    private static Pattern  array_pattern = Pattern.compile("([a-zA-Z0-9]+)(_array)?(_ellipse)?");
     private static final String INT_TYPE_NAME = "int";
     private static final String BOOL_TYPE_NAME = "boolean";
 
@@ -121,29 +120,28 @@ public class TypeUtils {
      * @param destinationType
      * @return true if sourceType can be assigned to destinationType
      */
-    public static boolean areTypesAssignable(String sourceType, String destinationType, SymbolTable table) {
-        ArrayList<String> atomicTypes = new ArrayList<>(Arrays.asList("int", "int_array", "boolean", "boolean_array"));
-        return sourceType.equals(destinationType)
-                || sourceType.equals("unknown")
-                || (sourceType.equals(table.getClassName()) && destinationType.equals(table.getSuper()))
+    public static boolean areTypesAssignable(JmmNode sourceType, JmmNode destinationType, SymbolTable table) {
+        ArrayList<String> atomicTypes = new ArrayList<>(Arrays.asList("int", "boolean"));
+        return sourceType.get("node_type").equals(destinationType.get("node_type")) &&  sourceType.hasAttribute("isArray") == destinationType.hasAttribute("isArray")
+                || sourceType.get("node_type").equals("unknown")
+                || (sourceType.get("node_type").equals(table.getClassName()) && destinationType.get("node_type").equals(table.getSuper()))
                 || (
-                        table.getImports().contains(sourceType) &&
-                        !atomicTypes.contains(destinationType)
+                        table.getImports().contains(sourceType.get("node_type")) &&
+                        !atomicTypes.contains(destinationType.get("node_type"))
         );
     }
 
-    public static boolean isEllipse (String type){
-        Matcher matcher = array_pattern.matcher(type);
-        return (matcher.find() && matcher.group(3) != null);
+    public static boolean isEllipse (JmmNode node){
+        return node.hasAttribute("isArray")  && node.get("isArray").equals("ellipse");
     }
-    public static boolean isArray (String type){
-        Matcher matcher = array_pattern.matcher(type);
-        return (matcher.find() && matcher.group(2) != null);
+    public static boolean isArray (JmmNode node){
+        return node.hasAttribute("isArray")  && node.get("isArray").equals("array");
     }
     public static String  getType( Type a){
         String isArray = a.isArray()?"_array":"";
         return  a.getName() + isArray;
     }
+
 
     public static JmmNode calc(String left, String right, String op){
         return switch (op) {
