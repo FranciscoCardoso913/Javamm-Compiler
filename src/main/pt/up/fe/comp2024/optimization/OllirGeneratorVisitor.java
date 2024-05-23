@@ -64,7 +64,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         // code to compute self
         String typeString = OptUtils.toOllirType(node);
 
-        // TODO: Refactor into two different functions
         if (NodeUtils.isFieldRef(node.get("name"), table, node.getAncestor(METHOD_DECL).get().get("name"))) {
             code.append("putfield(this, ").append(node.get("name")).append(typeString).append(", ")
                     .append(rhs.getCode()).append(").V").append(END_STMT);
