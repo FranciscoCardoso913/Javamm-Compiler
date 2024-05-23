@@ -14,7 +14,7 @@ import static pt.up.fe.comp2024.ast.Kind.METHOD_DECL;
 import static pt.up.fe.comp2024.ast.Kind.THIS;
 
 public class TypeUtils {
-    private static Pattern  array_pattern = Pattern.compile("([a-zA-Z0-9]+)(_array)?(_ellipse)?");
+    private static Pattern  array_pattern = Pattern.compile("([a-zA-Z0-9]+)(\narray)?(\nellipse)?");
     private static final String INT_TYPE_NAME = "int";
     private static final String BOOL_TYPE_NAME = "boolean";
 
@@ -122,7 +122,7 @@ public class TypeUtils {
      * @return true if sourceType can be assigned to destinationType
      */
     public static boolean areTypesAssignable(String sourceType, String destinationType, SymbolTable table) {
-        ArrayList<String> atomicTypes = new ArrayList<>(Arrays.asList("int", "int_array", "boolean", "boolean_array"));
+        ArrayList<String> atomicTypes = new ArrayList<>(Arrays.asList("int", "int\narray", "boolean", "boolean\narray"));
         return sourceType.equals(destinationType)
                 || sourceType.equals("unknown")
                 || (sourceType.equals(table.getClassName()) && destinationType.equals(table.getSuper()))
@@ -141,7 +141,7 @@ public class TypeUtils {
         return (matcher.find() && matcher.group(2) != null);
     }
     public static String  getType( Type a){
-        String isArray = a.isArray()?"_array":"";
+        String isArray = a.isArray()?"\narray":"";
         return  a.getName() + isArray;
     }
 

@@ -31,16 +31,16 @@ public class NodeUtils {
             var variable = table.getLocalVariables(currentMethod).get(i);
             if (variable.getName().equals(varRefName)) {
                 // TODO: Extract this block to a different function?
-                String isArray = variable.getType().isArray() ? "_array" : "";
-                String isEllipse = variable.getType().getObject("isEllipse", Boolean.class)?"_ellipse":"";
+                String isArray = variable.getType().isArray() ? "\narray" : "";
+                String isEllipse = variable.getType().getObject("isEllipse", Boolean.class)?"\nellipse":"";
                 return variable.getType().getName() + isArray + isEllipse;
             }
         }
         for (int i = 0; i < table.getParameters(currentMethod).size(); i++) {
             var variable = table.getParameters(currentMethod).get(i);
             if (variable.getName().equals(varRefName)) {
-                String isArray = variable.getType().isArray() ? "_array" : "";
-                String isEllipse = variable.getType().getObject("isEllipse", Boolean.class)?"_ellipse":"";
+                String isArray = variable.getType().isArray() ? "\narray" : "";
+                String isEllipse = variable.getType().getObject("isEllipse", Boolean.class)?"\nellipse":"";
                 return variable.getType().getName() + isArray + isEllipse;
             }
         }
@@ -51,8 +51,8 @@ public class NodeUtils {
                     if(currentMethod.equals("main")){
                         return null;
                     }
-                    String isArray = variable.getType().isArray() ? "_array" : "";
-                    String isEllipse = variable.getType().getObject("isEllipse", Boolean.class)?"_ellipse":"";
+                    String isArray = variable.getType().isArray() ? "\narray" : "";
+                    String isEllipse = variable.getType().getObject("isEllipse", Boolean.class)?"\nellipse":"";
                     return variable.getType().getName() + isArray + isEllipse;
                 }
             }

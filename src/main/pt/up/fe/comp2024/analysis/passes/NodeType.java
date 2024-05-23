@@ -19,7 +19,7 @@ import static pt.up.fe.comp2024.ast.TypeUtils.getExprType;
 
 public class NodeType extends AnalysisVisitor {
 
-    Pattern array_pattern = Pattern.compile("([a-zA-Z0-9]+)(_array)?(_ellipse)?");
+    Pattern array_pattern = Pattern.compile("([a-zA-Z0-9]+)(\narray)?(\nellipse)?");
 
     @Override
     protected void buildVisitor() {
@@ -112,7 +112,7 @@ public class NodeType extends AnalysisVisitor {
             addSemanticReport(node, "this nuts");
         }
         var method_type = node.getChild(0).get("name");
-        String isArray = Boolean.parseBoolean(node.getChild(0).get("isArray"))?"_array":"";
+        String isArray = Boolean.parseBoolean(node.getChild(0).get("isArray"))?"\narray":"";
         node.put("node_type", method_type +isArray);
         return null;
     }
@@ -123,14 +123,14 @@ public class NodeType extends AnalysisVisitor {
     }
 
     private Void visitNewArrayExpression(JmmNode node, SymbolTable table) {
-        node.put("node_type", "int_array");
+        node.put("node_type", "int\narray");
         return null;
     }
 
     private Void visitInitArrayExpression(JmmNode node, SymbolTable table) {
         visit(node.getChild(0), table);
         var type = node.getChild(0).get("node_type");
-        node.put("node_type", type + "_array");
+        node.put("node_type", type + "\narray");
         return null;
     }
 
@@ -160,7 +160,7 @@ public class NodeType extends AnalysisVisitor {
 
             if (table.getMethods().contains(node.get("name"))) {
                 var return_type = table.getReturnType(node.get("name"));
-                node.put("node_type", return_type.getName() + (return_type.isArray() ? "_array" : ""));
+                node.put("node_type", return_type.getName() + (return_type.isArray() ? "\narray" : ""));
                 return null;
             }
             if(table.getSuper() != null){
@@ -199,7 +199,7 @@ public class NodeType extends AnalysisVisitor {
         if(!validTypes.contains(type.get("name")))addSemanticReport(node, "Invalid type");
         else if( Boolean.parseBoolean(type.get("isEllipse"))) addSemanticReport(node, "Variables cannot be declared as ellipses");
         else if( type.get("name").equals("void")) addSemanticReport(node, "Variables cannot be declared as void");
-        else node.put("node_type", type.get("name") + (Boolean.parseBoolean(type.get("isArray"))?"_array":"") );
+        else node.put("node_type", type.get("name") + (Boolean.parseBoolean(type.get("isArray"))?"\narray":"") );
         return null;
     }
 
@@ -209,8 +209,8 @@ public class NodeType extends AnalysisVisitor {
         else node.put(
                 "node_type",
                 type.get("name") +
-                        (Boolean.parseBoolean(type.get("isArray"))?"_array":"") +
-                        (Boolean.parseBoolean(type.get("isEllipse"))?"_ellipse":"")
+                        (Boolean.parseBoolean(type.get("isArray"))?"\narray":"") +
+                        (Boolean.parseBoolean(type.get("isEllipse"))?"\nellipse":"")
                 );
         return null;
     }
