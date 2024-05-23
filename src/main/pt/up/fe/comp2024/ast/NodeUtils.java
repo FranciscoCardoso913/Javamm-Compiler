@@ -26,40 +26,37 @@ public class NodeUtils {
         String line = node.getOptional(attribute).orElse(defaultVal);
         return Boolean.parseBoolean(line);
     }
-    public static String getLocalVariableType(JmmNode varRefName, String currentMethod, SymbolTable table){
+    public static String getLocalVariableType(String varRefName, String currentMethod, SymbolTable table){
         for (int i = 0; i < table.getLocalVariables(currentMethod).size(); i++) {
             var variable = table.getLocalVariables(currentMethod).get(i);
-            if (variable.getName().equals(varRefName.get("name"))) {
-                if(variable.getType().isArray()) varRefName.put("isArray", "array");
-                if(variable.getType().getObject("isEllipse", Boolean.class)) varRefName.put("isArray", "ellipse");
-                varRefName.put("node_type", variable.getType().getName());
-                return "";
+            if (variable.getName().equals(varRefName)) {
+                // TODO: Extract this block to a different function?
+                String isArray = variable.getType().isArray() ? "\narray" : "";
+                String isEllipse = variable.getType().getObject("isEllipse", Boolean.class)?"\nellipse":"";
+                return variable.getType().getName() + isArray + isEllipse;
             }
         }
         for (int i = 0; i < table.getParameters(currentMethod).size(); i++) {
             var variable = table.getParameters(currentMethod).get(i);
-            if (variable.getName().equals(varRefName.get("name"))) {
-                if(variable.getType().isArray()) varRefName.put("isArray", "array");
-                if(variable.getType().getObject("isEllipse", Boolean.class)) varRefName.put("isArray", "ellipse");
-                varRefName.put("node_type", variable.getType().getName());
-                return "";
+            if (variable.getName().equals(varRefName)) {
+                String isArray = variable.getType().isArray() ? "\narray" : "";
+                String isEllipse = variable.getType().getObject("isEllipse", Boolean.class)?"\nellipse":"";
+                return variable.getType().getName() + isArray + isEllipse;
             }
         }
 
             for (int i = 0; i < table.getFields().size(); i++) {
                 var variable = table.getFields().get(i);
-                if (variable.getName().equals(varRefName.get("name"))) {
+                if (variable.getName().equals(varRefName)) {
                     if(currentMethod.equals("main")){
                         return null;
                     }
-                    if(variable.getType().isArray()) varRefName.put("isArray", "array");
-                    if(variable.getType().getObject("isEllipse", Boolean.class)) varRefName.put("isArray", "ellipse");
-                    varRefName.put("node_type", variable.getType().getName());
-                    return "";
+                    String isArray = variable.getType().isArray() ? "\narray" : "";
+                    String isEllipse = variable.getType().getObject("isEllipse", Boolean.class)?"\nellipse":"";
+                    return variable.getType().getName() + isArray + isEllipse;
                 }
             }
-        varRefName.put("node_type","unknown" );
-        return "";
+        return "unknown";
 
     }
 

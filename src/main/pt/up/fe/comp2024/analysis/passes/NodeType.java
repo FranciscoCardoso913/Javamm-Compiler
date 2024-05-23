@@ -19,6 +19,7 @@ import static pt.up.fe.comp2024.ast.TypeUtils.getExprType;
 
 public class NodeType extends AnalysisVisitor {
 
+    Pattern array_pattern = Pattern.compile("([a-zA-Z0-9]+)(\narray)?(\nellipse)?");
 
     @Override
     protected void buildVisitor() {
@@ -59,12 +60,14 @@ public class NodeType extends AnalysisVisitor {
     }
 
     private Void visitVarRef(JmmNode node, SymbolTable table) {
-        String message = NodeUtils.getLocalVariableType(node, currentMethod, table) ;
+        String varRefName = node.get("name");
+        String message = NodeUtils.getLocalVariableType(varRefName, currentMethod, table) ;
         if(message==null) {
             addSemanticReport(node, "Field "+ node.get("name") + " cannot be accessed");
             node.put("node_type", "undefined");
             return null;
         }
+        node.put("node_type",message );
         return null;
     }
 
@@ -79,7 +82,8 @@ public class NodeType extends AnalysisVisitor {
 
         var left = node.getChild(0);
         visit(left, table);
-        if (!left.hasAttribute("isArray")) {
+        Matcher matcher = array_pattern.matcher(left.get("node_type"));
+        if (!(matcher.find() && (matcher.group(2) != null || matcher.group(3) !=null))) {
             String message = String.format(
                     "Array expected, got %s instead",
                     left.get("node_type")
@@ -92,7 +96,7 @@ public class NodeType extends AnalysisVisitor {
                     null)
             );
         }
-        node.put("node_type", left.get("node_type"));
+        node.put("node_type", matcher.group(1));
         return null;
     }
 
@@ -108,8 +112,8 @@ public class NodeType extends AnalysisVisitor {
             addSemanticReport(node, "this nuts");
         }
         var method_type = node.getChild(0).get("name");
-        if(Boolean.parseBoolean(node.getChild(0).get("isArray"))) node.put("isArray", "array");
-        node.put("node_type", method_type );
+        String isArray = Boolean.parseBoolean(node.getChild(0).get("isArray"))?"\narray":"";
+        node.put("node_type", method_type +isArray);
         return null;
     }
 
@@ -119,16 +123,14 @@ public class NodeType extends AnalysisVisitor {
     }
 
     private Void visitNewArrayExpression(JmmNode node, SymbolTable table) {
-        node.put("node_type", "int");
-        node.put("isArray", "array");
+        node.put("node_type", "int\narray");
         return null;
     }
 
     private Void visitInitArrayExpression(JmmNode node, SymbolTable table) {
         visit(node.getChild(0), table);
         var type = node.getChild(0).get("node_type");
-        node.put("node_type", type );
-        node.put("isArray", "array");
+        node.put("node_type", type + "\narray");
         return null;
     }
 
@@ -158,8 +160,7 @@ public class NodeType extends AnalysisVisitor {
 
             if (table.getMethods().contains(node.get("name"))) {
                 var return_type = table.getReturnType(node.get("name"));
-                node.put("node_type", return_type.getName() );
-                if( (return_type.isArray())) node.put("isArray", "array");
+                node.put("node_type", return_type.getName() + (return_type.isArray() ? "\narray" : ""));
                 return null;
             }
             if(table.getSuper() != null){
@@ -198,30 +199,31 @@ public class NodeType extends AnalysisVisitor {
         if(!validTypes.contains(type.get("name")))addSemanticReport(node, "Invalid type");
         else if( Boolean.parseBoolean(type.get("isEllipse"))) addSemanticReport(node, "Variables cannot be declared as ellipses");
         else if( type.get("name").equals("void")) addSemanticReport(node, "Variables cannot be declared as void");
-        else{
-            node.put("node_type", type.get("name") );
-            if( Boolean.parseBoolean(type.get("isArray"))) node.put("isArray", "array");
-        }
+        else node.put("node_type", type.get("name") + (Boolean.parseBoolean(type.get("isArray"))?"\narray":"") );
         return null;
     }
 
     private Void visitParam(JmmNode node, SymbolTable table){
         var type = node.getChild(0);
         if( type.get("name").equals("void")) addSemanticReport(node, "Parameters cannot be declared as void");
-        else {
-            node.put("node_type", type.get("name"));
-            if(Boolean.parseBoolean(type.get("isArray"))) node.put("isArray", "array");
-            if(Boolean.parseBoolean(type.get("isEllipse"))) node.put("isArray", "ellipse");
-        }
+        else node.put(
+                "node_type",
+                type.get("name") +
+                        (Boolean.parseBoolean(type.get("isArray"))?"\narray":"") +
+                        (Boolean.parseBoolean(type.get("isEllipse"))?"\nellipse":"")
+                );
         return null;
     }
 
     private Void visitAssignStatement(JmmNode node ,SymbolTable table){
-        String variable_type =  NodeUtils.getLocalVariableType(node, currentMethod, table);
+        var variable = node.get("name");
+        String variable_type =  NodeUtils.getLocalVariableType(variable, currentMethod, table);
         if(variable_type == null) {
             addSemanticReport(node, "Static method cannot use non static fields");
             node.put("node_type", "undefined");
         }
+        else
+            node.put("node_type", variable_type);
         return null;
     }
 

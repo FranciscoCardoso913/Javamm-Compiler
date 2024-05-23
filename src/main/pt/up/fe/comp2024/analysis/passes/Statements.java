@@ -37,7 +37,7 @@ public class Statements extends AnalysisVisitor {
     private Void visitAssignStatement(JmmNode node, SymbolTable table) {
         String variable_type = node.get("node_type");
         var expr = node.getChild(0);
-        if(! areTypesAssignable(expr, node, table)) {
+        if(! areTypesAssignable(expr.get("node_type"), variable_type, table)) {
             addSemanticReport(node, String.format(
                     "Variable of type %s cannot be assign a value of type %s.",
                     variable_type,
@@ -104,7 +104,7 @@ public class Statements extends AnalysisVisitor {
                 "Expected array index of type int, got %s instead",
                 index_type
         ));
-        if( !isArray(node)) addSemanticReport(node, String.format(
+        if( !isArray(node.get("node_type"))) addSemanticReport(node, String.format(
                 "Expected %s to be array, got %s instead",
                 node.get("name"),
                 node.get("node_type")

@@ -19,7 +19,7 @@ public abstract class AnalysisVisitor extends PreorderJmmVisitor<SymbolTable, Vo
     private List<Report> reports;
     protected static String currentMethod = "main";
 
-    protected Pattern array_pattern = Pattern.compile("([a-zA-Z0-9]+)(_array)?(_ellipse)?");
+    protected Pattern array_pattern = Pattern.compile("([a-zA-Z0-9]+)(\narray)?(\nellipse)?");
 
     public AnalysisVisitor() {
         reports = new ArrayList<>();

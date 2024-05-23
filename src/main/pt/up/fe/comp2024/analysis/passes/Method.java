@@ -31,13 +31,11 @@ public class Method extends AnalysisVisitor {
                  addSemanticReport(node, "Ellipses should be in the last parameter");
                  return null;
              }
-             if (isEll && isArray(node.getChild(invoc_param_idx))) {
+             if (isEll && isArray(node.getChild(invoc_param_idx).get("node_type"))) {
                  invoc_params_size --;
                  break;
              }
-             if(! method_params.get(method_param_idx).getType().getName().equals( node.getChild(invoc_param_idx).get("node_type")) ||
-                     method_params.get(method_param_idx).getType().isArray() != node.getChild(invoc_param_idx).hasAttribute("isArray")
-             ){
+             if(! getType(method_params.get(method_param_idx).getType()).equals( node.getChild(invoc_param_idx).get("node_type"))){
                 addSemanticReport(node, String.format(
                         "Expected parameter %s to be type %s, got %s instead.",
                         method_params.get(method_param_idx).getName(),
@@ -47,7 +45,7 @@ public class Method extends AnalysisVisitor {
                 return null;
             }
             if(!isEll) method_param_idx++;
-            if(!isEllipse(node.getChild(invoc_param_idx))) invoc_param_idx ++;
+            if(!isEllipse(node.getChild(invoc_param_idx).get("node_type"))) invoc_param_idx ++;
         };
 
 
