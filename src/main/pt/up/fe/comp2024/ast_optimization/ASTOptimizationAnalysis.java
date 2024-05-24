@@ -1,8 +1,7 @@
-package ast_optimization;
+package pt.up.fe.comp2024.ast_optimization;
 
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp2024.symboltable.JmmSymbolTableBuilder;
 
 public class ASTOptimizationAnalysis {

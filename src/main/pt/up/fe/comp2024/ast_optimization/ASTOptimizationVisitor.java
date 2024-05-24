@@ -1,4 +1,4 @@
-package ast_optimization;
+package pt.up.fe.comp2024.ast_optimization;
 
 import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
