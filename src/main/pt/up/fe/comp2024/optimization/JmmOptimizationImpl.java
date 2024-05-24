@@ -85,7 +85,6 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
         if(ollirResult.getConfig().get("registerAllocation")!=null && !ollirResult.getConfig().get("registerAllocation").equals("-1")) {
             int maxSize = Integer.parseInt(ollirResult.getConfig().get("registerAllocation"));
-
             for (var method : ollirResult.getOllirClass().getMethods()) {
                 var inArray = new ArrayList<HashSet<String>>();
                 var outArray = new ArrayList<HashSet<String>>();
@@ -117,8 +116,9 @@ public class JmmOptimizationImpl implements JmmOptimization {
                 } while (!res);
                 var keySet = method.getVarTable().keySet();
                 var map = new HashMap<String, HashSet<String>>();
+                var intMap = new HashMap<String, Integer>();
                 for (var key : keySet) {
-
+                    intMap.put(key, 0);
                     map.put(key, new HashSet<>());
                     for (var inst : inArray) {
                         if (inst.contains(key)) map.get(key).addAll(inst);
@@ -128,17 +128,17 @@ public class JmmOptimizationImpl implements JmmOptimization {
                     }
 
                 }
-                var intMap = new HashMap<String, Integer>();
-                for (var key : keySet) {
-                    intMap.put(key, 0);
-                    boolean valid = false;
 
+                for (var key : keySet) {
+
+                    boolean valid = false;
                     while (!valid) {
                         valid = true;
                         for (var el : map.get(key)) {
                             if (!el.equals(key)) {
                                 if (intMap.get(el).equals(intMap.get(key))) {
-                                    if( maxSize !=0 && intMap.get(key) + 1 > maxSize) throw new RuntimeException();
+                                    if( maxSize !=0 && intMap.get(key) + 1 >= maxSize){
+                                        throw new RuntimeException();}
                                     intMap.put(key, intMap.get(key) + 1);
                                     valid = false;
                                 }
@@ -147,15 +147,12 @@ public class JmmOptimizationImpl implements JmmOptimization {
                     }
                 }
 
-
                 for (var key : keySet) {
                     method.getVarTable().get(key).setVirtualReg(intMap.get(key));
                 }
 
             }
         }
-
-
 
         return ollirResult;
     }
