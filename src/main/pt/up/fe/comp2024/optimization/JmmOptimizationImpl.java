@@ -84,6 +84,8 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
         System.out.println(ollirResult.getConfig().get("registerAllocation"));
         if(ollirResult.getConfig().get("registerAllocation")!=null && !ollirResult.getConfig().get("registerAllocation").equals("-1")) {
+            int maxSize = Integer.parseInt(ollirResult.getConfig().get("registerAllocation"));
+
             for (var method : ollirResult.getOllirClass().getMethods()) {
                 var inArray = new ArrayList<HashSet<String>>();
                 var outArray = new ArrayList<HashSet<String>>();
@@ -137,6 +139,7 @@ public class JmmOptimizationImpl implements JmmOptimization {
                         for (var el : map.get(key)) {
                             if (!el.equals(key)) {
                                 if (intMap.get(el).equals(intMap.get(key))) {
+                                    if( maxSize !=0 && intMap.get(key) + 1 > maxSize) throw new RuntimeException();
                                     intMap.put(key, intMap.get(key) + 1);
                                     valid = false;
                                 }

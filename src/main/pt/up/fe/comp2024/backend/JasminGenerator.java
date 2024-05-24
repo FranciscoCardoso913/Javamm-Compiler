@@ -221,17 +221,17 @@ public class JasminGenerator {
         if (!method.getVarTable().containsKey("this"))
             locals++;*/
 
-        int locals = 0;
+        HashSet<Integer> locals = new HashSet<>();
         for(var key: method.getVarTable().keySet()){
-            locals = max(locals,method.getVarTable().get(key).getVirtualReg());
+            locals.add(method.getVarTable().get(key).getVirtualReg());
         }
-
+        int l= locals.size();
         if (!method.getVarTable().containsKey("this"))
-            locals++;
+            l++;
 
 
 
-        code.append(TAB).append(".limit locals ").append(locals+1).append(NL);
+        code.append(TAB).append(".limit locals ").append(l).append(NL);
 
 
         code.append(instructionsCode);
@@ -290,7 +290,7 @@ public class JasminGenerator {
     private void updateStack(int value) {
         currentStack+=value;
 
-        maxStack = max(maxStack, currentStack);
+        maxStack = Math.max(maxStack, currentStack);
 
     }
 
