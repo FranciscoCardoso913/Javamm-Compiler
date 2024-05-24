@@ -28,6 +28,7 @@ public class Array extends AnalysisVisitor {
     }
 
     private Void visitInitArrayExpression(JmmNode node, SymbolTable table) {
+        if(node.getChildren().isEmpty()) return null;
         var type = node.getChild(0).get("node_type");
         for (var element : node.getChildren()) {
             visit(element, table);
