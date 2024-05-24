@@ -45,14 +45,14 @@ public class Method extends AnalysisVisitor {
                 return null;
             }
             if(!isEll) method_param_idx++;
-            if(!isEllipse(node.getChild(invoc_param_idx).get("node_type"))) invoc_param_idx ++;
+            if(!isEllipse(node.getChild(invoc_param_idx).get("node_type"))) invoc_param_idx++;
         };
 
 
 
-        if( isEll ) method_params_size --;
+        if( isEll ) method_params_size--;
 
-        if (!(method_param_idx==method_params_size && invoc_param_idx==invoc_params_size)){
+        if (!((method_param_idx==method_params_size && invoc_param_idx==invoc_params_size) || (method_param_idx + 1 == method_params_size && method_params.get(method_params.size() - 1).getType().getObject("isEllipse", Boolean.class) && invoc_param_idx==invoc_params_size))){
             addSemanticReport(node, String.format(
                     "Expected %s parameters, got %s instead.",
                     method_params.size(),

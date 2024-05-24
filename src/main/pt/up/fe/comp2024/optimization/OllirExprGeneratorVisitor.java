@@ -246,6 +246,8 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
                             .append(tmpVars.get(i + nParams - 1)).append(END_STMT);
                 }
             }
+            else
+                isLastParamEllipsis = false;
         }
 
         if (!returnType.equals(".V") && !node.getParent().isInstance(EXPR_STMT)) {

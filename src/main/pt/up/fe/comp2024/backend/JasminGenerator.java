@@ -26,7 +26,7 @@ public class JasminGenerator {
     private final OllirResult ollirResult;
     private final Map<String, String> classPathMap;
     private boolean shouldPop = true;
-    private boolean acessing = true;
+    private boolean accessing = true;
 
     List<Report> reports;
 
@@ -230,7 +230,9 @@ public class JasminGenerator {
             locals++;
 
 
+
         code.append(TAB).append(".limit locals ").append(locals+1).append(NL);
+
 
         code.append(instructionsCode);
 
@@ -287,6 +289,7 @@ public class JasminGenerator {
 
     private void updateStack(int value) {
         currentStack+=value;
+
         maxStack = max(maxStack, currentStack);
 
     }
@@ -351,96 +354,44 @@ public class JasminGenerator {
 //  Utilizada para chamar métodos de instância não-privados,
 //  não-estáticos e não-final (exceto construtores e métodos privados).
     private String generateInvokeVirtual(CallInstruction callInstruction) {
-        StringBuilder code = new StringBuilder();
-        Type typeInstance = callInstruction.getCaller().getType();
-        if (typeInstance instanceof ClassType classTypeInstance) {
-            String className = classPathMap.getOrDefault(classTypeInstance.getName(), classTypeInstance.getName());
-            String methodName = getMethodName(callInstruction);
-
-            code.append(generators.apply(callInstruction.getOperands().get(0)));
-
-            for (Element arg : callInstruction.getArguments()) {
-                code.append(generators.apply(arg));
-            }
-
-            String returnType = getType(callInstruction.getReturnType());
-
-            code.append("invokevirtual ")
-                    .append(className).append("/")
-                    .append(methodName)
-                    .append("(")
-                    .append(callInstruction.getArguments().stream()
-                            .map(arg -> getType(arg.getType()))
-                            .collect(Collectors.joining()))
-                    .append(")");
-            code.append(returnType).append(NL);
-
-            updateStack(-(callInstruction.getArguments().size()+1));
-
-            if (!callInstruction.getReturnType().getTypeOfElement().equals(ElementType.VOID))
-                updateStack(1);
-
-            if (shouldPop && !callInstruction.getReturnType().getTypeOfElement().equals(ElementType.VOID)) {
-                code.append("pop").append(NL);
-                updateStack(-1);
-            }
-        } else if (typeInstance instanceof ArrayType arrayTypeInstance) {
-            throw new NotImplementedException(arrayTypeInstance);
-        }
-        return code.toString();
-    }
-
-    private String generateInvokeStatic(CallInstruction callInstruction) {
-        StringBuilder code = new StringBuilder();
-        if (callInstruction.getCaller() instanceof Operand operand) {
-
-            String className = classPathMap.getOrDefault(operand.getName(), operand.getName());
-
-            String methodName = getMethodName(callInstruction);
-
-            for (Element arg : callInstruction.getArguments()) {
-                code.append(generators.apply(arg));
-            }
-
-            code.append("invokestatic ")
-                    .append(className).append("/")
-                    .append(methodName)
-                    .append("(")
-                    .append(callInstruction.getArguments().stream()
-                            .map(arg -> getType(arg.getType()))
-                            .collect(Collectors.joining()))
-                    .append(")");
-            code.append(getType(callInstruction.getReturnType())).append(NL);
-
-            updateStack(-(callInstruction.getArguments().size()));
-
-            if (!callInstruction.getReturnType().getTypeOfElement().equals(ElementType.VOID))
-                updateStack(1);
-
-            if (shouldPop && !callInstruction.getReturnType().getTypeOfElement().equals(ElementType.VOID)) {
-                code.append("pop").append(NL);
-                updateStack(-1);
-            }
-        } else {
-            throw new NotImplementedException(callInstruction.getCaller().getClass());
-        }
-        return code.toString();
+        return generateInvoke(callInstruction, "invokevirtual");
     }
 
     private String generateInvokeSpecial(CallInstruction callInstruction) {
+        return generateInvoke(callInstruction, "invokespecial");
+    }
+    private String generateInvokeStatic(CallInstruction callInstruction) {
+        return generateInvoke(callInstruction, "invokestatic");
+    }
+
+    private String generateInvoke(CallInstruction callInstruction, String invokeType) {
         StringBuilder code = new StringBuilder();
-        Type typeInstance = callInstruction.getCaller().getType();
-        if (typeInstance instanceof ClassType classTypeInstance) {
-            String className = classPathMap.getOrDefault(classTypeInstance.getName(), classTypeInstance.getName());
+
+        Element caller = callInstruction.getCaller();
+        if (caller instanceof Operand operand) {
+
+            String className = classPathMap.getOrDefault(operand.getName(), operand.getName());
+
+            if (!invokeType.equals("invokestatic")){
+                if (caller.getType() instanceof ClassType classTypeInstance) {
+                    className = classPathMap.getOrDefault(classTypeInstance.getName(), classTypeInstance.getName());
+                } else
+                    throw new NotImplementedException(caller.getClass());
+            }
+
             String methodName = getMethodName(callInstruction);
-            code.append(generators.apply(callInstruction.getOperands().get(0)));
+
+            if (!invokeType.equals("invokestatic"))
+                code.append(generators.apply(callInstruction.getOperands().get(0)));
 
             for (Element arg : callInstruction.getArguments()) {
                 code.append(generators.apply(arg));
             }
 
             String returnType = getType(callInstruction.getReturnType());
-            code.append("invokespecial ")
+
+            code.append(invokeType)
+                    .append(" ")
                     .append(className).append("/")
                     .append(methodName).append("(")
                     .append(callInstruction.getArguments().stream()
@@ -449,7 +400,10 @@ public class JasminGenerator {
                     .append(")")
                     .append(returnType).append(NL);
 
-            updateStack(-(callInstruction.getArguments().size()+1));
+            updateStack(-(callInstruction.getArguments().size()));
+
+            if (!invokeType.equals("invokestatic"))
+                updateStack(-1);
 
             if (!callInstruction.getReturnType().getTypeOfElement().equals(ElementType.VOID))
                 updateStack(1);
@@ -461,11 +415,10 @@ public class JasminGenerator {
             }
 
         } else {
-            throw new NotImplementedException(typeInstance.getClass());
+            throw new NotImplementedException(caller.getClass());
         }
         return code.toString();
     }
-
 
     private String getMethodName(CallInstruction callInstruction) {
         return callInstruction.getMethodNameTry()
@@ -518,9 +471,9 @@ public class JasminGenerator {
 
         if (operand instanceof ArrayOperand arrayOperand) {
             // load array reference and index
-            acessing = false;
+            accessing = false;
             code.append(generators.apply(arrayOperand));
-            acessing = true;
+            accessing = true;
         }
 
         // if RHS is an invoke, we don't want to pop the result
@@ -594,7 +547,7 @@ public class JasminGenerator {
             // load index
             code.append(generators.apply(arrayOperand.getIndexOperands().get(0)));
 
-            if (acessing) {
+            if (accessing) {
                 code.append("iaload").append(NL);
                 updateStack(-1);
             }
@@ -771,8 +724,7 @@ public class JasminGenerator {
         var code = new StringBuilder();
 
         ElementType type = returnInst.getReturnType().getTypeOfElement();
-        System.out.println(currentMethod.getMethodName());
-        System.out.println(type);
+
         switch (type) {
             case INT32, BOOLEAN -> {
                 code.append(generators.apply(returnInst.getOperand()));
@@ -786,8 +738,6 @@ public class JasminGenerator {
             }
             case VOID -> code.append("return").append(NL);
         }
-
         return code.toString();
     }
-
 }

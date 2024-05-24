@@ -128,7 +128,16 @@ public class NodeType extends AnalysisVisitor {
     }
 
     private Void visitInitArrayExpression(JmmNode node, SymbolTable table) {
+
+        if(node.getChildren().isEmpty()){
+
+            node.put("node_type",  "int\narray");
+
+            return null;
+        }
+
         visit(node.getChild(0), table);
+
         var type = node.getChild(0).get("node_type");
         node.put("node_type", type + "\narray");
         return null;

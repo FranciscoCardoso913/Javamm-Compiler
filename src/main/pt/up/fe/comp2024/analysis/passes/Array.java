@@ -2,11 +2,8 @@ package pt.up.fe.comp2024.analysis.passes;
 
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp.jmm.report.Report;
-import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2024.analysis.AnalysisVisitor;
 import pt.up.fe.comp2024.ast.Kind;
-import pt.up.fe.comp2024.ast.NodeUtils;
 
 import java.util.regex.Matcher;
 
@@ -21,7 +18,7 @@ public class Array extends AnalysisVisitor {
     private Void visitLengthAttributeExpression(JmmNode node, SymbolTable table) {
         var variable = node.getChild(0);
         Matcher matcher = array_pattern.matcher(variable.get("node_type"));
-        if (!(matcher.find() && matcher.group(2) != null)) {
+        if (!(matcher.find() && (matcher.group(2) != null || matcher.group(3) != null ))) {
            addSemanticReport(node, String.format(
                    "Length attribute requires array, got %s instead",
                    variable.get("node_type")
@@ -31,6 +28,7 @@ public class Array extends AnalysisVisitor {
     }
 
     private Void visitInitArrayExpression(JmmNode node, SymbolTable table) {
+        if(node.getChildren().isEmpty()) return null;
         var type = node.getChild(0).get("node_type");
         for (var element : node.getChildren()) {
             visit(element, table);

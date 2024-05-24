@@ -35,6 +35,10 @@ public class OptUtils {
         return tempNumber;
     }
 
+    public static void decrementTempNum() {
+        tempNumber -= 1;
+    }
+
     public static int getNextIfNum() {
         ifNumber++;
         return ifNumber;

@@ -5,7 +5,6 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp2024.ast.NodeUtils;
 
 import java.util.List;
@@ -27,8 +26,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private final SymbolTable table;
 
     private final OllirExprGeneratorVisitor exprVisitor;
-    // TODO: Add tabs to ollir code
-    private int tabs = 0;
+
     public OllirGeneratorVisitor(SymbolTable table) {
         this.table = table;
         exprVisitor = new OllirExprGeneratorVisitor(table);
@@ -58,31 +56,39 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         StringBuilder code = new StringBuilder();
 
-        // code to compute the children
-        code.append(rhs.getComputation());
-
         // code to compute self
         String typeString = OptUtils.toOllirType(node);
 
         if (NodeUtils.isFieldRef(node.get("name"), table, node.getAncestor(METHOD_DECL).get().get("name"))) {
+            code.append(rhs.getComputation());
             code.append("putfield(this, ").append(node.get("name")).append(typeString).append(", ")
                     .append(rhs.getCode()).append(").V").append(END_STMT);
         } else {
-            code.append(node.get("name"));
-            code.append(typeString);
-            code.append(SPACE);
+            if (!rhs.getComputation().isEmpty()) {
+                String[] insts = rhs.getComputation().split(NL);
+                String tmpName = rhs.getCode().split("\\.")[0];
 
-            code.append(ASSIGN);
-            code.append(typeString);
-            code.append(SPACE);
+                for (int i = 0; i < insts.length; i++) {
+                    insts[i] = insts[i].replace(tmpName, node.get("name"));
+                }
 
-            code.append(rhs.getCode());
+                code.append(String.join("\n", insts)).append(NL);
+                OptUtils.decrementTempNum();
+            }
+            else {
+                code.append(node.get("name"));
+                code.append(typeString);
+                code.append(SPACE);
 
-            code.append(END_STMT);
+                code.append(ASSIGN);
+                code.append(typeString);
+                code.append(SPACE);
+                code.append(rhs.getCode());
+                code.append(END_STMT);
+            }
         }
         return code.toString();
     }
-
 
     private String visitReturn(JmmNode node, Void unused) {
         String methodName = node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow();
@@ -318,17 +324,29 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
     private String visitListAssignStmt(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
-        // TODO: Stop using split when AST is properly annotated
+
+        String variable = node.get("name");
         String nodeType = node.get("node_type").split("\n")[0];
         String ollirType = OptUtils.toOllirType(new Type(nodeType, false));
 
         OllirExprResult idxRes = exprVisitor.visit(node.getChild(0));
         OllirExprResult exprRes = exprVisitor.visit(node.getChild(1));
 
+        if (NodeUtils.isFieldRef(node.get("name"), table, node.getAncestor(METHOD_DECL).get().get("name"))) {
+            String nextTmp = OptUtils.getTemp();
+            String fullOllirType = OptUtils.toOllirType(node);
+            variable = nextTmp;
+
+
+            code.append(nextTmp).append(fullOllirType);
+            code.append(SPACE).append(ASSIGN).append(fullOllirType).append(SPACE).append("getfield(this, ")
+                    .append(node.get("name")).append(fullOllirType).append(")").append(fullOllirType).append(END_STMT);
+        }
+
         code.append(idxRes.getComputation());
         code.append(exprRes.getComputation());
 
-        code.append(node.get("name")).append("[").append(idxRes.getCode()).append("]").append(ollirType).append(SPACE);
+        code.append(variable).append("[").append(idxRes.getCode()).append("]").append(ollirType).append(SPACE);
         code.append(ASSIGN).append(ollirType).append(SPACE).append(exprRes.getCode()).append(END_STMT);
 
         return code.toString();
