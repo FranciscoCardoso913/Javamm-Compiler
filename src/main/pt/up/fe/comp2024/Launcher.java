@@ -2,6 +2,9 @@ package pt.up.fe.comp2024;
 
 import ast_optimization.ASTOptimizationAnalysis;
 import ast_optimization.ASTOptimizationVisitor;
+import org.specs.comp.ollir.OllirErrorException;
+import org.specs.comp.ollir.Operand;
+import org.specs.comp.ollir.tree.TreeNode;
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
@@ -15,11 +18,12 @@ import pt.up.fe.comp2024.parser.JmmParserImpl;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsSystem;
 
+import java.util.Arrays;
 import java.util.Map;
 
 public class Launcher {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws NoSuchFieldException, OllirErrorException {
         SpecsSystem.programStandardInit();
 
         Map<String, String> config = CompilerConfig.parseArgs(args);
@@ -54,9 +58,20 @@ public class Launcher {
         JmmOptimizationImpl ollirGen = new JmmOptimizationImpl();
         OllirResult ollirResult = ollirGen.toOllir(semanticsResult);
         TestUtils.noErrors(ollirResult.getReports());
+        System.out.println("Ollir");
+        ollirResult.getOllirClass().buildCFGs();
+        ollirGen.optimize(ollirResult);
+        System.out.println("Ollir");
+        System.out.println(ollirResult.getOllirClass().getMethods().get(0).getVarTable().keySet());
+        var shit = (ollirResult.getOllirClass().getMethods().get(0).getInstructions().get(0).getChildren().get(0).toString().split(":")[1].split("($[1-9]+)?\\.")[0].strip());
+        /*for (var yoMama: shit){
+            System.out.println(yoMama);
+        }*/
+        System.out.println(shit);
+
 
         // Print OLLIR code
-        //System.out.println(ollirResult.getOllirCode());
+        System.out.println(ollirResult.getOllirCode());
 
         // Code generation stage
         JasminBackendImpl jasminGen = new JasminBackendImpl();
@@ -64,7 +79,7 @@ public class Launcher {
         TestUtils.noErrors(jasminResult.getReports());
 
         // Print Jasmin code
-        System.out.println(jasminResult.getJasminCode());
+        //System.out.println(jasminResult.getJasminCode());
     }
 
 }
