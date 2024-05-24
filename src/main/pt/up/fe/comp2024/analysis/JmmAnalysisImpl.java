@@ -1,6 +1,6 @@
 package pt.up.fe.comp2024.analysis;
 
-import ast_optimization.ASTOptimizationAnalysis;
+import pt.up.fe.comp2024.ast_optimization.ASTOptimizationAnalysis;
 import pt.up.fe.comp.jmm.analysis.JmmAnalysis;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
@@ -12,7 +12,6 @@ import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2024.analysis.passes.*;
 import pt.up.fe.comp2024.symboltable.JmmSymbolTableBuilder;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class JmmAnalysisImpl implements JmmAnalysis {

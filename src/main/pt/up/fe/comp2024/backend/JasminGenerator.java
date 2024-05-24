@@ -11,6 +11,8 @@ import pt.up.fe.specs.util.utilities.StringLines;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.lang.Math.max;
+
 /**
  * Generates Jasmin code from an OllirResult.
  * <p>
@@ -214,12 +216,23 @@ public class JasminGenerator {
 
         code.append(TAB).append(".limit stack ").append(maxStack).append(NL);
 
-        int locals = method.getVarTable().size();
+        /*int locals = method.getVarTable().size();
 
         if (!method.getVarTable().containsKey("this"))
-            locals++;
+            locals++;*/
 
-        code.append(TAB).append(".limit locals ").append(locals).append(NL);
+        HashSet<Integer> locals = new HashSet<>();
+        for(var key: method.getVarTable().keySet()){
+            locals.add(method.getVarTable().get(key).getVirtualReg());
+        }
+        int l= locals.size();
+        if (!method.getVarTable().containsKey("this") && !method.isStaticMethod())
+            l++;
+
+
+
+        code.append(TAB).append(".limit locals ").append(l).append(NL);
+
 
         code.append(instructionsCode);
 
@@ -276,7 +289,9 @@ public class JasminGenerator {
 
     private void updateStack(int value) {
         currentStack+=value;
+
         maxStack = Math.max(maxStack, currentStack);
+
     }
 
     private String generateCall(CallInstruction callInstruction) {

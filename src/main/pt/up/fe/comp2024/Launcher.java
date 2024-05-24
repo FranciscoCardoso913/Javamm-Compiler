@@ -1,10 +1,8 @@
 package pt.up.fe.comp2024;
 
-import ast_optimization.ASTOptimizationAnalysis;
-import ast_optimization.ASTOptimizationVisitor;
+import org.specs.comp.ollir.OllirErrorException;
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
-import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
 import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
@@ -19,7 +17,7 @@ import java.util.Map;
 
 public class Launcher {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws NoSuchFieldException, OllirErrorException {
         SpecsSystem.programStandardInit();
 
         Map<String, String> config = CompilerConfig.parseArgs(args);
@@ -44,8 +42,6 @@ public class Launcher {
         //parserResult.getRootNode().add(new JmmNodeImpl("IntegerLiteral"));
         System.out.println(parserResult.getRootNode().toTree());
         TestUtils.noErrors(semanticsResult.getReports());
-        System.out.println("ola");
-
 
         //System.out.println(semanticsResult.getSymbolTable().getLocalVariables("main"));
         System.out.println(parserResult.getRootNode().toTree());
@@ -55,8 +51,11 @@ public class Launcher {
         OllirResult ollirResult = ollirGen.toOllir(semanticsResult);
         TestUtils.noErrors(ollirResult.getReports());
 
+        ollirResult.getOllirClass().buildCFGs();
+        ollirGen.optimize(ollirResult);
+
         // Print OLLIR code
-        //System.out.println(ollirResult.getOllirCode());
+        System.out.println(ollirResult.getOllirCode());
 
         // Code generation stage
         JasminBackendImpl jasminGen = new JasminBackendImpl();
@@ -64,7 +63,7 @@ public class Launcher {
         TestUtils.noErrors(jasminResult.getReports());
 
         // Print Jasmin code
-        System.out.println(jasminResult.getJasminCode());
+        //System.out.println(jasminResult.getJasminCode());
     }
 
 }
