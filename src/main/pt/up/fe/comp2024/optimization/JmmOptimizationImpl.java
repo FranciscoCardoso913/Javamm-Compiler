@@ -8,6 +8,8 @@ import org.specs.comp.ollir.tree.TreeNode;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.ollir.JmmOptimization;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
+import pt.up.fe.comp.jmm.report.Report;
+import pt.up.fe.comp.jmm.report.Stage;
 
 import java.util.*;
 
@@ -85,6 +87,7 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
         if(ollirResult.getConfig().get("registerAllocation")!=null && !ollirResult.getConfig().get("registerAllocation").equals("-1")) {
             int maxSize = Integer.parseInt(ollirResult.getConfig().get("registerAllocation"));
+            int maxUsed=0;
             for (var method : ollirResult.getOllirClass().getMethods()) {
                 var inArray = new ArrayList<HashSet<String>>();
                 var outArray = new ArrayList<HashSet<String>>();
@@ -137,8 +140,7 @@ public class JmmOptimizationImpl implements JmmOptimization {
                         for (var el : map.get(key)) {
                             if (!el.equals(key)) {
                                 if (intMap.get(el).equals(intMap.get(key))) {
-                                    if( maxSize !=0 && intMap.get(key) + 1 >= maxSize){
-                                        throw new RuntimeException();}
+                                    maxUsed = Math.max(maxUsed, intMap.get(key) + 1);
                                     intMap.put(key, intMap.get(key) + 1);
                                     valid = false;
                                 }
@@ -147,13 +149,16 @@ public class JmmOptimizationImpl implements JmmOptimization {
                     }
                 }
 
+                if( maxUsed >= maxSize){
+                    ollirResult.getReports().add(Report.newError(Stage.OPTIMIZATION, -1,-1,String.valueOf(maxUsed+1),new RuntimeException()));
+                }
+
                 for (var key : keySet) {
                     method.getVarTable().get(key).setVirtualReg(intMap.get(key));
                 }
 
             }
         }
-
         return ollirResult;
     }
 }
