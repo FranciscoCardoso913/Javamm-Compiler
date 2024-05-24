@@ -24,7 +24,7 @@ public class JasminGenerator {
     private final OllirResult ollirResult;
     private final Map<String, String> classPathMap;
     private boolean shouldPop = true;
-    private boolean acessing = true;
+    private boolean accessing = true;
 
     List<Report> reports;
 
@@ -277,7 +277,6 @@ public class JasminGenerator {
     private void updateStack(int value) {
         currentStack+=value;
         maxStack = Math.max(maxStack, currentStack);
-
     }
 
     private String generateCall(CallInstruction callInstruction) {
@@ -352,7 +351,6 @@ public class JasminGenerator {
 
     private String generateInvoke(CallInstruction callInstruction, String invokeType) {
         StringBuilder code = new StringBuilder();
-        //Type typeInstance = callInstruction.getCaller().getType();
 
         Element caller = callInstruction.getCaller();
         if (caller instanceof Operand operand) {
@@ -458,9 +456,9 @@ public class JasminGenerator {
 
         if (operand instanceof ArrayOperand arrayOperand) {
             // load array reference and index
-            acessing = false;
+            accessing = false;
             code.append(generators.apply(arrayOperand));
-            acessing = true;
+            accessing = true;
         }
 
         // if RHS is an invoke, we don't want to pop the result
@@ -534,7 +532,7 @@ public class JasminGenerator {
             // load index
             code.append(generators.apply(arrayOperand.getIndexOperands().get(0)));
 
-            if (acessing) {
+            if (accessing) {
                 code.append("iaload").append(NL);
                 updateStack(-1);
             }
@@ -711,8 +709,7 @@ public class JasminGenerator {
         var code = new StringBuilder();
 
         ElementType type = returnInst.getReturnType().getTypeOfElement();
-        System.out.println(currentMethod.getMethodName());
-        System.out.println(type);
+
         switch (type) {
             case INT32, BOOLEAN -> {
                 code.append(generators.apply(returnInst.getOperand()));
@@ -726,8 +723,6 @@ public class JasminGenerator {
             }
             case VOID -> code.append("return").append(NL);
         }
-
         return code.toString();
     }
-
 }
