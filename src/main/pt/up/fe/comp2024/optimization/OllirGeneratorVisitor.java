@@ -324,17 +324,29 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
     private String visitListAssignStmt(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
-        // TODO: Stop using split when AST is properly annotated
+
+        String variable = node.get("name");
         String nodeType = node.get("node_type").split("\n")[0];
         String ollirType = OptUtils.toOllirType(new Type(nodeType, false));
 
         OllirExprResult idxRes = exprVisitor.visit(node.getChild(0));
         OllirExprResult exprRes = exprVisitor.visit(node.getChild(1));
 
+        if (NodeUtils.isFieldRef(node.get("name"), table, node.getAncestor(METHOD_DECL).get().get("name"))) {
+            String nextTmp = OptUtils.getTemp();
+            String fullOllirType = OptUtils.toOllirType(node);
+            variable = nextTmp;
+
+
+            code.append(nextTmp).append(fullOllirType);
+            code.append(SPACE).append(ASSIGN).append(fullOllirType).append(SPACE).append("getfield(this, ")
+                    .append(node.get("name")).append(fullOllirType).append(")").append(fullOllirType).append(END_STMT);
+        }
+
         code.append(idxRes.getComputation());
         code.append(exprRes.getComputation());
 
-        code.append(node.get("name")).append("[").append(idxRes.getCode()).append("]").append(ollirType).append(SPACE);
+        code.append(variable).append("[").append(idxRes.getCode()).append("]").append(ollirType).append(SPACE);
         code.append(ASSIGN).append(ollirType).append(SPACE).append(exprRes.getCode()).append(END_STMT);
 
         return code.toString();
