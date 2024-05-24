@@ -26,8 +26,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private final SymbolTable table;
 
     private final OllirExprGeneratorVisitor exprVisitor;
-    // TODO: Add tabs to ollir code
-    private int tabs = 0;
+
     public OllirGeneratorVisitor(SymbolTable table) {
         this.table = table;
         exprVisitor = new OllirExprGeneratorVisitor(table);
@@ -67,9 +66,10 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         } else {
             if (!rhs.getComputation().isEmpty()) {
                 String[] insts = rhs.getComputation().split(NL);
+                String tmpName = rhs.getCode().split("\\.")[0];
 
                 for (int i = 0; i < insts.length; i++) {
-                    insts[i] = insts[i].replace(rhs.getCode(), node.get("name") + typeString);
+                    insts[i] = insts[i].replace(tmpName, node.get("name"));
                 }
 
                 code.append(String.join("\n", insts)).append(NL);
