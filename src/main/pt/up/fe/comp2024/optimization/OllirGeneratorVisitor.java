@@ -73,6 +73,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                 }
 
                 code.append(String.join("\n", insts)).append(NL);
+                OptUtils.decrementTempNum();
             }
             else {
                 code.append(node.get("name"));
@@ -88,7 +89,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         }
         return code.toString();
     }
-
 
     private String visitReturn(JmmNode node, Void unused) {
         String methodName = node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow();
