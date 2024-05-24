@@ -5,7 +5,6 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp2024.ast.NodeUtils;
 
 import java.util.List;
@@ -58,27 +57,34 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         StringBuilder code = new StringBuilder();
 
-        // code to compute the children
-        code.append(rhs.getComputation());
-
         // code to compute self
         String typeString = OptUtils.toOllirType(node);
 
         if (NodeUtils.isFieldRef(node.get("name"), table, node.getAncestor(METHOD_DECL).get().get("name"))) {
+            code.append(rhs.getComputation());
             code.append("putfield(this, ").append(node.get("name")).append(typeString).append(", ")
                     .append(rhs.getCode()).append(").V").append(END_STMT);
         } else {
-            code.append(node.get("name"));
-            code.append(typeString);
-            code.append(SPACE);
+            if (!rhs.getComputation().isEmpty()) {
+                String[] insts = rhs.getComputation().split(NL);
 
-            code.append(ASSIGN);
-            code.append(typeString);
-            code.append(SPACE);
+                for (int i = 0; i < insts.length; i++) {
+                    insts[i] = insts[i].replace(rhs.getCode(), node.get("name") + typeString);
+                }
 
-            code.append(rhs.getCode());
+                code.append(String.join("\n", insts)).append(NL);
+            }
+            else {
+                code.append(node.get("name"));
+                code.append(typeString);
+                code.append(SPACE);
 
-            code.append(END_STMT);
+                code.append(ASSIGN);
+                code.append(typeString);
+                code.append(SPACE);
+                code.append(rhs.getCode());
+                code.append(END_STMT);
+            }
         }
         return code.toString();
     }
