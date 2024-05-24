@@ -52,7 +52,6 @@ public class SymbolTableTest {
         var checkInt = 0;
         var checkBool = 0;
         var checkObj = 0;
-        System.out.println("FIELDS: " + fields);
         for (var f : fields) {
             switch (f.getType().getName()) {
                 case "MethodsAndFields":

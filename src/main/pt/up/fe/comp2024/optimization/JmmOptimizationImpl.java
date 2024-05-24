@@ -82,7 +82,7 @@ public class JmmOptimizationImpl implements JmmOptimization {
     @Override
     public OllirResult optimize(OllirResult ollirResult) {
 
-        System.out.println(ollirResult.getConfig().get("registerAllocation"));
+
         if(ollirResult.getConfig().get("registerAllocation")!=null && !ollirResult.getConfig().get("registerAllocation").equals("-1")) {
             int maxSize = Integer.parseInt(ollirResult.getConfig().get("registerAllocation"));
 
@@ -107,8 +107,8 @@ public class JmmOptimizationImpl implements JmmOptimization {
                         inArray.set(i, in(method.getInstructions().get(i), outLine.get(i)));
                         outArray.set(i, out(method.getInstructions().get(i), inArray, i));
                     }
-                    System.out.println("ola" + inArray);
-                    System.out.println("ola2" + outArray);
+                    //System.out.println("ola" + inArray);
+                    //System.out.println("ola2" + outArray);
                     res = true;
                     for (var i = 0; i < method.getInstructions().size(); i++) {
                         res = res && (inLine.get(i).equals(inArray.get(i))) && (outLine.get(i).equals(outArray.get(i)));
@@ -128,7 +128,6 @@ public class JmmOptimizationImpl implements JmmOptimization {
                     }
 
                 }
-                System.out.println(map);
                 var intMap = new HashMap<String, Integer>();
                 for (var key : keySet) {
                     intMap.put(key, 0);
@@ -148,12 +147,10 @@ public class JmmOptimizationImpl implements JmmOptimization {
                     }
                 }
 
-                System.out.println(intMap);
 
                 for (var key : keySet) {
                     method.getVarTable().get(key).setVirtualReg(intMap.get(key));
                 }
-                System.out.println("Shit");
 
             }
         }

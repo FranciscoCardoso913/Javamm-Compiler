@@ -203,7 +203,7 @@ public class NodeType extends AnalysisVisitor {
             }
         }
 
-        System.out.println(validTypes);
+
 
         if(!validTypes.contains(type.get("name")))addSemanticReport(node, "Invalid type");
         else if( Boolean.parseBoolean(type.get("isEllipse"))) addSemanticReport(node, "Variables cannot be declared as ellipses");
