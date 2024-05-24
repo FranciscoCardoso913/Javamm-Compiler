@@ -18,8 +18,6 @@ import static pt.up.fe.comp2024.ast.Kind.*;
  * Generates OLLIR code from JmmNodes that are expressions.
  */
 
-// TODO: Refactor visitMethodExpr and creation of ollir arrays
-
 public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult> {
 
     private static final String SPACE = " ";
@@ -173,13 +171,11 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
     private OllirExprResult buildCommonField(JmmNode node) {
         StringBuilder code = new StringBuilder();
-        // TODO: Maybe annotate the information below?
         Optional<JmmNode> method = node.getAncestor(METHOD_DECL);
         Optional<JmmNode> returnStmt = node.getAncestor(RETURN_STMT);
 
         String id = node.get("name");
 
-        // TODO: Maybe annotate node to know if it is a parameter?
         // This is extra as it only adds the $ before the use of paramaters, which isn't mandatory
         if (returnStmt.isEmpty()) {
             String methodName = method.get().get("name");
@@ -332,7 +328,6 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         return new OllirExprResult(code.toString(), computation.toString());
     }
 
-    // TODO: Merge this function with visitNewObjExpr?
     private OllirExprResult visitNewArrayExpr(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
         StringBuilder computation = new StringBuilder();
