@@ -226,7 +226,7 @@ public class JasminGenerator {
             locals.add(method.getVarTable().get(key).getVirtualReg());
         }
         int l= locals.size();
-        if (!method.getVarTable().containsKey("this"))
+        if (!method.getVarTable().containsKey("this") && !method.isStaticMethod())
             l++;
 
 
